@@ -148,8 +148,8 @@
         <!-- routes slf4j calls to log4j -->
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.6.4</version>
+            <artifactId>slf4j-reload4j</artifactId>
+            <version>2.0.16</version>
             <scope>runtime</scope>
         </dependency>
 
