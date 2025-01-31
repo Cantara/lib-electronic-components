@@ -1,7 +1,5 @@
-package no.cantara.electronic.component;
+package no.cantara.electronic.component.lib;
 
-import no.cantara.electronic.component.lib.ComponentType;
-import no.cantara.electronic.component.lib.ComponentValueStandardizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

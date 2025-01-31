@@ -1,6 +1,5 @@
-package no.cantara.electronic.component;
+package no.cantara.electronic.component.lib;
 
-import no.cantara.electronic.component.lib.MPNUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

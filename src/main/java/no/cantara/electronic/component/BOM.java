@@ -133,7 +133,7 @@ public class BOM implements Serializable
         this.quantity = quantity;
     }
 
-    @JsonProperty("BOMType")
+    @JsonProperty("PcbReference")
     public PCBReference getPcbReference() {
         return pcbReference;
     }

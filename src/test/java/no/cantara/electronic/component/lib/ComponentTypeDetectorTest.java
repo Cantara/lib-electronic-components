@@ -1,7 +1,6 @@
-package no.cantara.electronic.component;
+package no.cantara.electronic.component.lib;
 
-import no.cantara.electronic.component.lib.ComponentType;
-import no.cantara.electronic.component.lib.ComponentTypeDetector;
+import no.cantara.electronic.component.ElectronicPart;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
