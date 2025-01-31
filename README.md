@@ -1,5 +1,5 @@
-![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/Cantara/lib-electronic-components) ![Build Status](https://jenkins.cantara.no/buildStatus/icon?job=HTTPLoadTest-Baseline) ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Cantara/HTTPLoadTest-Baseline)  
- [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) [![CodeQL](https://github.com/Cantara/lib-electronic-components/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Cantara/lib-electronic-components/actions/workflows/codeql-analysis.yml) 
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/Cantara/lib-electronic-components) ![Build Status](https://jenkins.cantara.no/buildStatus/icon?job=/Cantara%20lib-electronic-components) ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Cantara/lib-electronic-components)  
+ [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) 
 [![Known Vulnerabilities](https://snyk.io/test/github/Cantara/lib-electronic-components/badge.svg)](https://snyk.io/test/github/Cantara/lib-electronic-components)
 
 
