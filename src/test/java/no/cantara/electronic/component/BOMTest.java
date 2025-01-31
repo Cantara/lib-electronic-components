@@ -321,7 +321,7 @@ class BOMTest {
         // Verify critical power components
         assertTrue(bom.getBomEntries().stream()
                         .filter(entry -> entry.getDescription().contains("Power Inductor"))
-                        .anyMatch(entry -> entry.getSpecs().get("Current").contains("2.8A")),
+                        .anyMatch(entry -> entry.getSpecs().get("Current").toString().contains("2.8A")),
                 "Power inductor should have sufficient current rating");
 
         // Verify MCU crystal

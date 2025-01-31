@@ -96,4 +96,7 @@ class TypedBOMTest {
                 (Map<String, Object>) deserializedBom.getAssemblyDetails().get("conformalCoating");
         assertTrue((Boolean) coating.get("required"));
     }
+
+
+
 }

@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.*;
         "value",
         "manufacturer"
 })
-public class ElectronicPart implements Serializable {
+public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable {
 
     @JsonProperty("mpn")
     private String mpn;
@@ -26,7 +26,7 @@ public class ElectronicPart implements Serializable {
 
 
     @JsonProperty("specs")
-    private Map<String, String> specs = new HashMap<String, String>();
+    private Map<String, Object> specs = new HashMap<String, Object>();
 
     @JsonProperty("value")
     private String value;
@@ -51,23 +51,25 @@ public class ElectronicPart implements Serializable {
         return mpn;
     }
 
-    public void setMpn(String mpn) {
+    public <T extends ElectronicPart> T setMpn(String mpn) {
         this.mpn = mpn;
+        return (T)self();
     }
 
     public String getManufacturer() {
         return manufacturer;
     }
 
-    public void setManufacturer(String manufacturer) {
+    public <T extends ElectronicPart> T setManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
+        return (T)self();
     }
 
-    public Map<String, String> getSpecs() {
+    public Map<String, Object> getSpecs() {
         return specs;
     }
 
-    public void setSpecs(Map<String, String> specs) {
+    public void setSpecs(Map<String, Object> specs) {
         this.specs = specs;
     }
 
@@ -75,24 +77,55 @@ public class ElectronicPart implements Serializable {
         return value;
     }
 
-    public void setValue(String value) {
+    public <T extends ElectronicPart> T setValue(String value) {
         this.value = value;
+        return (T)self();
     }
 
     public String getPkg() {
         return pkg;
     }
 
-    public void setPkg(String pkg) {
+
+    public <T extends ElectronicPart> T setPkg(String pkg) {
         this.pkg = pkg;
+        return (T)self();
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public <T extends ElectronicPart> T setDescription(String description) {
         this.description = description;
+        return (T)self();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T self() {
+        return (T) this;
+    }
+
+
+    /**
+     * Adds a specification to the component
+     * @param key The specification key
+     * @param value The specification value
+     * @return this ElectronicPart for method chaining
+     */
+    public ElectronicPart addSpec(String key, Object value) {
+        this.specs.put(key, value);
+        return this;
+    }
+
+    /**
+     * Adds multiple specifications to the component
+     * @param specs Map of specifications to add
+     * @return this ElectronicPart for method chaining
+     */
+    public ElectronicPart addSpecs(Map<String, Object> specs) {
+        this.specs.putAll(specs);
+        return this;
     }
 
     @JsonAnyGetter
