@@ -14,6 +14,8 @@ import java.util.Map;
         "BOMType",
         "CustomerName",
         "OrderNo",
+        "Quantity",
+        "PCBReference",
         "BOMEntries"
 })
 public class BOM implements Serializable
@@ -27,6 +29,12 @@ public class BOM implements Serializable
     private String orderNo;
     @JsonProperty("BOMType")
     private BOMType bomType;
+    @JsonProperty("Version")
+    private String version;
+    @JsonProperty("Quantity")
+    private String quantity;
+    @JsonProperty("PCBReference")
+    private PCBReference pcbReference;
     @JsonProperty("BOMEntries")
     private List<BOMEntry> bomEntries = new ArrayList<BOMEntry>();
     @JsonIgnore
@@ -103,6 +111,36 @@ public class BOM implements Serializable
     @JsonProperty("BOMType")
     public void setBomType(BOMType bomType) {
         this.bomType = bomType;
+    }
+
+    @JsonProperty("Version")
+    public String getVersion() {
+        return version;
+    }
+
+    @JsonProperty("Version")
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    @JsonProperty("Quantity")
+    public String getQuantity() {
+        return quantity;
+    }
+
+    @JsonProperty("Quantity")
+    public void setQuantity(String quantity) {
+        this.quantity = quantity;
+    }
+
+    @JsonProperty("BOMType")
+    public PCBReference getPcbReference() {
+        return pcbReference;
+    }
+
+    @JsonProperty("PcbReference")
+    public void setPcbReference(PCBReference pcbReference) {
+        this.pcbReference = pcbReference;
     }
 
     @JsonAnyGetter
