@@ -26,7 +26,7 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
 
 
     @JsonProperty("specs")
-    private Map<String, Object> specs = new HashMap<String, Object>();
+    private Map<String, String> specs = new HashMap<String, String>();
 
     @JsonProperty("value")
     private String value;
@@ -51,25 +51,22 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
         return mpn;
     }
 
-    public <T extends ElectronicPart> T setMpn(String mpn) {
+    public ElectronicPart setMpn(String mpn) {
         this.mpn = mpn;
-        return (T)self();
+        return this;
     }
 
     public String getManufacturer() {
         return manufacturer;
     }
 
-    public <T extends ElectronicPart> T setManufacturer(String manufacturer) {
+    public ElectronicPart  setManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
-        return (T)self();
+        return this;
     }
 
-    public Map<String, Object> getSpecs() {
-        return specs;
-    }
 
-    public void setSpecs(Map<String, Object> specs) {
+    public void setSpecs(Map<String, String> specs) {
         this.specs = specs;
     }
 
@@ -87,9 +84,9 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
     }
 
 
-    public <T extends ElectronicPart> T setPkg(String pkg) {
+    public ElectronicPart setPkg(String pkg) {
         this.pkg = pkg;
-        return (T)self();
+        return this;
     }
 
     public String getDescription() {
@@ -107,26 +104,6 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
     }
 
 
-    /**
-     * Adds a specification to the component
-     * @param key The specification key
-     * @param value The specification value
-     * @return this ElectronicPart for method chaining
-     */
-    public ElectronicPart addSpec(String key, Object value) {
-        this.specs.put(key, value);
-        return this;
-    }
-
-    /**
-     * Adds multiple specifications to the component
-     * @param specs Map of specifications to add
-     * @return this ElectronicPart for method chaining
-     */
-    public ElectronicPart addSpecs(Map<String, Object> specs) {
-        this.specs.putAll(specs);
-        return this;
-    }
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
@@ -138,4 +115,26 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
         this.additionalProperties.put(name, value);
     }
 
+
+    public Map<String, String> getSpecs() {
+        return specs;
+    }
+
+    public T addSpec(String key, String value) {
+        this.specs.put(key, value);
+        return self();
+    }
+
+    // Helper method for nested values
+    public T addNestedSpec(String prefix, Map<String, String> values) {
+        values.forEach((key, value) ->
+                this.specs.put(prefix + "." + key, value));
+        return self();
+    }
+
+    // Helper method for multiple specifications
+    public T addSpecs(Map<String, String> specs) {
+        this.specs.putAll(specs);
+        return self();
+    }
 }
