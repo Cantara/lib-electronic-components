@@ -3,10 +3,8 @@ package no.cantara.electronic.component;
 import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -33,8 +31,6 @@ public class BOM implements Serializable
     private String version;
     @JsonProperty("Quantity")
     private String quantity;
-    @JsonProperty("PCBReference")
-    private PCBReference pcbReference;
     @JsonProperty("BOMEntries")
     private List<BOMEntry> bomEntries = new ArrayList<BOMEntry>();
     @JsonIgnore
@@ -133,15 +129,7 @@ public class BOM implements Serializable
         this.quantity = quantity;
     }
 
-    @JsonProperty("PcbReference")
-    public PCBReference getPcbReference() {
-        return pcbReference;
-    }
 
-    @JsonProperty("PcbReference")
-    public void setPcbReference(PCBReference pcbReference) {
-        this.pcbReference = pcbReference;
-    }
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
@@ -154,5 +142,67 @@ public class BOM implements Serializable
     }
 
 
+    // PCBA specific BOM
+    public static class PCBABOM extends BOM {
 
+        @JsonProperty("PCBReference")
+        private PCBReference pcbReference;
+
+        @JsonProperty("PlannedProductionDate")
+        private LocalDate plannedProductionDate;
+
+        @JsonProperty("TestJigDetails")
+        private Map<String, Object> testJigDetails = new HashMap<>();
+
+        @JsonProperty("AssemblyDetails")
+        private Map<String, Object> assemblyDetails = new HashMap<>();
+
+        public PCBABOM() {
+            super();
+            this.setBomType(BOMType.PCBA);
+            this.testJigDetails = new HashMap<>();
+            this.assemblyDetails = new HashMap<>();
+        }
+
+        public PCBABOM(String prodNo, String customerName, String orderNo, List<BOMEntry> entries) {
+            super(prodNo, customerName, orderNo, entries);
+            this.setBomType(BOMType.PCBA);
+            this.testJigDetails = new HashMap<>();
+            this.assemblyDetails = new HashMap<>();
+        }
+
+        public LocalDate getPlannedProductionDate() {
+            return plannedProductionDate;
+        }
+
+        public void setPlannedProductionDate(LocalDate plannedProductionDate) {
+            this.plannedProductionDate = plannedProductionDate;
+        }
+
+        public Map<String, Object> getTestJigDetails() {
+            return testJigDetails;
+        }
+
+        public void setTestJigDetails(Map<String, Object> testJigDetails) {
+            this.testJigDetails = testJigDetails;
+        }
+
+        public Map<String, Object> getAssemblyDetails() {
+            return assemblyDetails;
+        }
+
+        public void setAssemblyDetails(Map<String, Object> assemblyDetails) {
+            this.assemblyDetails = assemblyDetails;
+        }
+
+        @JsonProperty("PcbReference")
+        public PCBReference getPcbReference() {
+            return pcbReference;
+        }
+
+        @JsonProperty("PcbReference")
+        public void setPcbReference(PCBReference pcbReference) {
+            this.pcbReference = pcbReference;
+        }
+    }
 }

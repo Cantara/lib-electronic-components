@@ -330,4 +330,6 @@ class BOMTest {
                         .anyMatch(entry -> entry.getSpecs().get("Frequency").equals("32.768kHz")),
                 "32.768kHz crystal should be present for RTC");
     }
+
+
 }
