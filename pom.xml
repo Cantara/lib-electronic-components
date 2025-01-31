@@ -31,9 +31,9 @@
 
     <scm>
         <connection>scm:git:git://github.com/Cantara/lib-electronic-components.git</connection>
-        <developerConnection>scm:git:git@github.com:eCantara/lib-electronic-components.git
+        <developerConnection>scm:git:git@github.com:Cantara/lib-electronic-components.git
         </developerConnection>
-        <url>https://github.com/exoreaction/Cantara/lib-electronic-components/tree/master</url>
+        <url>https://github.com/Cantara/lib-electronic-components/tree/master</url>
         <tag>HEAD</tag>
     </scm>
 
