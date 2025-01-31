@@ -28,7 +28,7 @@ public class BOM implements Serializable
     @JsonProperty("BOMType")
     private BOMType bomType;
     @JsonProperty("BOMEntries")
-    private List<BOMEntry> bom = new ArrayList<BOMEntry>();
+    private List<BOMEntry> bomEntries = new ArrayList<BOMEntry>();
     @JsonIgnore
     private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
     private final static long serialVersionUID = 4172683921030305406L;
@@ -52,7 +52,7 @@ public class BOM implements Serializable
         this.productionNo = prodNo;
         this.customerName = customerName;
         this.orderNo = orderNo;
-        this.bom = bom;
+        this.bomEntries = bom;
     }
 
     @JsonProperty("ProdNo")
@@ -86,13 +86,13 @@ public class BOM implements Serializable
     }
 
     @JsonProperty("BOMEntry")
-    public List<BOMEntry> getBom() {
-        return bom;
+    public List<BOMEntry> getBomEntries() {
+        return bomEntries;
     }
 
     @JsonProperty("BOMEntry")
-    public void setBom(List<BOMEntry> bom) {
-        this.bom = bom;
+    public void setBomEntries(List<BOMEntry> bomEntries) {
+        this.bomEntries = bomEntries;
     }
 
     @JsonProperty("BOMType")
