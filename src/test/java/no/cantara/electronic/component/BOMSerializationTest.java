@@ -59,7 +59,7 @@ class BOMSerializationTest {
 
     @Test
     void shouldCreateAndSerializePCBABOM() throws Exception {
-        BOM.PCBABOM pcbaBom = new BOM.PCBABOM();
+        PCBABOM pcbaBom = new PCBABOM();
         pcbaBom.setProductionNo("TSM-2024-001");
         pcbaBom.setCustomerName("Environmental Systems");
         pcbaBom.setOrderNo("ORD-2024-Q1-123");
@@ -120,7 +120,7 @@ class BOMSerializationTest {
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(pcbaBom));
 
         // Deserialize back to PCBABOM
-        BOM.PCBABOM deserializedBom = mapper.readValue(json, BOM.PCBABOM.class);
+        PCBABOM deserializedBom = mapper.readValue(json, PCBABOM.class);
 
         // Verify the deserialized BOM
         assertEquals(pcbaBom.getProductionNo(), deserializedBom.getProductionNo());
@@ -231,7 +231,7 @@ class BOMSerializationTest {
     @Test
     void shouldSerializeAndDeserializeMechanicalBOM() throws Exception {
         // Create a Mechanical BOM for an enclosure part
-        BOM.MechanicalBOM mechBom = new BOM.MechanicalBOM();
+        MechanicalBOM mechBom = new MechanicalBOM();
         mechBom.setProductionNo("MECH-2024-001");
         mechBom.setCustomerName("Environmental Systems");
         mechBom.setOrderNo("ORD-2024-Q1-123");
@@ -299,7 +299,7 @@ class BOMSerializationTest {
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mechBom));
 
         // Deserialize and verify
-        BOM.MechanicalBOM deserializedBom = mapper.readValue(json, BOM.MechanicalBOM.class);
+        MechanicalBOM deserializedBom = mapper.readValue(json, MechanicalBOM.class);
 
         // Verify core properties
         assertEquals(mechBom.getProductionNo(), deserializedBom.getProductionNo());

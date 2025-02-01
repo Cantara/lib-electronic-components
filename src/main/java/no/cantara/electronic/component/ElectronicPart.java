@@ -15,13 +15,13 @@ import com.fasterxml.jackson.annotation.*;
         "value",
         "manufacturer"
 })
-public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable {
+public class ElectronicPart implements Serializable {
 
     @JsonProperty("mpn")
     private String mpn;
 
     @JsonProperty("manufacturer")
-    private String manufacturer;
+    public String manufacturer;
 
 
 
@@ -74,9 +74,9 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
         return value;
     }
 
-    public <T extends ElectronicPart> T setValue(String value) {
+    public ElectronicPart setValue(String value) {
         this.value = value;
-        return (T)self();
+        return this;
     }
 
     public String getPkg() {
@@ -93,15 +93,11 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
         return description;
     }
 
-    public <T extends ElectronicPart> T setDescription(String description) {
+    public ElectronicPart setDescription(String description) {
         this.description = description;
-        return (T)self();
+        return this;
     }
 
-    @SuppressWarnings("unchecked")
-    protected T self() {
-        return (T) this;
-    }
 
 
 
@@ -120,21 +116,21 @@ public class ElectronicPart<T extends ElectronicPart<T>> implements Serializable
         return specs;
     }
 
-    public T addSpec(String key, String value) {
+    public ElectronicPart addSpec(String key, String value) {
         this.specs.put(key, value);
-        return self();
+        return this;
     }
 
     // Helper method for nested values
-    public T addNestedSpec(String prefix, Map<String, String> values) {
+    public ElectronicPart addNestedSpec(String prefix, Map<String, String> values) {
         values.forEach((key, value) ->
                 this.specs.put(prefix + "." + key, value));
-        return self();
+        return this;
     }
 
     // Helper method for multiple specifications
-    public T addSpecs(Map<String, String> specs) {
+    public ElectronicPart addSpecs(Map<String, String> specs) {
         this.specs.putAll(specs);
-        return self();
+        return this;
     }
 }

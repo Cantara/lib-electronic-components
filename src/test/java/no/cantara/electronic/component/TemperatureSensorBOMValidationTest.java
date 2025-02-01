@@ -87,7 +87,7 @@ class TemperatureSensorBOMValidationTest {
 
     @Test
     void shouldValidateVoltageLevels() {
-        BOM.PCBABOM bom = new BOM.PCBABOM();
+        PCBABOM bom = new PCBABOM();
         List<String> voltageIssues = new ArrayList<>();
 
         // Create and add entries to BOM first

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BOMEntry extends ElectronicPart<BOMEntry> implements Serializable {
+public class BOMEntry extends ElectronicPart implements Serializable {
     @JsonProperty("quantity")
     private String qty;
 
@@ -43,11 +43,7 @@ public class BOMEntry extends ElectronicPart<BOMEntry> implements Serializable {
         return this;
     }
 
-    @Override
-    public BOMEntry setManufacturer(String manufacturer) {
-        super.setManufacturer(manufacturer);
-        return this;
-    }
+
 
     @Override
     public BOMEntry setValue(String value) {
@@ -79,7 +75,7 @@ public class BOMEntry extends ElectronicPart<BOMEntry> implements Serializable {
         return this;
     }
 
-    @Override
+    //@Override
     protected BOMEntry self() {
         return this;
     }
@@ -92,6 +88,11 @@ public class BOMEntry extends ElectronicPart<BOMEntry> implements Serializable {
         for (int i = 0; i < keyValues.length; i += 2) {
             addSpec(keyValues[i], keyValues[i + 1]);
         }
+        return this;
+    }
+
+    public BOMEntry setManufacturer(String manufacturer) {
+        super.setManufacturer(manufacturer);
         return this;
     }
 }

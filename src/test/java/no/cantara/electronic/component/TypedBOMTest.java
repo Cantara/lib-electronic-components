@@ -11,7 +11,7 @@ class TypedBOMTest {
 
     @Test
     void shouldHandlePCBASpecifications() {
-        BOM.PCBABOM bom = new BOM.PCBABOM();
+        PCBABOM bom = new PCBABOM();
         bom.setProductionNo("TSM-2024-001");
         bom.setPlannedProductionDate(LocalDate.of(2024, 3, 15));
 
@@ -53,7 +53,7 @@ class TypedBOMTest {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
-        BOM.PCBABOM originalBom = new BOM.PCBABOM();
+        PCBABOM originalBom = new PCBABOM();
         originalBom.setProductionNo("TSM-2024-001");
         originalBom.setPlannedProductionDate(LocalDate.of(2024, 3, 15));
 
@@ -78,7 +78,7 @@ class TypedBOMTest {
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(originalBom));
 
         // Deserialize back
-        BOM.PCBABOM deserializedBom = mapper.readValue(json, BOM.PCBABOM.class);
+        PCBABOM deserializedBom = mapper.readValue(json, PCBABOM.class);
 
         // Verify core properties
         assertEquals(originalBom.getProductionNo(), deserializedBom.getProductionNo());

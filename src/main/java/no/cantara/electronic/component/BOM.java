@@ -1,6 +1,7 @@
 package no.cantara.electronic.component;
 
 import com.fasterxml.jackson.annotation.*;
+import no.cantara.electronic.component.advanced.CableBOM;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -19,6 +20,8 @@ import java.util.*;
 public class BOM implements Serializable
 {
 
+    @JsonProperty("ID")
+    private String id;
     @JsonProperty("ProductionNo")
     private String productionNo;
     @JsonProperty("CustomerName")
@@ -115,8 +118,9 @@ public class BOM implements Serializable
     }
 
     @JsonProperty("Version")
-    public void setVersion(String version) {
+    public BOM setVersion(String version) {
         this.version = version;
+        return this;
     }
 
     @JsonProperty("Quantity")
@@ -131,6 +135,7 @@ public class BOM implements Serializable
 
 
 
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -142,153 +147,8 @@ public class BOM implements Serializable
     }
 
 
-    // PCBA specific BOM
-    public static class PCBABOM extends BOM {
-
-        @JsonProperty("PCBReference")
-        private TechnicalAsset pcbReference;
-
-        @JsonProperty("PlannedProductionDate")
-        private LocalDate plannedProductionDate;
-
-        @JsonProperty("TestJigDetails")
-        private Map<String, Object> testJigDetails = new HashMap<>();
-
-        @JsonProperty("AssemblyDetails")
-        private Map<String, Object> assemblyDetails = new HashMap<>();
-
-        public PCBABOM() {
-            super();
-            this.setBomType(BOMType.PCBA);
-            this.testJigDetails = new HashMap<>();
-            this.assemblyDetails = new HashMap<>();
-        }
-
-        public PCBABOM(String prodNo, String customerName, String orderNo, List<BOMEntry> entries) {
-            super(prodNo, customerName, orderNo, entries);
-            this.setBomType(BOMType.PCBA);
-            this.testJigDetails = new HashMap<>();
-            this.assemblyDetails = new HashMap<>();
-        }
-
-        public LocalDate getPlannedProductionDate() {
-            return plannedProductionDate;
-        }
-
-        public void setPlannedProductionDate(LocalDate plannedProductionDate) {
-            this.plannedProductionDate = plannedProductionDate;
-        }
-
-        public Map<String, Object> getTestJigDetails() {
-            return testJigDetails;
-        }
-
-        public void setTestJigDetails(Map<String, Object> testJigDetails) {
-            this.testJigDetails = testJigDetails;
-        }
-
-        public Map<String, Object> getAssemblyDetails() {
-            return assemblyDetails;
-        }
-
-        public void setAssemblyDetails(Map<String, Object> assemblyDetails) {
-            this.assemblyDetails = assemblyDetails;
-        }
-
-        @JsonProperty("PcbReference")
-        public TechnicalAsset getPcbReference() {
-            return pcbReference;
-        }
-
-        @JsonProperty("PcbReference")
-        public void setPcbReference(TechnicalAsset pcbReference) {
-            this.pcbReference = pcbReference;
-        }
-
-        public void addTestJigSpec(String key, Object value) {
-            testJigDetails.put(key, value);
-        }
-
-        public void addAssemblySpec(String key, Object value) {
-            assemblyDetails.put(key, value);
-        }
-    }
-
-    // Inside BOM.java
-    public static class MechanicalBOM extends BOM {
-        @JsonProperty("PlannedProductionDate")
-        private LocalDate plannedProductionDate;
-
-        @JsonProperty("CADModel")
-        private TechnicalAsset cadModel;
-
-        @JsonProperty("MaterialDetails")
-        private Map<String, Object> materialDetails = new HashMap<>();
-
-        @JsonProperty("ManufacturingDetails")
-        private Map<String, Object> manufacturingDetails = new HashMap<>();
-
-        @JsonProperty("FinishingDetails")
-        private Map<String, Object> finishingDetails = new HashMap<>();
-
-        public MechanicalBOM() {
-            super();
-            this.setBomType(BOMType.MECHANICAL_PART);
-            this.materialDetails = new HashMap<>();
-            this.manufacturingDetails = new HashMap<>();
-            this.finishingDetails = new HashMap<>();
-        }
-
-        public LocalDate getPlannedProductionDate() {
-            return plannedProductionDate;
-        }
-
-        public void setPlannedProductionDate(LocalDate plannedProductionDate) {
-            this.plannedProductionDate = plannedProductionDate;
-        }
-
-        public TechnicalAsset getCadModel() {
-            return cadModel;
-        }
-
-        public void setCadModel(TechnicalAsset cadModel) {
-            this.cadModel = cadModel;
-        }
-
-        public Map<String, Object> getMaterialDetails() {
-            return materialDetails;
-        }
-
-        public void setMaterialDetails(Map<String, Object> materialDetails) {
-            this.materialDetails = materialDetails;
-        }
-
-        public Map<String, Object> getManufacturingDetails() {
-            return manufacturingDetails;
-        }
-
-        public void setManufacturingDetails(Map<String, Object> manufacturingDetails) {
-            this.manufacturingDetails = manufacturingDetails;
-        }
-
-        public Map<String, Object> getFinishingDetails() {
-            return finishingDetails;
-        }
-
-        public void setFinishingDetails(Map<String, Object> finishingDetails) {
-            this.finishingDetails = finishingDetails;
-        }
-
-        public void addMaterialSpec(String key, Object value) {
-            materialDetails.put(key, value);
-        }
-
-        public void addManufacturingSpec(String key, Object value) {
-            manufacturingDetails.put(key, value);
-        }
-
-        public void addFinishingSpec(String key, Object value) {
-            finishingDetails.put(key, value);
-        }
+    public BOM setId(String s) {
+        id=s;
+        return this;
     }
 }

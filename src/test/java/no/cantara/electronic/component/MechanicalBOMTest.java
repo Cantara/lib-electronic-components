@@ -10,7 +10,7 @@ class MechanicalBOMTest {
     @Test
     void shouldCreateCustomEnclosureBOM() {
         // Create a BOM for a custom CNC-machined electronics enclosure
-        BOM.MechanicalBOM mechBom = new BOM.MechanicalBOM();
+        MechanicalBOM mechBom = new MechanicalBOM();
         mechBom.setProductionNo("MECH-2024-001");
         mechBom.setCustomerName("Industrial IoT Solutions");
         mechBom.setOrderNo("ORD-2024-M1-123");
@@ -168,7 +168,7 @@ class MechanicalBOMTest {
         verifyManufacturingRequirements(mechBom);
     }
 
-    private void verifySealing(BOM.MechanicalBOM bom) {
+    private void verifySealing(MechanicalBOM bom) {
         // Verify O-ring specifications
         BOMEntry oring = findComponentByType(bom, "O-Ring");
         assertNotNull(oring, "O-ring must be present");
@@ -187,7 +187,7 @@ class MechanicalBOMTest {
                 "Must have adequate sealing components for IP67 rating");
     }
 
-    private void verifyThermalManagement(BOM.MechanicalBOM bom) {
+    private void verifyThermalManagement(MechanicalBOM bom) {
         // Verify thermal interface material
         BOMEntry tim = findComponentByType(bom, "Thermal Interface");
         assertNotNull(tim, "Thermal interface material must be present");
@@ -206,7 +206,7 @@ class MechanicalBOMTest {
                 "Enclosure material must provide adequate thermal conductivity");
     }
 
-    private void verifyStructuralIntegrity(BOM.MechanicalBOM bom) {
+    private void verifyStructuralIntegrity(MechanicalBOM bom) {
         // Verify thread inserts
         BOMEntry threadInserts = findComponentByType(bom, "Thread Insert");
         assertNotNull(threadInserts, "Thread inserts must be present");
@@ -224,7 +224,7 @@ class MechanicalBOMTest {
                 "Must have mounting provisions");
     }
 
-    private void verifyManufacturingRequirements(BOM.MechanicalBOM bom) {
+    private void verifyManufacturingRequirements(MechanicalBOM bom) {
         // Verify material specifications
         assertNotNull(bom.getMaterialDetails().get("materialCertification"),
                 "Material certification requirements must be specified");

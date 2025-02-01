@@ -24,7 +24,7 @@ class MechanicalBOMSerializationTest {
     @Test
     void shouldSerializeAndDeserializeMechanicalBOM() throws Exception {
         // Create mechanical BOM
-        BOM.MechanicalBOM mechBom = new BOM.MechanicalBOM();
+        MechanicalBOM mechBom = new MechanicalBOM();
         mechBom.setProductionNo("MECH-2024-001");
         mechBom.setCustomerName("Industrial IoT Solutions");
         mechBom.setOrderNo("ORD-2024-M1-123");
@@ -124,7 +124,7 @@ class MechanicalBOMSerializationTest {
         System.out.println(json);
 
         // Deserialize back to object
-        BOM.MechanicalBOM deserializedBom = objectMapper.readValue(json, BOM.MechanicalBOM.class);
+        MechanicalBOM deserializedBom = objectMapper.readValue(json, MechanicalBOM.class);
 
         // Verify core properties
         assertEquals(mechBom.getProductionNo(), deserializedBom.getProductionNo());
@@ -188,14 +188,14 @@ class MechanicalBOMSerializationTest {
 
     @Test
     void shouldHandleEmptyCollections() throws Exception {
-        BOM.MechanicalBOM mechBom = new BOM.MechanicalBOM();
+        MechanicalBOM mechBom = new MechanicalBOM();
         mechBom.setProductionNo("TEST-001");
         mechBom.setBomEntries(new ArrayList<>());
         mechBom.setMaterialDetails(new HashMap<>());
         mechBom.setManufacturingDetails(new HashMap<>());
 
         String json = objectMapper.writeValueAsString(mechBom);
-        BOM.MechanicalBOM deserializedBom = objectMapper.readValue(json, BOM.MechanicalBOM.class);
+        MechanicalBOM deserializedBom = objectMapper.readValue(json, MechanicalBOM.class);
 
         assertNotNull(deserializedBom.getBomEntries());
         assertTrue(deserializedBom.getBomEntries().isEmpty());
@@ -207,7 +207,7 @@ class MechanicalBOMSerializationTest {
 
     @Test
     void shouldHandleSpecialCharacters() throws Exception {
-        BOM.MechanicalBOM mechBom = new BOM.MechanicalBOM();
+        MechanicalBOM mechBom = new MechanicalBOM();
         mechBom.setProductionNo("TEST-001");
 
         BOMEntry entry = new BOMEntry()
@@ -222,7 +222,7 @@ class MechanicalBOMSerializationTest {
         mechBom.setBomEntries(Collections.singletonList(entry));
 
         String json = objectMapper.writeValueAsString(mechBom);
-        BOM.MechanicalBOM deserializedBom = objectMapper.readValue(json, BOM.MechanicalBOM.class);
+        MechanicalBOM deserializedBom = objectMapper.readValue(json, MechanicalBOM.class);
 
         BOMEntry deserializedEntry = deserializedBom.getBomEntries().get(0);
         assertEquals(entry.getMpn(), deserializedEntry.getMpn());
