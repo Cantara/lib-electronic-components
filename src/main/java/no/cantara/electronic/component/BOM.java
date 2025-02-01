@@ -92,12 +92,12 @@ public class BOM implements Serializable
         this.orderNo = orderNo;
     }
 
-    @JsonProperty("BOMEntry")
+    @JsonProperty("BOMEntries")
     public List<BOMEntry> getBomEntries() {
         return bomEntries;
     }
 
-    @JsonProperty("BOMEntry")
+    @JsonProperty("BOMEntries")
     public void setBomEntries(List<BOMEntry> bomEntries) {
         this.bomEntries = bomEntries;
     }

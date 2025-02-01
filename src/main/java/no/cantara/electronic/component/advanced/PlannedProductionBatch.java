@@ -1,5 +1,9 @@
 package no.cantara.electronic.component.advanced;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import no.cantara.electronic.component.BOMEntry;
 import no.cantara.electronic.component.MechanicalBOM;
 import no.cantara.electronic.component.PCBABOM;
 
@@ -11,17 +15,35 @@ import java.util.*;
  * This includes PCB assemblies, mechanical assemblies, cable assemblies, and packaging assemblies.
  */
 public class PlannedProductionBatch {
+    @JsonProperty("batchId")
     private final String batchId;
+
+    @JsonProperty("productId")
     private final String productId;
+
+    @JsonProperty("revision")
     private final String revision;
+
+    @JsonProperty("quantity")
     private final int quantity;
+
+    @JsonProperty("plannedDate")
     private LocalDate plannedDate;
+
+    @JsonProperty("status")
     private BatchStatus status;
 
     // Core manufacturing structures
+    @JsonProperty("pcbastructure")
     private final PCBAStructure pcbaStructure = new PCBAStructure();
+
+    @JsonProperty("mechanicalStructure")
     private final MechanicalStructure mechanicalStructure = new MechanicalStructure();
+
+    @JsonProperty("cableStructure")
     private final CableStructure cableStructure = new CableStructure();
+
+    @JsonProperty("packagingStructure")
     private final PackagingStructure packagingStructure = new PackagingStructure();
 
     public enum BatchStatus {
@@ -40,8 +62,11 @@ public class PlannedProductionBatch {
      * Structure for managing PCB assemblies
      */
     public static class PCBAStructure {
+        @JsonProperty("assemblies")
         private final Set<PCBABOM> assemblies = new HashSet<>();
+        @JsonProperty("assemblyInstructions")
         private final Map<String, String> assemblyInstructions = new HashMap<>();
+        @JsonProperty("testRequirements")
         private final Map<String, String> testRequirements = new HashMap<>();
 
         public Set<PCBABOM> getAssemblies() {
@@ -65,8 +90,11 @@ public class PlannedProductionBatch {
      * Structure for managing mechanical assemblies
      */
     public static class MechanicalStructure {
+        @JsonProperty("assemblies")
         private final Set<MechanicalBOM> assemblies = new HashSet<>();
+        @JsonProperty("assemblyInstructions")
         private final Map<String, String> assemblyInstructions = new HashMap<>();
+        @JsonProperty("testRequirements")
         private final Map<String, String> testRequirements = new HashMap<>();
 
         public Set<MechanicalBOM> getAssemblies() {
@@ -90,8 +118,11 @@ public class PlannedProductionBatch {
      * Structure for managing cable assemblies
      */
     public static class CableStructure {
+        @JsonProperty("assemblies")
         private final Set<CableBOM> assemblies = new HashSet<>();
+        @JsonProperty("assemblyInstructions")
         private final Map<String, String> assemblyInstructions = new HashMap<>();
+        @JsonProperty("testRequirements")
         private final Map<String, String> testRequirements = new HashMap<>();
 
         public Set<CableBOM> getAssemblies() {
@@ -115,8 +146,11 @@ public class PlannedProductionBatch {
      * Structure for managing packaging assemblies
      */
     public static class PackagingStructure {
+        @JsonProperty("assemblies")
         private final Set<PackagingBOM> assemblies = new HashSet<>();
+        @JsonProperty("assemblyInstructions")
         private final Map<String, String> assemblyInstructions = new HashMap<>();
+        @JsonProperty("requirements")
         private final Map<String, String> requirements = new HashMap<>();
 
         public Set<PackagingBOM> getAssemblies() {
@@ -136,7 +170,12 @@ public class PlannedProductionBatch {
         }
     }
 
-    public PlannedProductionBatch(String batchId, String productId, String revision, int quantity) {
+    @JsonCreator
+    public PlannedProductionBatch(
+            @JsonProperty("batchId") String batchId,
+            @JsonProperty("productId") String productId,
+            @JsonProperty("revision") String revision,
+            @JsonProperty("quantity") int quantity) {
         if (batchId == null || batchId.trim().isEmpty()) {
             throw new IllegalArgumentException("Batch ID cannot be null or empty");
         }
@@ -229,11 +268,6 @@ public class PlannedProductionBatch {
     }
 
     public void setStatus(BatchStatus newStatus) {
-//        if (!canTransitionTo(newStatus)) {
-//            throw new IllegalStateException(
-//                    String.format("Cannot transition from %s to %s", status, newStatus)
-//            );
-//        }
         this.status = newStatus;
     }
 
