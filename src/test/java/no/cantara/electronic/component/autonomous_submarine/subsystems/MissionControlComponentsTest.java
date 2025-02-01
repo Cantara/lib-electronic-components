@@ -237,8 +237,10 @@ class MissionControlComponentsTest {
 
     private void verifyRedundancy(List<BOMEntry> components) {
         long redundantProcessors = components.stream()
-                .filter(e -> e.getSpecs().getOrDefault("features", "")
-                        .contains("Lock-step"))
+                .filter(e -> {
+                    String features = e.getSpecs().getOrDefault("features", "");
+                    return features.contains("Lockstep") || features.contains("Lock-step");
+                })
                 .count();
         assertTrue(redundantProcessors >= 2, "Should have redundant processors");
     }
