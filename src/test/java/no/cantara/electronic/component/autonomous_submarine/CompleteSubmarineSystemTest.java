@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import no.cantara.electronic.component.advanced.PlannedProductionBatch;
 import no.cantara.electronic.component.autonomous_submarine.subsystems.*;
-import no.cantara.electronic.component.autonomous_submarine.verification.SubmarineSystemVerification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
@@ -123,7 +122,6 @@ public class CompleteSubmarineSystemTest {
                 5
         );
 
-        // Set production date
         batch.setPlannedDate(LocalDate.of(2024, 6, 1));
         batch.setStatus(PlannedProductionBatch.BatchStatus.PLANNING);
 
@@ -159,11 +157,9 @@ public class CompleteSubmarineSystemTest {
     }
 
     private void addMissionControl(PlannedProductionBatch batch) {
-        // Create main control board
         var mainBoard = MissionControlComponents.PCBAComponents.createMainControlBoard();
         batch.addPCBA(mainBoard);
 
-        // Create housing
         var housing = MissionControlComponents.MechanicalComponents.createHousing();
         batch.addMechanical(housing);
     }
