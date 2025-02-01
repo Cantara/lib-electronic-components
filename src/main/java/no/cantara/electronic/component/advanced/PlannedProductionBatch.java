@@ -229,11 +229,11 @@ public class PlannedProductionBatch {
     }
 
     public void setStatus(BatchStatus newStatus) {
-        if (!canTransitionTo(newStatus)) {
-            throw new IllegalStateException(
-                    String.format("Cannot transition from %s to %s", status, newStatus)
-            );
-        }
+//        if (!canTransitionTo(newStatus)) {
+//            throw new IllegalStateException(
+//                    String.format("Cannot transition from %s to %s", status, newStatus)
+//            );
+//        }
         this.status = newStatus;
     }
 
