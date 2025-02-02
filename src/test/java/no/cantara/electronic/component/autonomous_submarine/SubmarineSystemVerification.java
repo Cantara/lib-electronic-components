@@ -1,12 +1,17 @@
 package no.cantara.electronic.component.autonomous_submarine;
 
+import no.cantara.electronic.component.MechanicalBOM;
+import no.cantara.electronic.component.PCBABOM;
 import no.cantara.electronic.component.advanced.PlannedProductionBatch;
 import no.cantara.electronic.component.autonomous_submarine.subsystems.*;
 import no.cantara.electronic.component.BOMEntry;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class SubmarineSystemVerification {
     private final List<String> crossSystemIssues = new ArrayList<>();
+    private final ComponentTypeDetector typeDetector= new ComponentTypeDetector();
 
     public SystemVerificationResult verifySystem(PlannedProductionBatch batch) {
         SystemVerificationResult result = new SystemVerificationResult();
@@ -194,7 +199,7 @@ public class SubmarineSystemVerification {
         }
     }
 
-    private void verifyPressureRatings(PlannedProductionBatch batch) {
+    private void verifyPressureRatingOlds(PlannedProductionBatch batch) {
         batch.getMechanicalStructure().getAssemblies().stream()
                 .flatMap(bom -> bom.getBomEntries().stream())
                 .filter(entry -> entry.getSpecs() != null)
@@ -209,7 +214,7 @@ public class SubmarineSystemVerification {
         }
     }
 
-    private void verifyWaterproofing(PlannedProductionBatch batch) {
+    private void verifyWaterproofingOld(PlannedProductionBatch batch) {
         batch.getMechanicalStructure().getAssemblies().stream()
                 .flatMap(bom -> bom.getBomEntries().stream())
                 .filter(entry -> entry.getSpecs() != null)
@@ -308,5 +313,294 @@ public class SubmarineSystemVerification {
         if (!hasCurrentMonitor) {
             crossSystemIssues.add("Current monitoring system not found");
         }
+    }
+
+    /**
+     * Verifies waterproofing requirements for all components.
+     */
+    public void verifyWaterproofing(PlannedProductionBatch batch) {
+        StringBuilder errorReport = new StringBuilder("Waterproofing Verification Report:\n");
+        boolean allValid = true;
+
+        // Verify all components
+        for (BOMEntry entry : getAllComponents(batch)) {
+            if (!verifyComponentWaterproofing(entry, errorReport)) {
+                allValid = false;
+            }
+        }
+
+        // Verify subsystem-level waterproofing
+        Map<String, Boolean> subsystemResults = new HashMap<>();
+        subsystemResults.put("Navigation", verifySubsystemWaterproofing(batch, "Navigation", errorReport));
+        subsystemResults.put("Propulsion", verifySubsystemWaterproofing(batch, "Propulsion", errorReport));
+        subsystemResults.put("Communications", verifySubsystemWaterproofing(batch, "Communications", errorReport));
+        subsystemResults.put("Mission Control", verifySubsystemWaterproofing(batch, "Mission Control", errorReport));
+        subsystemResults.put("Sensors", verifySubsystemWaterproofing(batch, "Sensors", errorReport));
+        subsystemResults.put("Power", verifySubsystemWaterproofing(batch, "Power", errorReport));
+
+        // Check if any subsystem failed
+        for (Map.Entry<String, Boolean> subsystemResult : subsystemResults.entrySet()) {
+            if (!subsystemResult.getValue()) {
+                allValid = false;
+                errorReport.append(String.format("Subsystem %s failed waterproofing check\n",
+                        subsystemResult.getKey()));
+            }
+        }
+
+        assertTrue(allValid, "Waterproofing requirements not met:\n" + errorReport.toString());
+    }
+
+    /**
+     * Verifies thermal management requirements for all components.
+     */
+    public void verifyThermalManagement(PlannedProductionBatch batch) {
+        StringBuilder errorReport = new StringBuilder("Thermal Management Verification Report:\n");
+        boolean allValid = true;
+
+        // Verify all components
+        for (BOMEntry entry : getAllComponents(batch)) {
+            if (!verifyComponentThermal(entry, errorReport)) {
+                allValid = false;
+            }
+        }
+
+        // Verify subsystem-level thermal management
+        Map<String, Boolean> subsystemResults = new HashMap<>();
+        subsystemResults.put("Navigation", verifySubsystemThermal(batch, "Navigation", errorReport));
+        subsystemResults.put("Propulsion", verifySubsystemThermal(batch, "Propulsion", errorReport));
+        subsystemResults.put("Communications", verifySubsystemThermal(batch, "Communications", errorReport));
+        subsystemResults.put("Mission Control", verifySubsystemThermal(batch, "Mission Control", errorReport));
+        subsystemResults.put("Sensors", verifySubsystemThermal(batch, "Sensors", errorReport));
+        subsystemResults.put("Power", verifySubsystemThermal(batch, "Power", errorReport));
+
+        // Check if any subsystem failed
+        for (Map.Entry<String, Boolean> subsystemResult : subsystemResults.entrySet()) {
+            if (!subsystemResult.getValue()) {
+                allValid = false;
+                errorReport.append(String.format("Subsystem %s failed thermal management check\n",
+                        subsystemResult.getKey()));
+            }
+        }
+
+        assertTrue(allValid, "Thermal management requirements not met:\n" + errorReport.toString());
+    }
+
+    /**
+     * Verifies pressure rating requirements for all components.
+     */
+    public void verifyPressureRatings(PlannedProductionBatch batch) {
+        StringBuilder errorReport = new StringBuilder("Pressure Rating Verification Report:\n");
+        boolean allValid = true;
+
+        // Check all components
+        for (BOMEntry entry : getAllComponents(batch)) {
+            String pressureRating = entry.getSpecs().get("pressure_rating");
+            if (pressureRating == null) {
+                errorReport.append(String.format("  Missing pressure rating for %s (%s)\n",
+                        entry.getMpn(), entry.getDescription()));
+                allValid = false;
+            } else if (!pressureRating.equals("300m depth")) {
+                errorReport.append(String.format("  Invalid pressure rating format for %s: %s\n",
+                        entry.getMpn(), pressureRating));
+                allValid = false;
+            }
+        }
+
+        assertTrue(allValid, "Pressure rating requirements not met:\n" + errorReport.toString());
+    }
+
+    private List<BOMEntry> getAllComponents(PlannedProductionBatch batch) {
+        List<BOMEntry> allComponents = new ArrayList<>();
+
+        // Add PCBA components
+        batch.getPCBAStructure().getAssemblies().forEach(pcba ->
+                allComponents.addAll(pcba.getBomEntries()));
+
+        // Add mechanical components
+        batch.getMechanicalStructure().getAssemblies().forEach(mech ->
+                allComponents.addAll(mech.getBomEntries()));
+
+        return allComponents;
+    }
+
+    private boolean verifyComponentWaterproofing(BOMEntry entry, StringBuilder errorReport) {
+        boolean valid = true;
+        String componentInfo = String.format("%s (%s)", entry.getMpn(), entry.getDescription());
+
+        // Basic waterproofing requirements
+        String[] requiredSpecs = {
+                "sealing", "waterproofing", "protection_rating",
+                "pressure_rating", "pressure_compensation"
+        };
+
+        for (String spec : requiredSpecs) {
+            if (!entry.getSpecs().containsKey(spec) || entry.getSpecs().get(spec) == null
+                    || entry.getSpecs().get(spec).isEmpty()) {
+                errorReport.append(String.format("  Missing or invalid %s for component %s\n",
+                        spec, componentInfo));
+                valid = false;
+            }
+        }
+
+        // Verify specification values
+        Map<String, String> specs = entry.getSpecs();
+        if (!"IP68".equals(specs.get("protection_rating"))) {
+            errorReport.append(String.format("  Invalid protection rating for %s: %s\n",
+                    componentInfo, specs.get("protection_rating")));
+            valid = false;
+        }
+        if (!"Yes".equals(specs.get("waterproof"))) {
+            errorReport.append(String.format("  Component not waterproof: %s\n", componentInfo));
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private boolean verifySubsystemWaterproofing(PlannedProductionBatch batch, String subsystem,
+                                                 StringBuilder errorReport) {
+        boolean valid = true;
+        for (BOMEntry entry : getSubsystemComponents(batch, subsystem)) {
+            String[] requiredSpecs = getRequiredWaterproofingSpecs(subsystem, entry);
+            for (String spec : requiredSpecs) {
+                if (!entry.getSpecs().containsKey(spec) || entry.getSpecs().get(spec) == null
+                        || entry.getSpecs().get(spec).isEmpty()) {
+                    errorReport.append(String.format("  Missing or invalid %s for %s component %s (%s)\n",
+                            spec, subsystem, entry.getMpn(), entry.getDescription()));
+                    valid = false;
+                }
+            }
+        }
+        return valid;
+    }
+
+    private boolean verifyComponentThermal(BOMEntry entry, StringBuilder errorReport) {
+        boolean valid = true;
+        String componentInfo = String.format("%s (%s)", entry.getMpn(), entry.getDescription());
+
+        // Basic thermal management requirements
+        String[] requiredSpecs = {
+                "thermal_monitoring", "thermal_protection", "cooling_redundancy",
+                "heat_dissipation_method", "thermal_management", "operating_temperature"
+        };
+
+        for (String spec : requiredSpecs) {
+            if (!entry.getSpecs().containsKey(spec) || entry.getSpecs().get(spec) == null
+                    || entry.getSpecs().get(spec).isEmpty()) {
+                errorReport.append(String.format("  Missing %s for component %s\n", spec, componentInfo));
+                valid = false;
+            }
+        }
+
+        // Verify operating temperature
+        String tempRange = entry.getSpecs().get("operating_temperature");
+        if (tempRange != null && !tempRange.equals("-40C to +85C")) {
+            errorReport.append(String.format("  Invalid temperature range for %s: %s\n",
+                    componentInfo, tempRange));
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private boolean verifySubsystemThermal(PlannedProductionBatch batch, String subsystem,
+                                           StringBuilder errorReport) {
+        boolean valid = true;
+        for (BOMEntry entry : getSubsystemComponents(batch, subsystem)) {
+            String[] requiredSpecs = getRequiredThermalSpecs(subsystem, entry);
+            for (String spec : requiredSpecs) {
+                if (!entry.getSpecs().containsKey(spec) || entry.getSpecs().get(spec) == null
+                        || entry.getSpecs().get(spec).isEmpty()) {
+                    errorReport.append(String.format("  Missing %s for %s component %s (%s)\n",
+                            spec, subsystem, entry.getMpn(), entry.getDescription()));
+                    valid = false;
+                }
+            }
+        }
+        return valid;
+    }
+
+    private String[] getRequiredWaterproofingSpecs(String subsystem, BOMEntry entry) {
+        List<String> specs = new ArrayList<>();
+        specs.add("waterproofing");
+        specs.add("pressure_rating");
+        specs.add("pressure_compensation");
+
+        switch (subsystem) {
+            case "Communications":
+                if (entry.getDescription().toLowerCase().contains("antenna")) {
+                    specs.add("antenna_sealing");
+                }
+                break;
+            case "Power":
+                specs.add("battery_protection");
+                break;
+            case "Sensors":
+                specs.add("sensor_sealing");
+                break;
+        }
+        return specs.toArray(new String[0]);
+    }
+
+    private String[] getRequiredThermalSpecs(String subsystem, BOMEntry entry) {
+        List<String> specs = new ArrayList<>();
+        specs.add("thermal_management");
+        specs.add("thermal_monitoring");
+        specs.add("thermal_protection");
+        specs.add("cooling_redundancy");
+        specs.add("heat_dissipation_method");
+
+        if (typeDetector.isProcessorComponent(entry)) {
+            specs.add("cooling_method");
+            specs.add("heat_sink_type");
+            specs.add("thermal_throttling");
+            specs.add("max_thermal_dissipation");
+        }
+        if (typeDetector.isPowerComponent(entry)) {
+            specs.add("cooling_method");
+            specs.add("thermal_runaway_protection");
+            specs.add("max_thermal_load");
+        }
+        if (typeDetector.isSensorComponent(entry)) {
+            specs.add("thermal_stability");
+            specs.add("thermal_isolation");
+            specs.add("temperature_compensation");
+            specs.add("thermal_equilibrium_time");
+        }
+
+        return specs.toArray(new String[0]);
+    }
+
+    private List<BOMEntry> getSubsystemComponents(PlannedProductionBatch batch, String subsystem) {
+        List<BOMEntry> components = new ArrayList<>();
+        String subsystemPattern = subsystem.toLowerCase().replace(" ", "");
+
+        // Get PCBA components
+        batch.getPCBAStructure().getAssemblies().stream()
+                .filter(pcba -> containsSubsystem(pcba, subsystemPattern))
+                .forEach(pcba -> components.addAll(pcba.getBomEntries()));
+
+        // Get mechanical components
+        batch.getMechanicalStructure().getAssemblies().stream()
+                .filter(mech -> containsSubsystem(mech, subsystemPattern))
+                .forEach(mech -> components.addAll(mech.getBomEntries()));
+
+        return components;
+    }
+
+    private boolean containsSubsystem(PCBABOM pcba, String subsystemPattern) {
+        return pcba.getBomEntries().stream()
+                .anyMatch(entry ->
+                        (entry.getMpn() != null && entry.getMpn().toLowerCase().contains(subsystemPattern)) ||
+                                (entry.getDescription() != null && entry.getDescription().toLowerCase().contains(subsystemPattern))
+                );
+    }
+
+    private boolean containsSubsystem(MechanicalBOM mech, String subsystemPattern) {
+        return mech.getBomEntries().stream()
+                .anyMatch(entry ->
+                        (entry.getMpn() != null && entry.getMpn().toLowerCase().contains(subsystemPattern)) ||
+                                (entry.getDescription() != null && entry.getDescription().toLowerCase().contains(subsystemPattern))
+                );
     }
 }
