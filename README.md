@@ -56,6 +56,63 @@ pcbSpec.setFormat("Gerber");
 pcba.setPcbReference(pcbSpec);
 ```
 
+### Core Classes
+
+### MPNUtils
+Utility class for handling Manufacturing Part Numbers (MPNs):
+```java
+// Parse and standardize MPNs
+String standardizedMpn = MPNUtils.standardize("LM317-T");  // Returns "LM317T"
+boolean isValid = MPNUtils.isValidMpn("LM317T");          // Basic MPN validation
+
+// Compare MPNs
+boolean areEqual = MPNUtils.compareMpn("LM317-T", "LM317T");  // True
+String normalized = MPNUtils.normalizeMpn("LM317-T");         // Removes special chars
+```
+### ComponentType
+```java
+ComponentType type = ComponentType.INTEGRATED_CIRCUIT;
+ComponentType.Category category = type.getCategory();  // ACTIVE
+
+// Component classification
+boolean isActive = type.isActiveComponent();     // True
+boolean isPassive = type.isPassiveComponent();   // False
+boolean isDiscrete = type.isDiscreteComponent(); // False
+
+// Grouping and categorization
+List<ComponentType> activeTypes = ComponentType.getTypesByCategory(Category.ACTIVE);
+```
+### ComponentTypeDetector
+```java
+ 
+ComponentTypeDetector detector = new ComponentTypeDetector();
+
+// Detect component types
+boolean isProcessor = detector.isProcessorComponent(component);
+boolean isPower = detector.isPowerComponent(component);
+boolean isSensor = detector.isSensorComponent(component);
+
+// Get detailed classification
+ComponentType detectedType = detector.detectType(component);
+String category = detector.getComponentCategory(component);
+```
+
+### ElectronicComponentManufacturer
+Represents and manages manufacturer information:
+```java
+ElectronicComponentManufacturer manufacturer = new ElectronicComponentManufacturer();
+manufacturer.setName("Texas Instruments");
+manufacturer.setPrefix("TI");
+manufacturer.setMpnPattern("^(LM|TPS|TMS|CC)\\d+.*");
+
+// Validate manufacturer-specific MPNs
+boolean isValidMpn = manufacturer.isValidMpn("TPS65281");
+
+// Get standardized manufacturer names
+String stdName = manufacturer.getStandardizedName();
+```
+
+
 As the market changes daily, this will never be 100% - but we believe that it 
 should bring value to systems dealing with electronic components.
 
