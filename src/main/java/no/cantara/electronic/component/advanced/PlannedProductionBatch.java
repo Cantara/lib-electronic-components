@@ -2,8 +2,6 @@ package no.cantara.electronic.component.advanced;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import no.cantara.electronic.component.BOMEntry;
 import no.cantara.electronic.component.MechanicalBOM;
 import no.cantara.electronic.component.PCBABOM;
 

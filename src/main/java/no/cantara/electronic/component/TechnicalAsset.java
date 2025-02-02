@@ -1,9 +1,17 @@
 package no.cantara.electronic.component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import no.cantara.electronic.component.advanced.GerberAsset;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = GerberAsset.class, name = "gerber")
+})
 public class TechnicalAsset {
     @JsonProperty("ID")
     private String id;

@@ -1,6 +1,8 @@
 package no.cantara.electronic.component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import no.cantara.electronic.component.advanced.GerberAsset;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -11,6 +13,7 @@ import java.util.Map;
 public  class PCBABOM extends BOM {
 
     @JsonProperty("PCBReference")
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     private TechnicalAsset pcbReference;
 
     @JsonProperty("PlannedProductionDate")
@@ -75,6 +78,8 @@ public  class PCBABOM extends BOM {
         this.pcbReference = pcbReference;
         return this;
     }
+
+
 
     public void addTestJigSpec(String key, Object value) {
         testJigDetails.put(key, value);
