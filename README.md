@@ -28,35 +28,87 @@ Add the following dependency to your `pom.xml`:
 </dependency>
 ```
 
-### Basic Usage
-```java
-// Create a BOM entry
-BOMEntry component = new BOMEntry();
-component.setMpn("LM317T");
-component.setDescription("Voltage Regulator");
-
-// Add specifications
-component.addSpec("package", "TO-220");
-component.addSpec("output_type", "Adjustable");
-component.addSpec("voltage_range", "1.2V to 37V");
-
-// Create a PCBA BOM
-PCBABOM pcba = new PCBABOM(
-    "POWER-01",          // Production number
-    "Power Supply",      // Customer name
-    "ORDER-123",         // Order number
-    Arrays.asList(component)  // Components
-);
-
-// Add technical documentation
-TechnicalAsset pcbSpec = new TechnicalAsset();
-pcbSpec.setName("POWER-01-PCB");
-pcbSpec.setType(TechnicalAsset.AssetType.PCB_DESIGN);
-pcbSpec.setFormat("Gerber");
-pcba.setPcbReference(pcbSpec);
-```
+## Using the Electronics BOM System
 
 ### Core Classes
+#### BOMEntry
+Basic building block for components:
+```java
+// Creating a basic component
+BOMEntry entry = new BOMEntry();
+entry.setMpn("LTC7132");  // Manufacturer Part Number
+entry.setDescription("Power Distribution Controller");
+entry.addSpec("power_type", "Marine grade");
+entry.addSpec("redundant_power", "yes");
+```
+
+#### PCBABOM & MechanicalBOM
+Assemblies for electronic and mechanical components:
+```java
+// Creating a PCBA assembly
+List<BOMEntry> pcbaEntries = new ArrayList<>();
+// ... add entries ...
+PCBABOM pcba = new PCBABOM("PWR-MAIN-01", "Power Management Board", "R1.0", pcbaEntries);
+
+// Creating a mechanical assembly
+List<BOMEntry> mechEntries = new ArrayList<>();
+// ... add entries ...
+MechanicalBOM mech = new MechanicalBOM();
+mech.setBomEntries(mechEntries);
+mech.setProductionNo("PWR-MECH-01");
+```
+
+#### PlannedProductionBatch
+Container for complete systems:
+```java
+// Creating a production batch
+PlannedProductionBatch batch = new PlannedProductionBatch(
+    "BATCH-2024-001",  // Batch ID
+    "SUBMARINE-V1",    // Product ID
+    "R1.0",           // Revision
+    1                 // Quantity
+);
+
+// Adding assemblies
+batch.addPCBA(powerBoard);
+batch.addMechanical(powerMechanicals);
+```
+
+#### Example: Complete System Creation
+See full example as JUnit test
+```java
+// Create entries with required specs
+BOMEntry powerIC = new BOMEntry()
+    .setMpn("BQ40Z80RSMR")
+    .setDescription("Battery Management IC")
+    .addSpec("power_type", "Marine grade")
+    .addSpec("redundant_power", "yes")
+    .addSpec("waterproof", "yes")
+    .addSpec("protection_rating", "IP68");
+
+// Create PCBA with entries
+List<BOMEntry> entries = new ArrayList<>();
+entries.add(powerIC);
+PCBABOM powerBoard = new PCBABOM("PWR-01", "Power Board", "R1.0", entries);
+
+// Create production batch
+PlannedProductionBatch batch = new PlannedProductionBatch(
+    "BATCH-2024-001",
+    "SUBMARINE-V1",
+    "R1.0",
+    1
+);
+batch.addPCBA(powerBoard);
+
+// Validate the batch
+SubmarineSystemValidator validator = new SubmarineSystemValidator();
+validator.validate(batch);
+if (!validator.getValidationErrors().isEmpty()) {
+    // Handle validation errors
+    validator.getValidationErrors().forEach(System.out::println);
+}
+```
+
 
 ### MPNUtils
 Utility class for handling Manufacturing Part Numbers (MPNs):
@@ -111,6 +163,8 @@ boolean isValidMpn = manufacturer.isValidMpn("TPS65281");
 // Get standardized manufacturer names
 String stdName = manufacturer.getStandardizedName();
 ```
+
+
 
 
 As the market changes daily, this will never be 100% - but we believe that it 
