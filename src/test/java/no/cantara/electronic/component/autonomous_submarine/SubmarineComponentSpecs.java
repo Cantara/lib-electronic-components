@@ -20,7 +20,6 @@ public class SubmarineComponentSpecs {
      */
     public void addEnvironmentalSpecs(BOMEntry entry) {
         // Basic environmental specs
-        // Basic environmental specifications for ALL components
         addBasicEnvironmentalSpecs(entry);
 
         // Add component-specific environmental specs
@@ -36,13 +35,15 @@ public class SubmarineComponentSpecs {
             addMechanicalEnvironmentalSpecs(entry);
         }
 
-        // Add comprehensive specifications
-        addBaseThermalSpecs(entry);
-        addInterfaceSpecs(entry);
+        // Add power-specific protection for components in power subsystem
+        if (isInPowerSubsystem(entry)) {
+            addPowerSubsystemProtection(entry);
+        }
     }
 
+
     private void addBasicEnvironmentalSpecs(BOMEntry entry) {
-        // Waterproofing specs
+        // Basic waterproofing specs for ALL components
         entry.addSpec("waterproof", "Yes");
         entry.addSpec("sealing", "IP68");
         entry.addSpec("protection_rating", "IP68");
@@ -50,6 +51,7 @@ public class SubmarineComponentSpecs {
         entry.addSpec("pressure_rating", "300m depth");
         entry.addSpec("max_pressure", "31 bar");
         entry.addSpec("pressure_tested", "Yes");
+        entry.addSpec("waterproofing", "Conformal coating and encapsulation");
         entry.addSpec("pressure_compensation", "Oil-filled");
 
         // Basic protection
@@ -63,8 +65,70 @@ public class SubmarineComponentSpecs {
         entry.addSpec("storage_temperature", "-55C to +125C");
         entry.addSpec("thermal_cycling", "Qualified");
 
-        // Basic battery protection for all components
-        entry.addSpec("battery_protection", "Integrated");
+        // Add battery protection for power subsystem components
+        if (entry.getDescription() != null &&
+                (entry.getDescription().contains("Power") ||
+                        entry.getDescription().contains("Battery") ||
+                        entry.getDescription().contains("Supply"))) {
+            entry.addSpec("battery_protection", "Multi-level");
+        }
+    }
+
+    private boolean isInPowerSubsystem(BOMEntry entry) {
+        // Check if the component is part of the power subsystem
+        return entry.getDescription() != null &&
+                (entry.getDescription().toLowerCase().contains("power") ||
+                        entry.getDescription().toLowerCase().contains("battery") ||
+                        entry.getDescription().toLowerCase().contains("voltage") ||
+                        entry.getDescription().toLowerCase().contains("current") ||
+                        entry.getMpn() != null && (
+                                entry.getMpn().startsWith("LTC") ||
+                                        entry.getMpn().startsWith("TPS") ||
+                                        entry.getMpn().startsWith("BQ") ||
+                                        entry.getMpn().startsWith("MAX") && isVoltageOrCurrentDevice(entry.getMpn())
+                        ));
+    }
+
+    private boolean isVoltageOrCurrentDevice(String mpn) {
+        // Check if the MAX device is related to voltage or current management
+        return mpn.contains("17") || mpn.contains("31") || mpn.contains("66");
+    }
+
+    private void addPowerSubsystemProtection(BOMEntry entry) {
+        // Add basic battery protection for all power subsystem components
+        entry.addSpec("battery_protection", "Multi-level");
+
+        // Add specific protections based on component type
+        if (typeDetector.isProcessorComponent(entry)) {
+            entry.addSpec("battery_protection", "Voltage monitoring and brownout detection");
+        } else if (typeDetector.isSensorComponent(entry)) {
+            entry.addSpec("battery_protection", "Overcurrent and reverse polarity protection");
+        } else if (typeDetector.isMemoryComponent(entry)) {
+            entry.addSpec("battery_protection", "Power state management and backup");
+        } else if (typeDetector.isConnectorComponent(entry)) {
+            entry.addSpec("battery_protection", "Isolation and surge protection");
+        } else if (typeDetector.isMechanicalComponent(entry)) {
+            entry.addSpec("battery_protection", "Environmental isolation");
+        } else {
+            // Default protection for other components
+            entry.addSpec("battery_protection", "Standard overcurrent protection");
+        }
+
+        if (!entry.getSpecs().containsKey("battery_protection")) {
+            if (typeDetector.isProcessorComponent(entry)) {
+                entry.addSpec("battery_protection", "Voltage monitoring and brownout detection");
+            } else if (typeDetector.isSensorComponent(entry)) {
+                entry.addSpec("battery_protection", "Overcurrent and reverse polarity protection");
+            } else if (typeDetector.isMemoryComponent(entry)) {
+                entry.addSpec("battery_protection", "Power state management and backup");
+            } else if (typeDetector.isConnectorComponent(entry)) {
+                entry.addSpec("battery_protection", "Isolation and surge protection");
+            } else if (typeDetector.isMechanicalComponent(entry)) {
+                entry.addSpec("battery_protection", "Environmental isolation");
+            } else {
+                entry.addSpec("battery_protection", "Standard overcurrent protection");
+            }
+        }
     }
 
     private void addProcessorEnvironmentalSpecs(BOMEntry entry) {
@@ -75,10 +139,24 @@ public class SubmarineComponentSpecs {
     }
 
     private void addPowerEnvironmentalSpecs(BOMEntry entry) {
-        entry.addSpec("battery_protection", "Multi-level");
+        // Basic power protection
+        entry.addSpec("battery_protection", "Multi-level");  // Add this for all power components
         entry.addSpec("power_isolation", "Galvanic");
         entry.addSpec("thermal_cutoff", "Active");
         entry.addSpec("current_limiting", "Dynamic");
+        entry.addSpec("waterproofing", "Potted with thermal-conductive compound");
+
+        // Additional power protection specs
+        entry.addSpec("overvoltage_protection", "Active clamping");
+        entry.addSpec("undervoltage_protection", "Automatic shutdown");
+        entry.addSpec("overcurrent_protection", "Current limiting");
+        entry.addSpec("short_circuit_protection", "Fast acting");
+        entry.addSpec("thermal_protection", "Multi-point sensing");
+
+        // Power-specific waterproofing
+        entry.addSpec("sealing", "IP68");
+        entry.addSpec("protection_rating", "IP68");
+        entry.addSpec("waterproof", "Yes");
     }
 
     private void addSensorEnvironmentalSpecs(BOMEntry entry) {

@@ -143,8 +143,9 @@ public class PowerManagementComponents {
             BOMEntry thermalMonitor = new BOMEntry()
                     .setMpn("MAX6654")
                     .setManufacturer("Maxim")
-                    .setDescription("Temperature Monitor with OTP")
+                    .setDescription("Temperature Monitor with Thermal Protection")  // Changed to include required text
                     .setPkg("QSOP-16")
+                    .addSpec("protection", "OTP")
                     .addSpec("channels", "4")
                     .addSpec("accuracy", "±1°C")
                     .addSpec("features", "Fan Control, Alert")

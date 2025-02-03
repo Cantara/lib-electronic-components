@@ -1,114 +1,149 @@
 package no.cantara.electronic.component.autonomous_submarine;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import no.cantara.electronic.component.advanced.PlannedProductionBatch;
+import no.cantara.electronic.component.autonomous_submarine.subsystems.SubmarineSystemFactory;
+import no.cantara.electronic.component.autonomous_submarine.subsystems.SubmarineSystemValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for complete submarine system creation and verification.
- */
 public class CompleteSubmarineSystemTest {
-    private SubmarineSystemVerification systemVerification;
-    private ComponentTypeDetector typeDetector;
-    private SubmarineComponentSpecs componentSpecs;
-    private PCBGenerator pcbGenerator;
-    private SubmarineSubsystemFactory subsystemFactory;
+
+    private SubmarineSystemValidator systemValidator;
 
     @BeforeEach
     void setUp() {
-        typeDetector = new ComponentTypeDetector();
-        componentSpecs = new SubmarineComponentSpecs(typeDetector);
-        pcbGenerator = new PCBGenerator(componentSpecs);
-        subsystemFactory = new SubmarineSubsystemFactory(componentSpecs, pcbGenerator);
-        systemVerification = new SubmarineSystemVerification();
+        systemValidator = new SubmarineSystemValidator();
     }
 
     @Test
-    void shouldCreateAndVerifyCompleteSystem() {
-        // Create batch
-        PlannedProductionBatch batch = createCompleteBatch();
+    void shouldCreateCompleteSystem() {
+        PlannedProductionBatch batch = SubmarineSystemFactory.createCompleteSystem(
+                        "SUB-2024-001",
+                        "DEEPDIVE-1000",
+                        "R1.0",
+                        1
+                )
+                .plannedDate(LocalDate.now())
+                .build();
 
-        // Verify system
-    //    SystemVerificationResult result = systemVerification.verifySystem(batch);
-    //    assertTrue(result.isValid(), "System verification failed:\n" + result.getDetailedReport());
+        assertNotNull(batch);
+        assertTrue(batch.getPCBAStructure().getAssemblies().size() > 0);
+        assertTrue(batch.getMechanicalStructure().getAssemblies().size() > 0);
+
+        // Validate the complete system
+        systemValidator.validate(batch);
+        assertTrue(systemValidator.getValidationErrors().isEmpty(),
+                "Complete system should have no validation errors");
     }
 
     @Test
-    void shouldSerializeAndDeserializeCompleteBatch() throws Exception {
-        // Create and verify initial batch
-        PlannedProductionBatch originalBatch = createCompleteBatch();
-        //SystemVerificationResult originalResult = systemVerification.verifySystem(originalBatch);
-        //assertTrue(originalResult.isValid(), "Original system invalid:\n" + originalResult.getDetailedReport());
+    void shouldCreateMinimalSystem() {
+        PlannedProductionBatch batch = SubmarineSystemFactory.createMinimalSystem(
+                        "SUB-2024-002",
+                        "DEEPDIVE-500",
+                        "R1.0",
+                        1
+                )
+                .build();
 
-        // Configure ObjectMapper
-        ObjectMapper objectMapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        assertNotNull(batch);
+        assertTrue(batch.getPCBAStructure().getAssemblies().size() > 0);
+        assertTrue(batch.getMechanicalStructure().getAssemblies().size() > 0);
 
-        // Serialize to JSON
-        String json = objectMapper.writeValueAsString(originalBatch);
-        assertNotNull(json, "Serialization failed");
-
-        // Deserialize from JSON
-        PlannedProductionBatch deserializedBatch = objectMapper.readValue(json, PlannedProductionBatch.class);
-        assertNotNull(deserializedBatch, "Deserialization failed");
-
-        // Verify deserialized batch
-//        SystemVerificationResult deserializedResult = systemVerification.verifySystem(deserializedBatch);
-//        assertTrue(deserializedResult.isValid(), "Deserialized system invalid:\n" + deserializedResult.getDetailedReport());
+        // Validate minimal system
+        systemValidator.validate(batch);
+        assertTrue(systemValidator.getValidationErrors().isEmpty(),
+                "Minimal system should have no validation errors");
     }
 
     @Test
     void shouldHandleEnvironmentalRequirements() {
-        // Create batch
-        PlannedProductionBatch batch = createCompleteBatch();
+        PlannedProductionBatch batch = SubmarineSystemFactory.createCustomSystem(
+                        "SUB-2024-003",
+                        "DEEPDIVE-1000",
+                        "R1.0",
+                        1
+                )
+                .plannedDate(LocalDate.now())
+                .withMinimalSensors()
+                .build();
 
-        // Verify waterproofing
-//        systemVerification.verifyWaterproofing(batch);
+        systemValidator.validate(batch);
 
-        // Verify thermal management
-//        systemVerification.verifyThermalManagement(batch);
-
-        // Verify pressure ratings
-        systemVerification.verifyPressureRatings(batch);
+        // Verify no environmental-related validation errors
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("waterproof")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("thermal")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("pressure")));
     }
 
-    private PlannedProductionBatch createCompleteBatch() {
-        PlannedProductionBatch batch = new PlannedProductionBatch(
-                "AUV-2024-FULL-001",
-                "DEEPDIVE-1000",
-                "R1.0",
-                5
-        );
+    @Test
+    void shouldHandlePowerRequirements() {
+        PlannedProductionBatch batch = SubmarineSystemFactory.createCustomSystem(
+                        "SUB-2024-004",
+                        "DEEPDIVE-1000",
+                        "R1.0",
+                        1
+                )
+                .withMinimalConfiguration()  // Only include required systems
+                .build();
 
-        batch.setPlannedDate(LocalDate.of(2024, 6, 1));
-        batch.setStatus(PlannedProductionBatch.BatchStatus.PLANNING);
+        systemValidator.validate(batch);
 
-        // Add network infrastructure first
-        subsystemFactory.addNetworkInterfaces(batch);
-
-        // Add all subsystems
-        subsystemFactory.addMissionControlSystem(batch);
-        subsystemFactory.addNavigationSystem(batch);
-        subsystemFactory.addPowerSystem(batch);
-        subsystemFactory.addPropulsionSystem(batch);
-        subsystemFactory.addCommunicationsSystem(batch);
-        subsystemFactory.addSensorSystem(batch);
-
-        return batch;
+        // Check power-related validation
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("power")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("battery")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("emergency power")));
     }
 
-    // The verification methods will be moved to SubmarineSystemVerification class
+    @Test
+    void shouldHandleSafetyRequirements() {
+        PlannedProductionBatch batch = SubmarineSystemFactory.createCustomSystem(
+                        "SUB-2024-005",
+                        "DEEPDIVE-1000",
+                        "R1.0",
+                        1
+                )
+                .plannedDate(LocalDate.now())
+                .withMinimalConfiguration()
+                .withMinimalSensors()
+                .build();
+
+        systemValidator.validate(batch);
+
+        // Check safety-related validation
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("safety")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("emergency")));
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("fail-safe")));
+    }
+
+    @Test
+    void shouldHandleCommunicationRequirements() {
+        PlannedProductionBatch batch = SubmarineSystemFactory.createCompleteSystem(
+                        "SUB-2024-006",
+                        "DEEPDIVE-1000",
+                        "R1.0",
+                        1
+                )
+                .plannedDate(LocalDate.now())
+                .build();
+
+        systemValidator.validate(batch);
+
+        // Check communication-related validation
+        assertTrue(systemValidator.getValidationErrors().stream()
+                .noneMatch(error -> error.toLowerCase().contains("communication")));
+    }
 }

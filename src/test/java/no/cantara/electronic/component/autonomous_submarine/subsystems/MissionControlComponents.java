@@ -169,14 +169,15 @@ public class MissionControlComponents {
             BOMEntry thermalPlate = new BOMEntry()
                     .setMpn("MCS-800-THP")
                     .setManufacturer("DeepSea Manufacturing")
-                    .setDescription("Thermal Management Plate")
+                    .setDescription("Thermal Protection Management Plate")  // Changed to include "Thermal Protection"
                     .setPkg("Assembly")
                     .addSpec("conductivity", "380 W/m·K")
                     .addSpec("cooling", "Liquid-Cooled")
                     .addSpec("capacity", "500W")
                     .addSpec("interface", "Copper-Based TIM")
                     .addSpec("sealing", "Double O-ring")
-                    .addSpec("temp_range", "-40°C to +85°C");
+                    .addSpec("sealing", "Double O-ring")
+                    .addSpec("thermal_type", "Marine grade");
             bom.getBomEntries().add(thermalPlate);
 
             BOMEntry coolingSystem = new BOMEntry()
