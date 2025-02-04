@@ -1,5 +1,5 @@
 module lib.electronic.components {
-    // Export your packages
+    // Export existing packages
     exports no.cantara.electronic.component;
     exports no.cantara.electronic.component.advanced;
     exports no.cantara.electronic.component.lib;
@@ -7,13 +7,34 @@ module lib.electronic.components {
     exports no.cantara.electronic.component.lib.connectors;
     exports no.cantara.electronic.component.lib.manufacturers;
 
-    // Add opens directives for Jackson
+    // Export new specification packages
+    exports no.cantara.electronic.component.lib.specs.base;
+    //exports no.cantara.electronic.component.lib.specs.passive;
+    //exports no.cantara.electronic.component.lib.specs.semiconductor;
+    //exports no.cantara.electronic.component.lib.specs.power;
+    //exports no.cantara.electronic.component.lib.specs.mechanical;
+    //exports no.cantara.electronic.component.lib.specs.marine;
+    //exports no.cantara.electronic.component.lib.specs.validation;
+    //exports no.cantara.electronic.component.lib.specs.comparison;
+    //exports no.cantara.electronic.component.lib.specs.util;
+
+    // Add opens directives for Jackson serialization
     opens no.cantara.electronic.component to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.advanced to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib.componentsimilaritycalculators to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib.connectors to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib.manufacturers to com.fasterxml.jackson.databind;
+
+    // Open new specification packages to Jackson
+    opens no.cantara.electronic.component.lib.specs.base to com.fasterxml.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.passive to com.fasterxml.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.semiconductor to com.fasterxml.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.power to com.fasterxml.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.mechanical to com.fasterxml.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.validation to com.fasterxml.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.comparison to com.fasterxml.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.util to com.fasterxml.jackson.databind;
 
     // Required dependencies
     requires org.slf4j;
