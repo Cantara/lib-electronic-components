@@ -22,4 +22,6 @@ module lib.electronic.components {
     requires transitive com.fasterxml.jackson.core;
     requires transitive com.fasterxml.jackson.annotation;
     requires transitive com.fasterxml.jackson.databind;
+    requires transitive com.fasterxml.jackson.datatype.jsr310;
+    requires transitive com.fasterxml.jackson.datatype.jdk8;
 }
