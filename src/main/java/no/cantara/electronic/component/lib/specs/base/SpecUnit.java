@@ -23,6 +23,7 @@ public enum SpecUnit {
 
     // Electrical units - Resistance
     OHMS("Ω", "Resistance"),
+    MILLIOHMS("mΩ", "Milliohms"),
     KILOOHMS("kΩ", "Kiloohms"),
     MEGAOHMS("MΩ", "Megaohms"),
 
@@ -67,6 +68,7 @@ public enum SpecUnit {
     MILLIMETERS("mm", "Millimeters"),
     MICROMETERS("µm", "Micrometers"),
     INCHES("in", "Inches"),
+    NANOMETERS("nm", "Nanometers"),
 
     // Charge units
     COULOMBS("C", "Coulombs"),
@@ -78,6 +80,17 @@ public enum SpecUnit {
     VOLTS_PER_MICROSECOND("V/µs", "Volts per Microsecond"),
     VOLTS_PER_MILLISECOND("V/ms", "Volts per Millisecond"),
     AMPS_PER_SECOND("A/s", "Amps per Second"),
+
+    // Light/Optical units
+    MILLICANDELA("mcd", "Millicandela"),
+    CANDELA("cd", "Candela"),
+    LUMENS("lm", "Lumens"),
+
+    // Pressure units
+    PASCALS("Pa", "Pascals"),
+    KILOPASCALS("kPa", "Kilopascals"),
+    BARS("bar", "Bars"),
+    PSI("psi", "Pounds per Square Inch"),
 
     // Other
     PERCENTAGE("%", "Percentage"),
@@ -127,13 +140,15 @@ public enum SpecUnit {
             case MILLIVOLTS, MICROVOLTS, NANOVOLTS -> VOLTS;
             case MILLIAMPS, MICROAMPS, NANOAMPS -> AMPS;
             case MILLIWATTS, MICROWATTS -> WATTS;
-            case KILOOHMS, MEGAOHMS -> OHMS;
+            case MILLIOHMS, KILOOHMS, MEGAOHMS -> OHMS;
             case MICROFARADS, NANOFARADS, PICOFARADS -> FARADS;
             case MILLIHENRIES, MICROHENRIES -> HENRIES;
             case KILOHERTZ, MEGAHERTZ, GIGAHERTZ -> HERTZ;
             case MILLISECONDS, MICROSECONDS, NANOSECONDS, PICOSECONDS -> SECONDS;
             case KILOBYTES, MEGABYTES -> BYTES;
             case MILLICOULOMBS, MICROCOULOMBS, NANOCOULOMBS -> COULOMBS;
+            case MILLICANDELA -> CANDELA;
+            case KILOPASCALS -> PASCALS;
             default -> this;
         };
     }
@@ -153,5 +168,23 @@ public enum SpecUnit {
             }
         }
         return NONE;
+    }
+
+    /**
+     * Gets the conversion factor to convert from this unit to its base unit.
+     *
+     * @return The conversion factor
+     */
+    public double getConversionFactor() {
+        return switch (this) {
+            case MILLIVOLTS, MILLIAMPS, MILLICOULOMBS, MILLIHENRIES, MILLICANDELA -> 1e-3;
+            case MICROVOLTS, MICROAMPS, MICROCOULOMBS, MICROHENRIES, MICROWATTS -> 1e-6;
+            case NANOVOLTS, NANOAMPS, NANOCOULOMBS -> 1e-9;
+            case PICOFARADS -> 1e-12;
+            case KILOOHMS, KILOHERTZ, KILOBYTES, KILOPASCALS -> 1e3;
+            case MEGAOHMS, MEGAHERTZ, MEGABYTES -> 1e6;
+            case GIGAHERTZ -> 1e9;
+            default -> 1.0;
+        };
     }
 }

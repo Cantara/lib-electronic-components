@@ -9,11 +9,10 @@ module lib.electronic.components {
 
     // Export new specification packages
     exports no.cantara.electronic.component.lib.specs.base;
-    //exports no.cantara.electronic.component.lib.specs.passive;
-    //exports no.cantara.electronic.component.lib.specs.semiconductor;
-    //exports no.cantara.electronic.component.lib.specs.power;
+    exports no.cantara.electronic.component.lib.specs.passive;
+    exports no.cantara.electronic.component.lib.specs.semiconductor;
+    exports no.cantara.electronic.component.lib.specs.power;
     //exports no.cantara.electronic.component.lib.specs.mechanical;
-    //exports no.cantara.electronic.component.lib.specs.marine;
     //exports no.cantara.electronic.component.lib.specs.validation;
     //exports no.cantara.electronic.component.lib.specs.comparison;
     //exports no.cantara.electronic.component.lib.specs.util;
@@ -30,7 +29,7 @@ module lib.electronic.components {
     opens no.cantara.electronic.component.lib.specs.base to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib.specs.passive to com.fasterxml.jackson.databind;
     opens no.cantara.electronic.component.lib.specs.semiconductor to com.fasterxml.jackson.databind;
-    //opens no.cantara.electronic.component.lib.specs.power to com.fasterxml.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.power to com.fasterxml.jackson.databind;
     //opens no.cantara.electronic.component.lib.specs.mechanical to com.fasterxml.jackson.databind;
     //opens no.cantara.electronic.component.lib.specs.validation to com.fasterxml.jackson.databind;
     //opens no.cantara.electronic.component.lib.specs.comparison to com.fasterxml.jackson.databind;
