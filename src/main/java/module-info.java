@@ -8,5 +8,6 @@ module lib.electronic.components {
     // If you have transitive dependencies, you can declare them as transitive.
     // For example, if clients of your module should also see Jackson:
     requires transitive com.fasterxml.jackson.core;
+    requires transitive com.fasterxml.jackson.annotation;
 }
 
