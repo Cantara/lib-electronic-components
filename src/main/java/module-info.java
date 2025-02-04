@@ -1,7 +1,11 @@
 module lib.electronic.components {
     // Export your public packages
     exports no.cantara.electronic.component;
-
+    exports no.cantara.electronic.component.advanced;
+    exports no.cantara.electronic.component.lib;
+    exports no.cantara.electronic.component.lib.manufacturers;
+    exports no.cantara.electronic.component.lib.connectors;
+    exports no.cantara.electronic.component.lib.componentsimilaritycalculators;
     // Require other modules (if any). For example, if you need SLF4J:
     requires org.slf4j;
 
