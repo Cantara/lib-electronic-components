@@ -160,7 +160,17 @@
     <build>
         <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
             <plugins>
-
+<plugin>
+    <artifactId>maven-jar-plugin</artifactId>
+    <version>3.4.2</version>
+    <configuration>
+        <archive>
+            <manifestEntries>
+                <Automatic-Module-Name>no.cantara.electronics.lib.electronics.components</Automatic-Module-Name>
+            </manifestEntries>
+        </archive>
+    </configuration>
+</plugin>
 
                 <!-- Ensures to run JUnit Tests  -->
                 <!-- https://dzone.com/articles/why-your-junit-5-tests-are-not-running-under-maven -->
