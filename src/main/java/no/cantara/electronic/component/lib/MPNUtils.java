@@ -165,15 +165,7 @@ public class MPNUtils {
         return Math.min(similarity, 1.0);
     }
 
-    /**
-     * Get all matching types for an MPN
-     */
-    public static ComponentType[] getMatchingTypes(String mpn) {
-        if (mpn == null || mpn.isEmpty()) {
-            return new ComponentType[]{ComponentType.GENERIC};
-        }
-        return ComponentType.getPossibleTypes(normalize(mpn));
-    }
+
 
     /**
      * Check if an MPN is from a specific manufacturer
@@ -325,6 +317,166 @@ public class MPNUtils {
      */
     public static Set<ManufacturerHandler> getAllHandlers() {
         return registry.getAllHandlers();
+    }
+
+
+    /**
+     * Attempts to find an MPN in the given text.
+     *
+     * @param text The text to search for an MPN
+     * @return The found MPN, or null if none found
+     */
+    public static String findMPNInText(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return null;
+        }
+
+        System.out.println("\nSearching for MPN in text: " + text);
+        String[] words = text.trim().split("\\s+|[;,|]");
+
+        // Remove common prefixes and suffixes
+        words = cleanWords(words);
+
+        // Try each word with each handler
+        Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
+        for (String word : words) {
+            // First try manufacturer-specific types
+            for (ManufacturerHandler handler : handlers) {
+                for (ComponentType type : handler.getSupportedTypes()) {
+                    if (handler.matches(word, type, registry)) {
+                        System.out.println("Found match using " + handler.getClass().getSimpleName() +
+                                " for type " + type + ": " + word);
+                        return word;
+                    }
+                }
+            }
+
+            // Then try generic component types
+            for (ComponentType type : ComponentType.values()) {
+                if (registry.matches(word, type)) {
+                    System.out.println("Found match for type " + type + ": " + word);
+                    return word;
+                }
+            }
+        }
+
+        System.out.println("No MPN found in text");
+        return null;
+    }
+
+    /**
+     * Clean words by removing common prefixes and suffixes.
+     */
+    private static String[] cleanWords(String[] words) {
+        String[] result = new String[words.length];
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i].trim().toUpperCase();
+
+            // Handle key-value pairs with equals sign
+            if (word.contains("=")) {
+                word = word.split("=")[1];
+            }
+
+            // Remove common prefixes
+            String[] prefixes = {
+                    "IC-", "IC ",
+                    "PART-", "PART ",
+                    "MPN-", "MPN:",
+                    "PN:", "P/N:",
+                    "REF:", "REF-",
+                    "ITEM:", "ITEM-"
+            };
+            for (String prefix : prefixes) {
+                if (word.startsWith(prefix)) {
+                    word = word.substring(prefix.length());
+                }
+            }
+
+            // Remove common suffixes that aren't part of the MPN
+            String[] suffixes = {
+                    "-SMD", "-THT",
+                    " SMD", " THT",
+                    "-ROHS", " ROHS"
+            };
+            for (String suffix : suffixes) {
+                if (word.endsWith(suffix)) {
+                    word = word.substring(0, word.length() - suffix.length());
+                }
+            }
+
+            result[i] = word;
+        }
+        return result;
+    }
+
+    /**
+     * Gets the component type for an MPN by checking all handlers.
+     *
+     * @param mpn The manufacturer part number
+     * @return The component type, or null if not determined
+     */
+    public static ComponentType getComponentType(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return null;
+        }
+
+        System.out.println("\nDetermining component type for MPN: " + mpn);
+
+        // First try manufacturer-specific types
+        Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
+        for (ManufacturerHandler handler : handlers) {
+            for (ComponentType type : handler.getSupportedTypes()) {
+                if (handler.matches(mpn, type, registry)) {
+                    System.out.println("Found match using " + handler.getClass().getSimpleName() +
+                            " for type: " + type);
+                    return type;
+                }
+            }
+        }
+
+        // Then try generic component types
+        for (ComponentType type : ComponentType.values()) {
+            if (!type.name().contains("_") && registry.matches(mpn, type)) {
+                System.out.println("Found match for generic type: " + type);
+                return type;
+            }
+        }
+
+        System.out.println("No component type found for MPN: " + mpn);
+        return null;
+    }
+
+    /**
+     * Gets all matching component types for an MPN.
+     *
+     * @param mpn The manufacturer part number
+     * @return Set of matching component types, empty if none found
+     */
+    public static Set<ComponentType> getMatchingTypes(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<ComponentType> matchingTypes = new HashSet<>();
+
+        // Check manufacturer-specific types
+        Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
+        for (ManufacturerHandler handler : handlers) {
+            for (ComponentType type : handler.getSupportedTypes()) {
+                if (handler.matches(mpn, type, registry)) {
+                    matchingTypes.add(type);
+                }
+            }
+        }
+
+        // Check generic types
+        for (ComponentType type : ComponentType.values()) {
+            if (!type.name().contains("_") && registry.matches(mpn, type)) {
+                matchingTypes.add(type);
+            }
+        }
+
+        return matchingTypes;
     }
 
 }
