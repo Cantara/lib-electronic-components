@@ -258,7 +258,6 @@ public class MPNUtils {
                         System.out.println("Testing handler: " + handler.getClass().getSimpleName());
                         // Initialize patterns for this handler
                         registry.setCurrentHandlerClass(handler.getClass());
-                        handler.initializePatterns(registry);
                         if (handler.matches(mpn, type, registry)) {
                             System.out.println("Found matching handler: " + handler.getClass().getSimpleName());
                             return handler;
