@@ -29,6 +29,8 @@ public class ManufacturerHandlerFactory {
             // Create instances and initialize patterns
             PatternRegistry registry = new PatternRegistry();
 
+// Debug: Print found handler classes
+            System.out.println("Found handler classes: " + Arrays.toString(handlerClasses));
             for (Class<?> handlerClass : handlerClasses) {
                 try {
                     // Skip abstract classes and interfaces
