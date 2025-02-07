@@ -85,7 +85,7 @@ public class AtmelHandler implements ManufacturerHandler {
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        // Extract package code from suffix
+        // Extract suffix after the last hyphen
         String[] parts = mpn.split("-");
         if (parts.length > 1) {
             String suffix = parts[parts.length - 1];
