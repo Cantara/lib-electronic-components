@@ -2,9 +2,10 @@ package no.cantara.electronic.component.lib;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MPNUtilsTest {
     private MPNUtils mpnUtils;
@@ -169,5 +170,54 @@ public class MPNUtilsTest {
                 "Same component with/without suffix should have high similarity");
         assertTrue(MPNUtils.calculateSimilarity("ATMEGA328P-PU", "ATMEGA328P-AU") > 0.8,
                 "Same component with different package codes should have high similarity");
+    }
+
+    @Test
+    public void shouldFindHandlersForMPNs() {
+        // Test finding handlers for specific MPNs
+        ManufacturerHandler handler;
+
+        // Test TI components
+        handler = MPNUtils.getManufacturerHandler("LM358");
+        assertNotNull(handler, "Should find handler for LM358");
+        assertTrue(handler.getClass().getSimpleName().contains("TI"),
+                "Should be TI handler");
+
+        // Test Atmel components
+        handler = MPNUtils.getManufacturerHandler("ATMEGA328P");
+        assertNotNull(handler, "Should find handler for ATMEGA328P");
+
+    }
+
+    @Test
+    public void shouldGetHandlersForComponentTypes() {
+        // Check handlers for specific component types
+        Set<ManufacturerHandler> opampHandlers = MPNUtils.getHandlersForType(ComponentType.OPAMP);
+        assertFalse(opampHandlers.isEmpty(), "Should find handlers for op-amps");
+
+        Set<ManufacturerHandler> mcuHandlers = MPNUtils.getHandlersForType(ComponentType.MICROCONTROLLER);
+        assertFalse(mcuHandlers.isEmpty(), "Should find handlers for microcontrollers");
+
+        // Print all handlers for debugging
+        System.out.println("\nHandlers for OPAMP:");
+        opampHandlers.forEach(h -> System.out.println("- " + h.getClass().getSimpleName()));
+
+        System.out.println("\nHandlers for MICROCONTROLLER:");
+        mcuHandlers.forEach(h -> System.out.println("- " + h.getClass().getSimpleName()));
+    }
+
+    @Test
+    public void shouldExtractPackageCodes() {
+        // Now we can properly test package code extraction
+        assertEquals("SOIC", MPNUtils.getPackageCode("LM358D"));
+        assertEquals("PDIP", MPNUtils.getPackageCode("ATMEGA328P-PU"));
+        assertEquals("T6", MPNUtils.getPackageCode("STM32F103C8T6"));
+
+        // Print handler information for debugging
+        String mpn = "LM358D";
+        ManufacturerHandler handler = MPNUtils.getManufacturerHandler(mpn);
+        System.out.println("\nHandler for " + mpn + ":");
+        System.out.println("- Class: " + (handler != null ? handler.getClass().getSimpleName() : "null"));
+        System.out.println("- Package code: " + MPNUtils.getPackageCode(mpn));
     }
 }

@@ -113,6 +113,20 @@ public class FairchildHandler implements ManufacturerHandler {
 
         String upperMpn = mpn.toUpperCase();
 
+        // STM32 specific package codes
+        if (upperMpn.matches("STM32[F|L|H|G|W|U].*")) {
+            // Extract package code from end of MPN (e.g., T6, R8, V6)
+            if (upperMpn.matches(".*[TRV][0-9]$")) {
+                String code = upperMpn.substring(upperMpn.length() - 2);
+                return switch (code.charAt(0)) {
+                    case 'T' -> code; // LQFP packages (T6 = LQFP48, T7 = LQFP64, etc.)
+                    case 'R' -> code; // TSSOP packages
+                    case 'V' -> code; // VFQPN packages
+                    default -> code;
+                };
+            }
+        }
+
         // Check for known package codes
         for (Map.Entry<String, String> entry : PACKAGE_CODES.entrySet()) {
             if (upperMpn.endsWith(entry.getKey()) || upperMpn.contains(entry.getKey() + "-")) {

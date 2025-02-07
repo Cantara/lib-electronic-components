@@ -99,6 +99,22 @@ public class STHandler implements ManufacturerHandler {
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
+        System.out.println("\nSTHandler extracting package code from: " + mpn);
+        String upperMpn = mpn.toUpperCase();
+        if (upperMpn.startsWith("STM32")) {
+            // Extract package code (last two characters)
+            String lastTwo = upperMpn.substring(upperMpn.length() - 2);
+            char packageType = lastTwo.charAt(0);
+            char pinCode = lastTwo.charAt(1);
+
+            // Validate package type
+            if ("TUVRY".indexOf(packageType) >= 0 &&
+                    Character.isDigit(pinCode)) {
+                System.out.println("Found valid package code: " + lastTwo);
+                return lastTwo;
+            }
+        }
+
         // Op-amps and voltage regulators
         String suffix = mpn.replaceAll("^[A-Z0-9]+", "");
         return switch (suffix) {

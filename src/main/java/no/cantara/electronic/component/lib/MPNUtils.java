@@ -2,9 +2,9 @@ package no.cantara.electronic.component.lib;
 
 import no.cantara.electronic.component.ElectronicPart;
 import no.cantara.electronic.component.lib.componentsimilaritycalculators.*;
+import no.cantara.electronic.component.lib.manufacturers.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -12,6 +12,20 @@ import java.util.regex.Pattern;
  */
 public class MPNUtils {
     private static final Pattern SPECIAL_CHARS = Pattern.compile("[^a-zA-Z0-9]");
+    private static final PatternRegistry registry;
+
+    static {
+        // Initialize registry with all handlers from factory
+        registry = new PatternRegistry();
+        Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.initializeHandlers();
+        for (ManufacturerHandler handler : handlers) {
+            registry.setCurrentHandlerClass(handler.getClass());
+            handler.initializePatterns(registry);
+        }
+    }
+
+
+
 
     private static final List<ComponentSimilarityCalculator> calculators = Arrays.asList(
             new VoltageRegulatorSimilarityCalculator(),
@@ -226,4 +240,91 @@ public class MPNUtils {
         ComponentType type = ComponentTypeDetector.determineComponentType(mpn);
         return type != null && type == ComponentType.IC && !isAnalogIC(mpn);
     }
+
+    /**
+     * Gets the manufacturer handler that matches this MPN.
+     */
+    public static ManufacturerHandler getManufacturerHandler(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return null;
+        }
+
+        System.out.println("\nLooking for handler for MPN: " + mpn);
+
+        // Try each component type
+        for (ComponentType type : ComponentType.values()) {
+            if (registry.matches(mpn, type)) {
+                System.out.println("Found match for type: " + type);
+                // Get all handlers for this type
+                Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
+                for (ManufacturerHandler handler : handlers) {
+                    if (handler.getSupportedTypes().contains(type)) {
+                        System.out.println("Testing handler: " + handler.getClass().getSimpleName());
+                        // Initialize patterns for this handler
+                        registry.setCurrentHandlerClass(handler.getClass());
+                        handler.initializePatterns(registry);
+                        if (handler.matches(mpn, type, registry)) {
+                            System.out.println("Found matching handler: " + handler.getClass().getSimpleName());
+                            return handler;
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println("No handler found for MPN: " + mpn);
+        return null;
+    }
+
+
+
+    /**
+     * Attempts to extract the package code from an MPN.
+     *
+     * @param mpn The manufacturer part number
+     * @return The package code if found, null otherwise
+     */
+    public static String getPackageCode(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return "";
+        }
+
+        System.out.println("\nExtracting package code for MPN: " + mpn);
+        ManufacturerHandler handler = getManufacturerHandler(mpn);
+
+        if (handler != null) {
+            System.out.println("Using handler: " + handler.getClass().getSimpleName());
+            try {
+                String packageCode = handler.extractPackageCode(mpn);
+                System.out.println("Extracted package code: '" + packageCode + "'");
+                return packageCode;
+            } catch (Exception e) {
+                System.err.println("Error extracting package code: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        return "";
+    }
+
+
+    /**
+     * Gets all handlers that support a specific component type.
+     *
+     * @param type The component type
+     * @return Set of handlers supporting this type
+     */
+    public static Set<ManufacturerHandler> getHandlersForType(ComponentType type) {
+        return registry.getHandlersForType(type);
+    }
+
+    /**
+     * Gets all registered handlers.
+     *
+     * @return Set of all handlers
+     */
+    public static Set<ManufacturerHandler> getAllHandlers() {
+        return registry.getAllHandlers();
+    }
+
 }

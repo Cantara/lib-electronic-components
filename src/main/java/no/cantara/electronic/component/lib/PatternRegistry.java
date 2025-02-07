@@ -82,4 +82,115 @@ public class PatternRegistry {
                 .findFirst()
                 .orElse(null);
     }
+
+
+    /**
+     * Gets the handler for a specific MPN.
+     * Will try to match each handler with each component type.
+     *
+     * @param mpn The MPN to find a handler for
+     * @return The first matching handler, or null if none found
+     */
+    public ManufacturerHandler getHandlerForMPN(String mpn) {
+        for (Map.Entry<ComponentType, Map<Class<?>, Set<Pattern>>> typeEntry : patterns.entrySet()) {
+            ComponentType type = typeEntry.getKey();
+            for (Class<?> handlerClass : typeEntry.getValue().keySet()) {
+                if (matches(mpn, type)) {
+                    return createHandlerInstance(handlerClass);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets all handlers registered for a specific component type.
+     *
+     * @param type The component type
+     * @return Set of handlers for this type, empty if none found
+     */
+    public Set<ManufacturerHandler> getHandlersForType(ComponentType type) {
+        Set<ManufacturerHandler> handlers = new HashSet<>();
+        Map<Class<?>, Set<Pattern>> typeHandlers = patterns.get(type);
+
+        if (typeHandlers != null) {
+            for (Class<?> handlerClass : typeHandlers.keySet()) {
+                ManufacturerHandler handler = createHandlerInstance(handlerClass);
+                if (handler != null) {
+                    handlers.add(handler);
+                }
+            }
+        }
+
+        return handlers;
+    }
+
+    /**
+     * Gets all registered handlers.
+     *
+     * @return Set of all unique handlers
+     */
+    public Set<ManufacturerHandler> getAllHandlers() {
+        Set<ManufacturerHandler> handlers = new HashSet<>();
+
+        for (Map<Class<?>, Set<Pattern>> typeHandlers : patterns.values()) {
+            for (Class<?> handlerClass : typeHandlers.keySet()) {
+                ManufacturerHandler handler = createHandlerInstance(handlerClass);
+                if (handler != null) {
+                    handlers.add(handler);
+                }
+            }
+        }
+
+        return handlers;
+    }
+
+    private ManufacturerHandler createHandlerInstance(Class<?> handlerClass) {
+        try {
+            return (ManufacturerHandler) handlerClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            // Log error or handle appropriately
+            return null;
+        }
+    }
+
+    /**
+     * Gets the patterns registered for a specific handler class and component type.
+     *
+     * @param handlerClass The handler class
+     * @param type         The component type
+     * @return Set of patterns, empty if none found
+     */
+    public Set<Pattern> getPatternsForHandler(Class<?> handlerClass, ComponentType type) {
+        Map<Class<?>, Set<Pattern>> typeHandlers = patterns.get(type);
+        if (typeHandlers != null) {
+            return typeHandlers.getOrDefault(handlerClass, Collections.emptySet());
+        }
+        return Collections.emptySet();
+    }
+
+    /**
+     * Gets the handler for a specific component type and MPN.
+     */
+    public ManufacturerHandler getHandlerForType(ComponentType type, String mpn) {
+        Map<Class<?>, Set<Pattern>> typeHandlers = patterns.get(type);
+        if (typeHandlers != null) {
+            for (Map.Entry<Class<?>, Set<Pattern>> entry : typeHandlers.entrySet()) {
+                // Check if any pattern matches
+                for (Pattern pattern : entry.getValue()) {
+                    if (pattern.matcher(mpn).matches()) {
+                        try {
+                            return (ManufacturerHandler) entry.getKey()
+                                    .getDeclaredConstructor().newInstance();
+                        } catch (Exception e) {
+                            System.err.println("Error creating handler instance: " +
+                                    entry.getKey().getName());
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 }
