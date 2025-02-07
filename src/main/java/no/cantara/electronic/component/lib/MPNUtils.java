@@ -341,12 +341,21 @@ public class MPNUtils {
         // Remove common prefixes and suffixes
         words = cleanWords(words);
 
+        // Debug: Print cleaned words
+        System.out.println("Cleaned words: " + Arrays.toString(words));
+
         // Try each word with each handler
         Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
+        System.out.println("Number of handlers: " + handlers.size());
+
         for (String word : words) {
+            System.out.println("\nTrying word: " + word);
+
             // First try manufacturer-specific types
             for (ManufacturerHandler handler : handlers) {
+                System.out.println("Checking handler: " + handler.getClass().getSimpleName());
                 for (ComponentType type : handler.getSupportedTypes()) {
+                    System.out.println("  Checking type: " + type);
                     if (handler.matches(word, type, registry)) {
                         System.out.println("Found match using " + handler.getClass().getSimpleName() +
                                 " for type " + type + ": " + word);
@@ -356,9 +365,10 @@ public class MPNUtils {
             }
 
             // Then try generic component types
+            System.out.println("Trying generic types for word: " + word);
             for (ComponentType type : ComponentType.values()) {
-                if (registry.matches(word, type)) {
-                    System.out.println("Found match for type " + type + ": " + word);
+                if (!type.name().contains("_") && registry.matches(word, type)) {
+                    System.out.println("Found match for generic type " + type + ": " + word);
                     return word;
                 }
             }
@@ -367,6 +377,7 @@ public class MPNUtils {
         System.out.println("No MPN found in text");
         return null;
     }
+
 
     /**
      * Clean words by removing common prefixes and suffixes.
