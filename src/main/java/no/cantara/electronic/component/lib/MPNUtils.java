@@ -15,14 +15,18 @@ public class MPNUtils {
     private static final PatternRegistry registry;
 
     static {
-        // Initialize registry with all handlers from factory
+        // Initialize registry with handlers in a deterministic order
         registry = new PatternRegistry();
-        Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.initializeHandlers();
+        List<ManufacturerHandler> handlers = new ArrayList<>(ManufacturerHandlerFactory.initializeHandlers());
+        handlers.sort(Comparator.comparing(h -> h.getClass().getName()));
         for (ManufacturerHandler handler : handlers) {
             registry.setCurrentHandlerClass(handler.getClass());
             handler.initializePatterns(registry);
         }
     }
+
+
+
 
 
 
