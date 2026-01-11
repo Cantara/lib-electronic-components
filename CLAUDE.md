@@ -109,6 +109,15 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 Manufacturer-specific skills for complex MPN encoding patterns:
 - `/manufacturers/ti` - **Texas Instruments** MPN decoding (LM, TL, TPS prefixes; package/temp suffixes)
 - `/manufacturers/atmel` - **Atmel/Microchip AVR** MPN decoding (ATmega, ATtiny, SAM; -PU/-AU package codes)
+- `/manufacturers/st` - **STMicroelectronics** MPN decoding (STM32, STM8, MOSFETs, regulators)
+- `/manufacturers/nxp` - **NXP Semiconductors** MPN decoding (LPC, S32K, audio codecs, sensors)
+- `/manufacturers/infineon` - **Infineon Technologies** MPN decoding (IRF, BSC, IFX MOSFETs; Cypress PSoC)
+- `/manufacturers/microchip` - **Microchip Technology** MPN decoding (PIC, dsPIC, AVR, SAM; package suffixes)
+- `/manufacturers/onsemi` - **ON Semiconductor** MPN decoding (FQP, NTD MOSFETs; 2N transistors; MC78xx regulators)
+- `/manufacturers/analogdevices` - **Analog Devices** MPN decoding (AD8xxx op-amps, ADCs, DACs, ADXL accelerometers)
+- `/manufacturers/maxim` - **Maxim Integrated** MPN decoding (MAX232, DS18B20, DS1307 RTC; temp+package suffixes)
+- `/manufacturers/renesas` - **Renesas Electronics** MPN decoding (RL78, RX, RA, RH850 MCUs; R5F/R7F prefixes)
+- `/manufacturers/toshiba` - **Toshiba Semiconductor** MPN decoding (TK MOSFETs, TLP optocouplers, TB motor drivers, 2SC transistors)
 
 ## Recording Learnings
 
@@ -203,14 +212,72 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - ~~STHandler: multi-pattern matching bug~~ - Added explicit type checks
 - ~~AtmelHandler: cross-handler pattern matching~~ - Don't fall through for base MICROCONTROLLER type
 
+**Documented Handler Bugs (11 handlers audited, 880+ tests)**:
+
+*NXPHandler (8 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing MEMORY type despite memory patterns (MX25, S25FL)
+- Missing pressure sensor patterns (MPX series)
+- Package extraction incomplete (only handles LPC)
+- Series extraction incomplete for audio codecs, sensors
+- Cross-handler pattern matching possible (falls through to registry)
+
+*InfineonHandler (5 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing Cypress PSoC specific patterns (acquired company)
+- Package extraction only handles IRF MOSFETs, not BSC/IFX
+- Speed grade suffix handling incomplete
+
+*MicrochipHandler (5 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing AVR32 patterns (legacy acquired from Atmel)
+- Package extraction returns raw suffix, not decoded package name
+- Some dsPIC patterns overlap with PIC patterns
+
+*OnSemiHandler (9 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing NTD/FQP/FDP MOSFET patterns
+- Missing 2N/MMBT/MPSA transistor patterns
+- Missing NCP regulator patterns
+- Package extraction only handles diodes, not MOSFETs/transistors
+- Series extraction incomplete for MOSFETs/transistors
+
+*AnalogDevicesHandler (5 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing AD7xxx ADC and AD5xxx DAC patterns with manufacturer-specific types
+- ADCs/DACs fall through to generic IC instead of ADC_AD/DAC_AD
+- Package extraction doesn't handle grade+package+rohs structure
+
+*MaximHandler (6 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing MAX232/MAX485 interface IC patterns
+- Missing MAX6675 thermocouple patterns
+- Missing MAX17xxx power management patterns
+- Package extraction only handles DS18B20
+- Series extraction limited to DS18B20 and MAX6xxx
+
+*RenesasHandler (5 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Package extraction returns too much (includes version suffix)
+- RL78 pattern subset of RX pattern (overlapping)
+- Version suffix (#30, #V1) breaks package extraction
+
+*ToshibaHandler (7 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Missing TRANSISTOR type in getSupportedTypes() despite 2SC/2SA patterns
+- Missing base IC type in getSupportedTypes()
+- Package extraction missing TK/TLP/SSM/TB/2SC series
+- Series extraction missing TLP/2SC/2SA/TB series
+- Missing 2SK JIS N-channel MOSFET patterns
+- Missing RN/RP digital transistor patterns
+
 **Medium**:
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
-- Other handlers likely have similar bugs as STHandler/AtmelHandler (need audit)
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
-- TIHandler, AtmelHandler, and STHandler now have comprehensive tests - use as template for others
+- Test coverage improving: 11 handlers now have comprehensive tests (880+ total tests)
+- Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
