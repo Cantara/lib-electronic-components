@@ -87,6 +87,12 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/memory` - Flash, EEPROM, SRAM
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
 
+## Manufacturer Skills
+
+Manufacturer-specific skills for complex MPN encoding patterns:
+- `/manufacturers/ti` - **Texas Instruments** MPN decoding (LM, TL, TPS prefixes; package/temp suffixes)
+- `/manufacturers/atmel` - **Atmel/Microchip AVR** MPN decoding (ATmega, ATtiny, SAM; -PU/-AU package codes)
+
 ## Recording Learnings
 
 When you discover quirks, edge cases, or important patterns while working on this codebase, record them:
