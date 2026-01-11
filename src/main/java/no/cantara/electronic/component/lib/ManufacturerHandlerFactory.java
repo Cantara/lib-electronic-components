@@ -15,7 +15,9 @@ import java.util.jar.JarFile;
  */
 public class ManufacturerHandlerFactory {
     private static final String MANUFACTURERS_PACKAGE = "no.cantara.electronic.component.lib.manufacturers";
-    private static final Set<ManufacturerHandler> handlers = new HashSet<>();
+    // Use TreeSet with deterministic ordering by class name to ensure consistent iteration order
+    private static final Set<ManufacturerHandler> handlers = new TreeSet<>(
+            Comparator.comparing(h -> h.getClass().getName()));
     private static boolean initialized = false;
 
     /**
