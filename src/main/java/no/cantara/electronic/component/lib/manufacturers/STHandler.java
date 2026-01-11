@@ -5,9 +5,8 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Collections;
+import java.util.Set;
 
 public class STHandler implements ManufacturerHandler {
     @Override
@@ -49,22 +48,22 @@ public class STHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_ST);
-        types.add(ComponentType.MCU_ST);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_ST);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_ST);
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_ST);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_LINEAR_ST);
-        types.add(ComponentType.VOLTAGE_REGULATOR_SWITCHING_ST);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        types.add(ComponentType.TEMPERATURE_SENSOR_ST);
-        return types;
+        return Set.of(
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_ST,
+                ComponentType.MCU_ST,
+                ComponentType.MEMORY,
+                ComponentType.MEMORY_ST,
+                ComponentType.OPAMP,
+                ComponentType.OPAMP_ST,
+                ComponentType.MOSFET,
+                ComponentType.MOSFET_ST,
+                ComponentType.VOLTAGE_REGULATOR,
+                ComponentType.VOLTAGE_REGULATOR_LINEAR_ST,
+                ComponentType.VOLTAGE_REGULATOR_SWITCHING_ST,
+                ComponentType.TEMPERATURE_SENSOR,
+                ComponentType.TEMPERATURE_SENSOR_ST
+        );
     }
 
     @Override
@@ -73,62 +72,103 @@ public class STHandler implements ManufacturerHandler {
 
         String upperMpn = mpn.toUpperCase();
 
-        // Special case for ST MOSFETs
-        if (type == ComponentType.MOSFET_ST &&
-                (upperMpn.startsWith("STF") || upperMpn.startsWith("STP") ||
-                        upperMpn.startsWith("STD") || upperMpn.startsWith("STB") ||
-                        upperMpn.startsWith("VN") || upperMpn.startsWith("VP"))) {
+        // Quick prefix checks for common types
+        boolean isMOSFET = upperMpn.startsWith("STF") || upperMpn.startsWith("STP") ||
+                upperMpn.startsWith("STD") || upperMpn.startsWith("STB") ||
+                upperMpn.startsWith("VN") || upperMpn.startsWith("VP");
+        boolean isSTM32 = upperMpn.startsWith("STM32");
+        boolean isSTM8 = upperMpn.startsWith("STM8");
+        boolean isRegulator = upperMpn.startsWith("L78") || upperMpn.startsWith("L79") ||
+                upperMpn.startsWith("MC78") || upperMpn.startsWith("MC79") ||
+                upperMpn.startsWith("MC317") || upperMpn.startsWith("MC337");
+
+        // Check base types
+        if (type == ComponentType.MOSFET && isMOSFET) {
+            return true;
+        }
+        if (type == ComponentType.MICROCONTROLLER && (isSTM32 || isSTM8)) {
+            return true;
+        }
+        if (type == ComponentType.VOLTAGE_REGULATOR && isRegulator) {
             return true;
         }
 
-        // Special case for STM32 microcontrollers
-        if (type == ComponentType.MICROCONTROLLER_ST && upperMpn.startsWith("STM32")) {
+        // Check ST-specific types
+        if (type == ComponentType.MOSFET_ST && isMOSFET) {
+            return true;
+        }
+        if (type == ComponentType.MICROCONTROLLER_ST && (isSTM32 || isSTM8)) {
+            return true;
+        }
+        if (type == ComponentType.VOLTAGE_REGULATOR_LINEAR_ST && isRegulator) {
             return true;
         }
 
-        // Special case for STM8 microcontrollers
-        if (type == ComponentType.MICROCONTROLLER_ST && upperMpn.startsWith("STM8")) {
-            return true;
-        }
-
-        // Fallback to default pattern matching
-        return ManufacturerHandler.super.matches(mpn, type, patterns);
+        // Fallback to registry pattern matching for all patterns
+        return patterns.matches(upperMpn, type);
     }
 
     @Override
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        System.out.println("\nSTHandler extracting package code from: " + mpn);
         String upperMpn = mpn.toUpperCase();
-        if (upperMpn.startsWith("STM32")) {
-            // Extract package code (last two characters)
-            String lastTwo = upperMpn.substring(upperMpn.length() - 2);
-            char packageType = lastTwo.charAt(0);
-            char pinCode = lastTwo.charAt(1);
 
-            // Validate package type
-            if ("TUVRY".indexOf(packageType) >= 0 &&
-                    Character.isDigit(pinCode)) {
-                System.out.println("Found valid package code: " + lastTwo);
-                return lastTwo;
+        // STM32/STM8: Package is second-to-last character, temp is last
+        // e.g., STM32F103C8T6 → T = LQFP, 6 = temperature range
+        if (upperMpn.startsWith("STM32") || upperMpn.startsWith("STM8")) {
+            if (upperMpn.length() >= 2) {
+                char packageChar = upperMpn.charAt(upperMpn.length() - 2);
+                return switch (packageChar) {
+                    case 'T' -> "LQFP";
+                    case 'H' -> "BGA";
+                    case 'U' -> "VFQFPN";
+                    case 'Y' -> "WLCSP";
+                    case 'P' -> "TSSOP";
+                    default -> String.valueOf(packageChar);
+                };
             }
         }
 
-        // Op-amps and voltage regulators
-        String suffix = mpn.replaceAll("^[A-Z0-9]+", "");
-        return switch (suffix) {
-            case "N" -> "DIP";
-            case "D" -> "SOIC";
-            case "DT" -> "TSSOP";
-            case "PT" -> "TSSOP";
-            case "PW" -> "TSSOP";
-            case "T" -> "TO-220";
-            case "M" -> "SO-8";
-            case "MW" -> "SO-8 Wide";
-            case "R" -> "SO-8";
-            default -> suffix;
-        };
+        // MOSFETs: Package is in prefix
+        if (upperMpn.startsWith("STF")) return "TO-220FP";
+        if (upperMpn.startsWith("STP")) return "TO-220";
+        if (upperMpn.startsWith("STD")) return "DPAK";
+        if (upperMpn.startsWith("STB")) return "D2PAK";
+        if (upperMpn.startsWith("STW")) return "TO-247";
+
+        // Voltage regulators: L78xxCV, L78xxABD2T, MC78xxCT, etc.
+        // Pattern: L78[voltage][grade][package] or MC78[voltage][package]
+        if (upperMpn.startsWith("L78") || upperMpn.startsWith("L79") ||
+                upperMpn.startsWith("MC78") || upperMpn.startsWith("MC79")) {
+            // Extract suffix after voltage digits
+            String suffix = upperMpn.replaceFirst("^[LM]C?7[89]\\d{2}", "");
+            // Strip grade letters (A, AB, AC) from the beginning
+            suffix = suffix.replaceFirst("^[A-C]{1,2}", "");
+            return switch (suffix) {
+                case "CV", "V" -> "TO-220";
+                case "CP", "P" -> "TO-220FP";
+                case "CT", "T" -> "TO-220";
+                case "CD2T", "D2T" -> "D2PAK";
+                case "CDT", "DT" -> "DPAK";
+                default -> suffix.isEmpty() ? "" : suffix;
+            };
+        }
+
+        // Op-amps and other linear ICs
+        if (upperMpn.contains("-")) {
+            String suffix = upperMpn.substring(upperMpn.lastIndexOf('-') + 1);
+            return switch (suffix) {
+                case "N" -> "DIP";
+                case "D" -> "SOIC";
+                case "DT" -> "TSSOP";
+                case "PT" -> "TSSOP";
+                case "PW" -> "TSSOP";
+                default -> suffix;
+            };
+        }
+
+        return "";
     }
 
     @Override

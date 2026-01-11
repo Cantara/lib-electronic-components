@@ -89,15 +89,17 @@ public class AtmelHandler implements ManufacturerHandler {
 
         String upperMpn = mpn.toUpperCase();
 
-        // Special case for microcontrollers - quick prefix check
+        // Check if this is an Atmel MCU by prefix
+        boolean isAtmelMcu = upperMpn.startsWith("ATMEGA") || upperMpn.startsWith("ATTINY") ||
+                upperMpn.startsWith("AT90") || upperMpn.startsWith("ATXMEGA") ||
+                upperMpn.startsWith("ATSAM");
+
+        // For microcontroller types, use prefix check only (don't fall through to pattern match
+        // which would incorrectly match other manufacturers' MCUs like STM32)
         if (type == ComponentType.MICROCONTROLLER_ATMEL ||
                 type == ComponentType.MCU_ATMEL ||
                 type == ComponentType.MICROCONTROLLER) {
-            if (upperMpn.startsWith("ATMEGA") || upperMpn.startsWith("ATTINY") ||
-                    upperMpn.startsWith("AT90") || upperMpn.startsWith("ATXMEGA") ||
-                    upperMpn.startsWith("ATSAM")) {
-                return true;
-            }
+            return isAtmelMcu;
         }
 
         // For all other types, use the registry's matches() which checks ALL patterns
