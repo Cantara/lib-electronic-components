@@ -109,6 +109,32 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 Manufacturer-specific skills for complex MPN encoding patterns:
 - `/manufacturers/ti` - **Texas Instruments** MPN decoding (LM, TL, TPS prefixes; package/temp suffixes)
 - `/manufacturers/atmel` - **Atmel/Microchip AVR** MPN decoding (ATmega, ATtiny, SAM; -PU/-AU package codes)
+- `/manufacturers/st` - **STMicroelectronics** MPN decoding (STM32, STM8, L78xx regulators, ST MOSFETs)
+- `/manufacturers/nxp` - **NXP Semiconductors** MPN decoding (LPC, Kinetis, i.MX, PSMN MOSFETs)
+- `/manufacturers/infineon` - **Infineon** MPN decoding (IRF MOSFETs, XMC MCUs, IGBTs)
+- `/manufacturers/microchip` - **Microchip** MPN decoding (PIC8/16/32, dsPIC, memory ICs)
+
+## Manufacturer Agent
+
+The **manufacturer-agent** skill (`.claude/skills/manufacturer-agent/SKILL.md`) automates creating handler tests:
+
+```
+/manufacturer-agent <manufacturer-name>
+```
+
+**Workflow:**
+1. Analyze existing handler code
+2. Web research for MPN naming conventions
+3. Generate comprehensive skill documentation
+4. Create test file with real-world MPNs
+5. Run tests and document bugs
+6. Update CLAUDE.md with findings
+
+**Key learnings encoded in the agent:**
+- Use direct handler instantiation (not MPNUtils.getManufacturerHandler)
+- Don't fall through to patterns.matches() for base types
+- Package location varies by component type (prefix/suffix/grade+suffix)
+- Update existing tests when fixing extraction logic
 
 ## Recording Learnings
 
@@ -143,10 +169,12 @@ This ensures institutional knowledge is preserved for future sessions.
 - Test-classes directory shadows main-classes directory, causing `ManufacturerHandlerFactory` to find 0 handlers
 - Solution: Put handler tests in a different package (e.g., `no.cantara.electronic.component.lib.handlers`)
 
-**Circular Initialization**:
-- NEVER use `new TIHandler()` or similar direct instantiation in tests
-- Causes `ExceptionInInitializerError` due to circular deps: ComponentType ↔ ComponentManufacturer ↔ Handler
-- Solution: Use `@BeforeAll` with `MPNUtils.getManufacturerHandler("LM358")` to get handler instance
+**Handler Instantiation** (UPDATED - PR #81):
+- **PREFER direct instantiation**: `handler = new STHandler()` in test setup
+- `MPNUtils.getManufacturerHandler()` has bugs - can return wrong handler due to alphabetical ordering
+- Example: `getManufacturerHandler("STM32F103C8T6")` returns AtmelHandler instead of STHandler!
+- Direct instantiation avoids this issue and is simpler
+- If you see `ExceptionInInitializerError`, run full test suite instead of single test
 
 **Test Isolation vs Full Suite**:
 - Running a single handler test may fail while full suite passes
@@ -203,14 +231,22 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - ~~STHandler: multi-pattern matching bug~~ - Added explicit type checks
 - ~~AtmelHandler: cross-handler pattern matching~~ - Don't fall through for base MICROCONTROLLER type
 
-**Medium**:
+**Medium** (documented in handler tests, not yet fixed):
+- NXPHandler: Op-amp misattribution (LM358 matches OPAMP_NXP but is TI part)
+- NXPHandler: Package extraction returns empty for LPC parts
+- NXPHandler: isOfficialReplacement always returns false
+- InfineonHandler: Package extraction regex removes entire string
+- InfineonHandler: Series extraction order bug (IRF before IRFP)
+- InfineonHandler: Missing patterns for XMC, OptiMOS
+- MicrochipHandler: Package extraction doesn't parse `-TempGrade/Package` format
+- MicrochipHandler: Regex bug `[A|L]` should be `[AL]`
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
-- Other handlers likely have similar bugs as STHandler/AtmelHandler (need audit)
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
 - Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
-- TIHandler, AtmelHandler, and STHandler now have comprehensive tests - use as template for others
+- **6 handlers now have comprehensive tests** - TI, Atmel, ST, NXP, Infineon, Microchip (440 tests total)
+- Use these as templates for other handlers
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
