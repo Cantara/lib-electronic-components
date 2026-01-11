@@ -163,7 +163,8 @@ public class MPNExtractionTest {
         ComponentType actualType = MPNUtils.getComponentType(actualMPN);
         System.out.println("Actual type: " + actualType);
 
-        assertTrue(actualType.toString().contains(expectedType.toString()),
-                String.format("Wrong component type for MPN: '%s'", actualMPN));
+        assertTrue(actualType == expectedType || actualType.getBaseType() == expectedType,
+                String.format("Wrong component type for MPN: '%s', expected %s but was %s",
+                        actualMPN, expectedType, actualType));
     }
 }

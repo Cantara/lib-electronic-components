@@ -169,23 +169,14 @@ public class TIHandler implements ManufacturerHandler {
                 "^(?:LM|UA)7905"
         ));
 
-        // LM358 series - Dual Op-Amp
+        // LM358 series - Dual Op-Amp (single consolidated entry)
         COMPONENT_SERIES.put("LM358", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
-                "^LM358(?:[AMDP])?(?:N|D|P|DG|PW|DR|DGK|DBV|DRG4)?$",  // Exact pattern with all known variants
+                "^LM358(?:[AMDP])?(?:N|D|P|DG|PW|DR|DGK|DBV|DRG4)?$",
                 "Dual Op-Amp",
                 Set.of("MC1458", "LM1458", "RC4558"),
                 Set.of(ComponentType.OPAMP, ComponentType.ANALOG_IC, ComponentType.IC),
                 "^LM358"
-        ));       // === VOLTAGE REGULATORS ===
-        // Fixed 5V Positive
-        COMPONENT_SERIES.put("LM7805", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^(?:LM|UA)7805(?:[A-Z]*(?:CT|T|KC|KV|MP|DT))?$",
-                "5V Fixed Positive Voltage Regulator",
-                Set.of("MC7805", "UA7805"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.ANALOG_IC, ComponentType.IC),
-                "^(?:LM|UA)7805"
         ));
 
         // Fixed 12V Positive
@@ -198,54 +189,8 @@ public class TIHandler implements ManufacturerHandler {
                 "^(?:LM|UA)7812"
         ));
 
-        // Fixed 5V Negative
-        COMPONENT_SERIES.put("LM7905", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^(?:LM|UA)7905[A-Z]*(?:CT|T|KC|KV|MP|DT)?$",
-                "5V Fixed Negative Voltage Regulator",
-                Set.of("MC7905", "UA7905"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^(?:LM|UA)7905"
-        ));
-
-        // LM317 Adjustable Positive
-        COMPONENT_SERIES.put("LM317", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM317(?:[A-Z]*(?:T|K|H|MP|S))?$",
-                "Adjustable Positive Voltage Regulator",
-                Set.of("MC317", "LM350", "LM338"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM317"
-        ));
-
-        // LM350 High Current Adjustable
-        COMPONENT_SERIES.put("LM350", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM350(?:[A-Z]*(?:T|K|H|MP|S))?$",
-                "High Current Adjustable Voltage Regulator",
-                Set.of("LM317", "LM338"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM350"
-        ));
-
-        // LM337 Adjustable Negative
-        COMPONENT_SERIES.put("LM337", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM337(?:[A-Z]*(?:T|K|H|MP|S))?$",
-                "Adjustable Negative Voltage Regulator",
-                Set.of("MC337"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM337"
-        ));
-        // === OPAMPS (register first for priority) ===
-        COMPONENT_SERIES.put("LM358", new ComponentSeriesInfo(
-                ComponentType.OPAMP_TI,
-                "^LM358(?:[A-Z0-9]*(?:N|D|P|DG|PW))?$",  // Very specific pattern
-                "Dual Op-Amp",
-                Set.of("MC1458", "LM1458", "RC4558"),
-                Set.of(ComponentType.OPAMP, ComponentType.ANALOG_IC, ComponentType.IC),
-                "^LM358(?![0-9])"  // Make sure no digits follow 358
-        ));
+        // Note: LM7905, LM317, LM350, LM337 defined below in consolidated section
+        // Note: LM358 already defined above
 
         COMPONENT_SERIES.put("LM324", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
@@ -257,36 +202,27 @@ public class TIHandler implements ManufacturerHandler {
         ));
 
         // === TEMPERATURE SENSORS === (after op-amps)
+        // LM35 sensors have LETTER after 35 (e.g., LM35DZ, LM35CZ), NOT digit (LM358 is op-amp!)
         COMPONENT_SERIES.put("LM35", new ComponentSeriesInfo(
                 ComponentType.TEMPERATURE_SENSOR_TI,
-                "^LM35[0-9][A-Z][A-Z0-9-]*$",  // Must have digit after 35 and a letter
+                "^LM35[A-D][A-Z0-9-]*$",  // Letter A-D after 35, NOT digit (avoids LM358)
                 "Precision Temperature Sensor",
                 Set.of(),
                 Set.of(ComponentType.TEMPERATURE_SENSOR, ComponentType.SENSOR, ComponentType.IC),
-                "^LM35[0-9]"  // Must have digit after 35
+                "^LM35[A-D]"  // Letter after 35
         ));
 
+        // TL072 - consolidated entry (single definition)
         COMPONENT_SERIES.put("TL072", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
                 "^TL072[A-Z0-9]*(?:N|D|P|DG|PW)?$",
                 "Dual JFET Op-Amp",
                 Set.of(),
-                Set.of(ComponentType.OPAMP, ComponentType.IC),  // Add IC as additional type
+                Set.of(ComponentType.OPAMP, ComponentType.IC),
                 "^TL072"
         ));
 
-
-
-
-        // === VOLTAGE REGULATORS - FIXED NEGATIVE (79xx) ===
-        COMPONENT_SERIES.put("LM7905", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^(?:LM|UA)7905[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "-5V Fixed Negative Voltage Regulator",
-                Set.of("MC7905", "UA7905", "KA7905"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),  // Add IC as additional type
-                "^(?:LM|UA)7905"
-        ));
+        // Note: LM7905 already defined above
 
 
 
@@ -302,15 +238,7 @@ public class TIHandler implements ManufacturerHandler {
                 "^LM311"
         ));
 
-        // Other op-amps
-        COMPONENT_SERIES.put("TL072", new ComponentSeriesInfo(
-                ComponentType.OPAMP_TI,
-                "^TL072[A-Z0-9]*(?:N|D|P|DG|PW)?$",
-                "Dual JFET Op-Amp",
-                Set.of(),
-                Set.of(ComponentType.OPAMP, ComponentType.IC),  // Add IC here
-                "^TL072"
-        ));
+        // Note: TL072 already defined above
 
         COMPONENT_SERIES.put("LM7806", new ComponentSeriesInfo(
                 ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
@@ -344,14 +272,8 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.VOLTAGE_REGULATOR),
                 "^(?:LM|UA)7810"
         ));
-        COMPONENT_SERIES.put("LM7812", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^(?:LM|UA)7812[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "12V Fixed Positive Voltage Regulator",
-                Set.of("MC7812", "UA7812", "KA7812"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^(?:LM|UA)7812"
-        ));
+        // Note: LM7812 already defined above
+
         COMPONENT_SERIES.put("LM7815", new ComponentSeriesInfo(
                 ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
                 "^(?:LM|UA)7815[A-Z]*(CT|T|KC|KV|MP|DT)?$",
@@ -377,55 +299,33 @@ public class TIHandler implements ManufacturerHandler {
                 "^(?:LM|UA)7824"
         ));
 
-        // === VOLTAGE REGULATORS - FIXED NEGATIVE (79xx) ===
-        COMPONENT_SERIES.put("LM7905", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^(?:LM|UA)7905[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "-5V Fixed Negative Voltage Regulator",
-                Set.of("MC7905", "UA7905", "KA7905"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^(?:LM|UA)7905"
-        ));
+        // Note: LM7905 already defined above
 
 
 
+        // Note: TL072 already defined above
 
-
-
-        COMPONENT_SERIES.put("TL072", new ComponentSeriesInfo(
-                ComponentType.OPAMP_TI,
-                "^TL072[A-Z0-9]*(?:N|D|P|DG|PW)?$",
-                "Dual JFET Op-Amp",
-                Set.of(),
-                Set.of(ComponentType.OPAMP),
-                "^TL072"
-        ));
+        // TL074 - consolidated entry
         COMPONENT_SERIES.put("TL074", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
                 "^TL074[A-Z0-9]*(?:N|D|P|DG|PW)?$",
                 "Quad JFET Op-Amp",
                 Set.of(),
-                Set.of(ComponentType.OPAMP),
+                Set.of(ComponentType.OPAMP, ComponentType.IC),
                 "^TL074"
         ));
+
+        // NE5532 - consolidated entry
         COMPONENT_SERIES.put("NE5532", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
                 "^NE5532[A-Z0-9]*(?:N|D|P|DG|PW)?$",
                 "Dual Low-Noise Op-Amp",
                 Set.of(),
-                Set.of(ComponentType.OPAMP),
+                Set.of(ComponentType.OPAMP, ComponentType.IC),
                 "^NE5532"
         ));
 
-        // === TEMPERATURE SENSORS ===
-        COMPONENT_SERIES.put("LM35", new ComponentSeriesInfo(
-                ComponentType.TEMPERATURE_SENSOR_TI,
-                "^LM35[A-Z][A-Z0-9-]*$",
-                "Precision Temperature Sensor",
-                Set.of(),
-                Set.of(ComponentType.TEMPERATURE_SENSOR, ComponentType.SENSOR),
-                "^LM35"
-        ));
+        // Note: LM35 already defined above
 
         // === LOW DROPOUT REGULATORS (LDO) ===
         COMPONENT_SERIES.put("TPS7350", new ComponentSeriesInfo(
@@ -447,36 +347,7 @@ public class TIHandler implements ManufacturerHandler {
                 "^TL431"
         ));
 
-        // TL Series Op-Amps
-        COMPONENT_SERIES.put("TL072", new ComponentSeriesInfo(
-                ComponentType.OPAMP_TI,
-                "^TL072[A-Z0-9-]*$",
-                "Dual JFET Op-Amp",
-                Set.of(),
-                Set.of(ComponentType.OPAMP),
-                "^TL072"
-        ));
-
-        // More Op-Amps
-        COMPONENT_SERIES.put("TL074", new ComponentSeriesInfo(
-                ComponentType.OPAMP_TI,
-                "^TL074[A-Z0-9-]*$",
-                "Quad JFET Op-Amp",
-                Set.of(),
-                Set.of(ComponentType.OPAMP),
-                "^TL074"
-        ));
-
-
-        // Temperature Sensors (with specific patterns)
-        COMPONENT_SERIES.put("LM35", new ComponentSeriesInfo(
-                ComponentType.TEMPERATURE_SENSOR_TI,
-                "^LM35[0-9][A-Z0-9-]*$",  // More specific pattern
-                "Precision Temperature Sensor",
-                Set.of(),
-                Set.of(ComponentType.TEMPERATURE_SENSOR, ComponentType.SENSOR),
-                "^LM35"
-        ));
+        // Note: TL072, TL074, LM35 already defined above
 
 
         // LEDs - RGB Series
@@ -516,98 +387,12 @@ public class TIHandler implements ManufacturerHandler {
         ));
 
 
-        COMPONENT_SERIES.put("LM7808", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM7808[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "8V Fixed Positive Voltage Regulator",
-                Set.of("MC7808", "UA7808", "KA7808"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^LM7808"
-        ));
+        // Note: LM7808 already defined above
 
-        COMPONENT_SERIES.put("LM7812", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM7812[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "12V Fixed Positive Voltage Regulator",
-                Set.of("MC7812", "UA7812", "KA7812"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^LM7812"
-        ));
-
-        // Voltage Regulators - Fixed Negative
-        COMPONENT_SERIES.put("LM7905", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM7905[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "-5V Fixed Negative Voltage Regulator",
-                Set.of("MC7905", "UA7905", "KA7905"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^LM7905"
-        ));
-
-        COMPONENT_SERIES.put("LM7912", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM7912[A-Z]*(CT|T|KC|KV|MP|DT)?$",
-                "-12V Fixed Negative Voltage Regulator",
-                Set.of("MC7912", "UA7912", "KA7912"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR),
-                "^LM7912"
-        ));
-
-        // Adjustable Regulators (more specific patterns first)
-        COMPONENT_SERIES.put("LM317", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM317[A-Z]*(T|K|H|MP|S)?$",  // Specific pattern
-                "Adjustable Positive Voltage Regulator",
-                Set.of("MC317", "LM350", "LM338"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM317"
-        ));
-
-        COMPONENT_SERIES.put("LM350", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM350[A-Z]*(T|K|H|MP|S)?$",
-                "Adjustable Positive Voltage Regulator (Higher Current)",
-                Set.of("LM317", "LM338"),  // Compatible types
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM350"
-        ));
-
-        // Add negative adjustable regulators
-        COMPONENT_SERIES.put("LM337", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM337[A-Z]*(T|K|H|MP|S)?$",  // Specific pattern
-                "Adjustable Negative Voltage Regulator",
-                Set.of("MC337", "LM333"),
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM337"
-        ));
-
-        COMPONENT_SERIES.put("LM338", new ComponentSeriesInfo(
-                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
-                "^LM338[A-Z]*(T|K|H|MP|S)?$",
-                "Adjustable Positive Voltage Regulator (High Current)",
-                Set.of("LM317", "LM350"),  // Compatible types
-                Set.of(ComponentType.VOLTAGE_REGULATOR, ComponentType.IC),
-                "^LM338"
-        ));
+        // Note: LM7812, LM7905, LM7912, LM317, LM350, LM337, LM338 already defined above
 
 
-
-
-
-        // ... [continue with the rest of the series definitions]
-
-        // Temperature Sensors
-        COMPONENT_SERIES.put("LM35", new ComponentSeriesInfo(
-                ComponentType.TEMPERATURE_SENSOR_TI,
-                "^LM35[A-Z][A-Z0-9-]*$",
-                "Precision Temperature Sensor",
-                Set.of(),
-                Set.of(ComponentType.TEMPERATURE_SENSOR, ComponentType.SENSOR),
-                "^LM35"
-        ));
-
-        // ... [continue with more series definitions]
+        // Note: LM35 already defined above
     }
 
     // Fallback patterns for broad component types
@@ -623,13 +408,13 @@ public class TIHandler implements ManufacturerHandler {
         FALLBACK_PATTERNS.put(ComponentType.VOLTAGE_REGULATOR,
                 "^(?:LM|UA)7[89][0-9]{2}[A-Z0-9-]*$");
 
-        // Temperature Sensors
+        // Temperature Sensors - LM35 has LETTER after 35 (LM35D, LM35C), not digit (LM358 is op-amp!)
         FALLBACK_PATTERNS.put(ComponentType.TEMPERATURE_SENSOR_TI,
-                "^(?:LM35|TMP)[0-9]+[A-Z0-9-]*$");
+                "^(?:LM35[A-D]|TMP[0-9]+)[A-Z0-9-]*$");
         FALLBACK_PATTERNS.put(ComponentType.TEMPERATURE_SENSOR,
-                "^(?:LM35|TMP)[0-9]+[A-Z0-9-]*$");
+                "^(?:LM35[A-D]|TMP[0-9]+)[A-Z0-9-]*$");
         FALLBACK_PATTERNS.put(ComponentType.SENSOR,
-                "^(?:LM35|TMP)[0-9]+[A-Z0-9-]*$");
+                "^(?:LM35[A-D]|TMP[0-9]+)[A-Z0-9-]*$");
 
         // Add LED patterns to fallback
         FALLBACK_PATTERNS.put(ComponentType.LED_TI,
@@ -652,17 +437,6 @@ public class TIHandler implements ManufacturerHandler {
     }
     @Override
     public void initializePatterns(PatternRegistry registry) {
-        // Register patterns in order (voltage regulators first)
-//        ArrayList<Map.Entry<String, ComponentSeriesInfo>> entries =
-//                new ArrayList<>(COMPONENT_SERIES.entrySet());
-//
-//        // Sort to ensure voltage regulators are registered first
-//        entries.sort((e1, e2) -> {
-//            boolean isReg1 = e1.getValue().primaryType == ComponentType.VOLTAGE_REGULATOR_LINEAR_TI;
-//            boolean isReg2 = e2.getValue().primaryType == ComponentType.VOLTAGE_REGULATOR_LINEAR_TI;
-//            return Boolean.compare(isReg2, isReg1);  // Voltage regulators first
-//        });
-        // Register all patterns from component series
         for (Map.Entry<String, ComponentSeriesInfo> entry : COMPONENT_SERIES.entrySet()) {
             ComponentSeriesInfo info = entry.getValue();
             // Register primary type
