@@ -153,21 +153,36 @@ This ensures institutional knowledge is preserved for future sessions.
 - Missing types fall through to `default -> this` (returns self, not base type)
 - Check when adding new types: TRANSISTOR_*, OPAMP_*, MOSFET_*, etc.
 
+**Multi-Pattern Types Bug (PR #80)**:
+- Default `ManufacturerHandler.matches()` uses `getPattern(type)` which returns only ONE pattern
+- Types like `MEMORY_ATMEL` have multiple patterns (AT24 for I2C, AT25 for SPI)
+- The first pattern found may not match the MPN even though another would
+- **Fix**: Override `matches()` to use `patterns.matches(mpn, type)` which checks ALL patterns
+- This affects any handler that registers multiple patterns for the same ComponentType
+
 ### Known Technical Debt
 
-**Fixed (PR #74, #75, #76)**:
+**Fixed (PR #74, #75, #76, #77, #78, #80)**:
 - ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
 - ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
 - ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
 - ~~Flaky tests due to handler order~~ - Fixed with deterministic TreeSet ordering
 - ~~`ComponentType.getManufacturer()` fragile string matching~~ - Fixed with explicit suffix→enum mapping
 - ~~Unused `TIHandlerPatterns.java`~~ - Deleted
+- ~~TIHandler: HashSet in getSupportedTypes()~~ - Changed to Set.of()
+- ~~TIHandler: suffix ordering bug (DT vs T)~~ - Longer suffixes checked first
+- ~~AtmelHandler: multi-pattern matching bug~~ - Uses registry.matches() now
+- ~~AtmelHandler: speed grade in package extraction~~ - Strips leading digits
+- ~~AtmelHandler: AT25 pattern too restrictive~~ - Now allows 0-2 letters
 
 **Medium**:
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
+- STHandler package extraction returns empty for STM32F103C8T6 (should return T6)
+- Other handlers likely have the multi-pattern bug (need audit)
 
 **Low**:
 - Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
+- TIHandler and AtmelHandler now have comprehensive tests - use as template for others
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused

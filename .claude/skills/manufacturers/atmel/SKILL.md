@@ -269,4 +269,43 @@ if (mpn.startsWith("ATMEGA")) {
 - **P suffix importance**: ATMEGA328 and ATMEGA328P are different! The P version has lower power consumption
 - **Memory in name**: ATmega328 has 32KB flash (32), ATtiny85 has 8KB (8), but encoding isn't always consistent
 
+## Handler Implementation Learnings (PR #80)
+
+### Multi-Pattern Bug (CRITICAL)
+Default `ManufacturerHandler.matches()` uses `getPattern()` which returns only ONE pattern. But types like `MEMORY_ATMEL` have multiple patterns (AT24 for I2C, AT25 for SPI). Fix:
+```java
+// WRONG - only checks first pattern
+return ManufacturerHandler.super.matches(mpn, type, patterns);
+
+// CORRECT - checks ALL patterns for the type
+return patterns.matches(upperMpn, type);
+```
+
+### Speed Grade in Package Extraction
+Atmel MPNs have speed grade digits BEFORE package code. Must strip them:
+```java
+// ATTINY85-20PU → package is "PU", not "20PU"
+String suffix = parts[parts.length - 1].toUpperCase();
+String packageCode = suffix.replaceAll("^[0-9]+", ""); // Strip leading digits
+```
+
+### AT25 Pattern Variants
+AT25 memory comes in variants with 0, 1, or 2 letters after "AT25":
+- `AT25080` - no letters (legacy EEPROM)
+- `AT25F1024` - 1 letter
+- `AT25SF041` - 2 letters (SF = Serial Flash)
+
+Pattern must use `[A-Z]{0,2}` not `[A-Z]{1,2}`.
+
+### Replacement Logic
+Same series = valid replacement, regardless of package:
+```java
+// ATMEGA328P-PU and ATMEGA328P-AU ARE replacements
+// (same die, different footprint - both are pin-compatible)
+return !series1.isEmpty() && series1.equals(series2);
+```
+
+### Test Location
+Put tests in `no.cantara.electronic.component.lib.handlers` package (NOT `manufacturers` - causes classpath shadowing). Use `@BeforeAll` with `MPNUtils.getManufacturerHandler("ATMEGA328P")`.
+
 <!-- Add new learnings above this line -->
