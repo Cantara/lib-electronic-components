@@ -199,10 +199,29 @@ LM7905CT  → -5V regulator, TO-220
 // For voltage regulators, package often follows voltage
 // Example: LM7805CT → base="LM7805", package="CT" (TO-220)
 
-// Check for compound codes first (PW, DGK, etc.)
-if (suffix.startsWith("DGK")) return "MSOP";
-if (suffix.startsWith("PW")) return "TSSOP";
-if (suffix.startsWith("D")) return "SOIC";  // Single letter last
+// CRITICAL: Check longer suffixes BEFORE shorter ones!
+// "LM7805DT".endsWith("T") is TRUE, but DT=SOT-223, not TO-220
+if (suffix.endsWith("CT")) return "TO-220";   // 2-char first
+if (suffix.endsWith("DT")) return "SOT-223";  // 2-char first
+if (suffix.endsWith("MP")) return "SOT-223";  // 2-char first
+if (suffix.endsWith("KC")) return "TO-252";   // 2-char first
+if (suffix.endsWith("T")) return "TO-220";    // 1-char LAST
+
+// Same for SOIC vs MSOP vs TSSOP
+if (suffix.startsWith("DGK")) return "MSOP";  // 3-char first
+if (suffix.startsWith("PW")) return "TSSOP";  // 2-char
+if (suffix.startsWith("D")) return "SOIC";    // 1-char LAST
+```
+
+**Bug Example (Fixed in PR #78)**:
+```java
+// WRONG - "DT" ends with "T" so this returns TO-220 incorrectly
+if (upperMpn.endsWith("T")) return "TO-220";   // Matches first!
+if (upperMpn.endsWith("DT")) return "SOT-223"; // Never reached
+
+// CORRECT - Check longer suffixes first
+if (upperMpn.endsWith("DT")) return "SOT-223"; // Matches correctly
+if (upperMpn.endsWith("T")) return "TO-220";   // Only bare "T"
 ```
 
 ### Series Extraction
@@ -231,5 +250,8 @@ if (suffix.startsWith("D")) return "SOIC";  // Single letter last
 - **UA prefix**: Original TI designation, functionally equivalent to LM (UA7805 = LM7805)
 - **Automotive suffix Q1/Q**: Indicates AEC-Q100 qualified for automotive use
 - **Green/lead-free**: Suffix "G" or "E" sometimes indicates RoHS compliance
+- **Suffix ordering bug (PR #78)**: When using `endsWith()` for package detection, ALWAYS check longer suffixes first. "DT" ends with "T", so checking "T" first causes wrong results.
+- **TIHandlerTest location**: Tests must be in `handlers` package, NOT `manufacturers` package (causes classpath shadowing)
+- **Handler initialization**: Use `MPNUtils.getManufacturerHandler("LM358")` in tests, not `new TIHandler()` (causes circular init)
 
 <!-- Add new learnings above this line -->
