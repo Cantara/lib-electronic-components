@@ -59,73 +59,31 @@ This skill provides architectural guidance for enhancing and cleaning up the lib
 
 ## Critical Issues to Fix
 
-### 1. TIHandler Pattern Duplication (CRITICAL)
+### RESOLVED ISSUES (PR #74, #75)
 
-**File**: `manufacturers/TIHandler.java`
+The following issues have been fixed:
 
-The `COMPONENT_SERIES` map contains duplicate entries with conflicting patterns:
+1. **TIHandler Pattern Duplication** - FIXED
+   - Removed ~170 lines of duplicate COMPONENT_SERIES entries
+   - Fixed LM35/LM358 pattern conflict (LM35 sensors use letter suffix A-D)
 
-```java
-// Line 172-179: First LM358 definition
-COMPONENT_SERIES.put("LM358", new ComponentSeriesInfo(
-    ComponentType.OPAMP_TI,
-    "^LM358(?:[AMDP])?(?:N|D|P|DG|PW|DR|DGK|DBV|DRG4)?$", ...
+2. **No Base Handler Class** - FIXED
+   - Created `AbstractManufacturerHandler` with shared helper methods
+   - Methods: `extractSuffixAfterHyphen()`, `extractTrailingSuffix()`, `findFirstDigitIndex()`, `findLastDigitIndex()`
 
-// Line 240-248: SECOND LM358 definition (overwrites first!)
-COMPONENT_SERIES.put("LM358", new ComponentSeriesInfo(
-    ComponentType.OPAMP_TI,
-    "^LM358(?:[A-Z0-9]*(?:N|D|P|DG|PW))?$", ...  // DIFFERENT PATTERN
-```
+3. **Package Code Duplication** - FIXED
+   - Created `PackageCodeRegistry` with centralized mappings
+   - Includes standard codes (N→DIP, D→SOIC) and Atmel-specific (PU→PDIP, AU→TQFP)
 
-**Duplicated components**:
-- LM358: lines 172, 240
-- LM7805: lines 153, 182, 519
-- LM7905: lines 162, 202, 282, 381, 538
-- TL072: lines 269, 306, 395, 451
-- LM7812: lines 192, 347, 528
-- LM317: lines 122, 212, 557
-- NE5532: lines 411 + in TIHandlerPatterns
+4. **Flaky Tests** - FIXED
+   - Changed `ManufacturerHandlerFactory` from `HashSet` to `TreeSet` with deterministic ordering
+   - Handler iteration order is now consistent across all test runs
 
-**Fix**: Consolidate to single definitions, remove duplicates.
+---
 
-### 2. TIHandlerPatterns Unused (HIGH)
+## Remaining Issues
 
-**File**: `manufacturers/TIHandlerPatterns.java` was created to extract patterns but TIHandler was never refactored to use it.
-
-**Fix**: Refactor TIHandler to delegate to TIHandlerPatterns, remove inline definitions.
-
-### 3. No Base Handler Class (HIGH)
-
-All 50 handlers duplicate:
-- Package code extraction logic
-- Series extraction patterns
-- Helper methods (findFirstDigit, findLastDigit)
-
-**Fix**: Create `AbstractManufacturerHandler`:
-
-```java
-public abstract class AbstractManufacturerHandler implements ManufacturerHandler {
-    // Shared package code mappings
-    protected static final Map<String, String> COMMON_PACKAGES = Map.of(
-        "N", "DIP", "D", "SOIC", "PW", "TSSOP", ...
-    );
-
-    // Shared helpers
-    protected int findFirstDigit(String str, int start) { ... }
-    protected int findLastDigit(String str) { ... }
-    protected String extractStandardPackage(String mpn) { ... }
-}
-```
-
-### 4. ComponentSeriesInfo Duplication (MEDIUM)
-
-Same class defined in two places:
-- `TIHandler.java` lines 73-96
-- `TIHandlerPatterns.java` lines 265-326
-
-**Fix**: Extract to shared `ComponentSeriesDefinition.java`
-
-### 5. ComponentType.getManufacturer() Broken (MEDIUM)
+### 1. ComponentType.getManufacturer() Broken (MEDIUM)
 
 **File**: `ComponentType.java` lines 497-507
 
@@ -147,37 +105,23 @@ public ComponentManufacturer getManufacturer() {
 
 ---
 
-## Package Code Duplication
+## Package Code Registry (IMPLEMENTED)
 
-Same mappings repeated across handlers:
-
-**TIHandler** (lines 17-44):
-```java
-PACKAGE_CODES.put("N", "DIP");
-PACKAGE_CODES.put("D", "SOIC");
-PACKAGE_CODES.put("PW", "TSSOP");
-// ... 15 more
-```
-
-**Also in**: AtmelHandler, NXPHandler, STHandler, InfineonHandler...
-
-**Fix**: Create `PackageCodeRegistry`:
+The `PackageCodeRegistry` class has been created to centralize package code mappings:
 
 ```java
-public final class PackageCodeRegistry {
-    public static final Map<String, String> STANDARD = Map.ofEntries(
-        entry("N", "DIP"), entry("P", "DIP"),
-        entry("D", "SOIC"), entry("PW", "TSSOP"),
-        entry("DGK", "MSOP"), entry("DBV", "SOT-23"),
-        entry("T", "TO-220"), entry("KC", "TO-252"),
-        entry("MP", "SOT-223")
-    );
-
-    public static String resolve(String code) {
-        return STANDARD.getOrDefault(code.toUpperCase(), code);
-    }
-}
+// Usage in handlers:
+String resolvedCode = PackageCodeRegistry.resolve("PU");  // Returns "PDIP"
+boolean isKnown = PackageCodeRegistry.isKnownCode("N");   // Returns true
+boolean isPower = PackageCodeRegistry.isPowerPackage("TO-220"); // Returns true
 ```
+
+**Supported codes include**:
+- Standard: N→DIP, D→SOIC, PW→TSSOP, DGK→MSOP, DBV→SOT-23
+- Power: T→TO-220, KC→TO-252, MP→SOT-223
+- Atmel-specific: PU→PDIP, AU→TQFP, MU→QFN, SU→SOIC, XU→TSSOP
+
+**Next step**: Migrate existing handlers to use the registry instead of inline maps.
 
 ---
 
@@ -215,56 +159,46 @@ public final class PackageCodeRegistry {
 
 ## Refactoring Priorities
 
-### Priority 1: Critical (Do First)
+### COMPLETED (PR #74, #75)
 
-1. **Deduplicate TIHandler COMPONENT_SERIES**
-   - Remove duplicate entries for LM358, LM7805, TL072, etc.
-   - Keep only the most specific pattern
-   - Files: `TIHandler.java` lines 99-611
+- ~~Deduplicate TIHandler COMPONENT_SERIES~~ - Done, removed ~170 lines
+- ~~Create AbstractManufacturerHandler~~ - Done
+- ~~Create PackageCodeRegistry~~ - Done
+- ~~Fix flaky tests (handler ordering)~~ - Done, uses TreeSet now
 
-2. **Integrate TIHandlerPatterns**
-   - Refactor TIHandler to use TIHandlerPatterns
-   - Remove inline COMPONENT_SERIES definitions
-   - Files: `TIHandler.java`, `TIHandlerPatterns.java`
+### Priority 1: High (Structural Improvements)
 
-### Priority 2: High (Structural Improvements)
+1. **Migrate handlers to use AbstractManufacturerHandler**
+   - Many handlers still use duplicate helper methods
+   - Files: `*Handler.java` in `manufacturers/`
 
-3. **Create AbstractManufacturerHandler**
-   - Extract common package/series extraction
-   - Move helper methods
-   - New file: `AbstractManufacturerHandler.java`
+2. **Migrate handlers to use PackageCodeRegistry**
+   - Replace inline PACKAGE_CODES maps with registry calls
+   - Files: `*Handler.java` in `manufacturers/`
 
-4. **Create PackageCodeRegistry**
-   - Centralize package code mappings
-   - New file: `PackageCodeRegistry.java`
+3. **Delete TIHandlerPatterns.java**
+   - Now unused after TIHandler consolidation
+   - File: `manufacturers/TIHandlerPatterns.java`
 
-5. **Extract ComponentSeriesDefinition**
-   - Shared series info container
-   - New file: `ComponentSeriesDefinition.java`
+### Priority 2: Medium (Quality Improvements)
 
-### Priority 3: Medium (Quality Improvements)
-
-6. **Add Handler Unit Tests**
+4. **Add Handler Unit Tests**
    - Test each handler's pattern matching
    - New files: `*HandlerTest.java`
 
-7. **Fix ComponentType.getManufacturer()**
+5. **Fix ComponentType.getManufacturer()**
    - Add explicit mapping or deprecate
    - File: `ComponentType.java`
 
-8. **Add Similarity Calculator Tests**
+6. **Add Similarity Calculator Tests**
    - Test each calculator
    - New files: `*SimilarityCalculatorTest.java`
 
-### Priority 4: Low (Enhancements)
+### Priority 3: Low (Enhancements)
 
-9. **Refactor ManufacturerHandlerFactory**
-   - Replace reflection with explicit registration
-   - File: `ManufacturerHandlerFactory.java`
-
-10. **Standardize Pattern Approaches**
-    - Consistent regex style across handlers
-    - All handlers in `manufacturers/`
+7. **Standardize Pattern Approaches**
+   - Consistent regex style across handlers
+   - All handlers in `manufacturers/`
 
 ---
 
@@ -301,13 +235,31 @@ When reviewing code, watch for:
 - `PatternRegistry` supports multi-handler per type but this feature is largely unused
 - Similarity calculators are registered in `MPNUtils` static initializer (lines 34-48)
 
+### Critical Implementation Details
+
+**Handler Ordering (PR #75)**:
+- `ManufacturerHandlerFactory` MUST use `TreeSet` with deterministic comparator
+- `HashSet` caused flaky tests because iteration order varied between runs
+- First matching handler wins in `getManufacturerHandler()` - order is critical!
+
+**Type Detection Specificity (PR #74)**:
+- `MPNUtils.getComponentType()` uses specificity scoring via `getTypeSpecificityScore()`
+- Manufacturer-specific types (OPAMP_TI) score +150, generic types (IC) score -50
+- Without scoring, iteration order could return IC instead of OPAMP_TI
+
+**ComponentType.getBaseType() Completeness**:
+- All manufacturer-specific types MUST be in the switch statement
+- Missing types fall through to `default -> this` (returns self, not base type)
+- Fixed in PR #74: Added TRANSISTOR_VISHAY, TRANSISTOR_NXP, OPAMP_ON, OPAMP_NXP, OPAMP_ROHM
+
 ### Known Gotchas
 - Handler order in `ComponentManufacturer` affects detection priority for ambiguous MPNs
 - Some MPNs legitimately match multiple manufacturers (second-source parts)
-- `TIHandlerPatterns.java` exists but isn't integrated - don't add more patterns there until refactored
+- `TIHandlerPatterns.java` exists but is unused - can be safely deleted
 
 ### Historical Context
-- Recent commits show "debugging CI test failures" - test stability may need attention
+- CI test failures (pre-PR #75) were caused by non-deterministic HashSet iteration
+- Test stability now achieved via TreeSet with class name comparator
 - Some handlers have commented-out patterns (e.g., `ComponentManufacturer.java` lines 45-53) - unclear if deprecated or WIP
 
 <!-- Add new learnings above this line -->

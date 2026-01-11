@@ -111,25 +111,48 @@ This ensures institutional knowledge is preserved for future sessions.
 - `MPNUtilsTest` and `MPNExtractionTest` are the primary tests for MPN parsing logic
 - Many test MPNs are real-world part numbers from datasheets
 - **Test coverage gap**: 50+ handlers and 20+ similarity calculators have no dedicated tests
+- **Flaky tests**: If tests pass individually but fail in suite, check for non-deterministic iteration (HashSet → TreeSet)
+
+### Critical Implementation Details
+
+**Handler Ordering (IMPORTANT)**:
+- `ManufacturerHandlerFactory` MUST use `TreeSet` with deterministic comparator
+- `HashSet` causes flaky tests because iteration order varies between runs
+- First matching handler wins in `getManufacturerHandler()` - order matters!
+
+**Type Detection Specificity**:
+- `MPNUtils.getComponentType()` uses specificity scoring to return most specific type
+- Manufacturer-specific types (OPAMP_TI) score higher than generic (IC, ANALOG_IC)
+- Without scoring, HashSet iteration could return IC instead of OPAMP_TI
+
+**ComponentType.getBaseType() Completeness**:
+- All manufacturer-specific types MUST be in the switch statement
+- Missing types fall through to `default -> this` (returns self, not base type)
+- Check when adding new types: TRANSISTOR_*, OPAMP_*, MOSFET_*, etc.
 
 ### Known Technical Debt
 
-**Critical**:
-- `TIHandler.java` has duplicate COMPONENT_SERIES entries (LM358, LM7805, TL072, etc. defined 2-3 times with different patterns)
-- `TIHandlerPatterns.java` was created but never integrated - TIHandler still uses inline definitions
-
-**High**:
-- No `AbstractManufacturerHandler` base class - 50 handlers duplicate package/series extraction logic
-- Package code mappings (DIP, SOIC, TSSOP) duplicated across 10+ handlers
-- `ComponentSeriesInfo` class defined in both TIHandler (line 73) and TIHandlerPatterns (line 265)
+**Fixed (PR #74, #75)**:
+- ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
+- ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
+- ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
+- ~~Flaky tests due to handler order~~ - Fixed with deterministic TreeSet ordering
 
 **Medium**:
 - `ComponentType.getManufacturer()` method (lines 497-507) returns incorrect results for some types
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
+- `TIHandlerPatterns.java` exists but is unused - can be deleted (patterns now in TIHandler)
+
+**Low**:
+- Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
 - Similarity calculators registered in `MPNUtils` static initializer (lines 34-48)
-- `ManufacturerHandlerFactory` uses reflection-based classpath scanning - brittle approach
+- `ManufacturerHandlerFactory` uses reflection-based classpath scanning with TreeSet for deterministic order
+
+### Recent Infrastructure (PR #74)
+- **`PackageCodeRegistry`** - Centralized package code mappings (PU→PDIP, AU→TQFP, etc.)
+- **`AbstractManufacturerHandler`** - Base class with `extractSuffixAfterHyphen()`, `extractTrailingSuffix()`, `findFirstDigitIndex()`, `findLastDigitIndex()` helpers
 
 <!-- Add new learnings above this line -->
