@@ -481,13 +481,14 @@ public class TIHandler implements ManufacturerHandler {
         String upperMpn = mpn.toUpperCase();
 
         // Handle voltage regulators
+        // Check longer suffixes first to avoid false matches (e.g., "DT" ends with "T")
         if (series.primaryType == ComponentType.VOLTAGE_REGULATOR_LINEAR_TI ||
                 series.primaryType == ComponentType.VOLTAGE_REGULATOR_SWITCHING_TI) {
-            if (upperMpn.endsWith("T")) return "TO-220";
             if (upperMpn.endsWith("CT")) return "TO-220";
-            if (upperMpn.endsWith("MP")) return "SOT-223";
             if (upperMpn.endsWith("DT")) return "SOT-223";
+            if (upperMpn.endsWith("MP")) return "SOT-223";
             if (upperMpn.endsWith("KC") || upperMpn.endsWith("KV")) return "TO-252";
+            if (upperMpn.endsWith("T")) return "TO-220";
         }
 
         // Handle op-amps
