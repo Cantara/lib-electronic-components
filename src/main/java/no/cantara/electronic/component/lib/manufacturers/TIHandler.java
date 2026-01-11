@@ -3,6 +3,7 @@ package no.cantara.electronic.component.lib.manufacturers;
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
+import no.cantara.electronic.component.lib.PackageCodeRegistry;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.*;
@@ -13,58 +14,27 @@ import java.util.regex.Pattern;
  * Implements specific pattern matching and component identification for TI parts.
  */
 public class TIHandler implements ManufacturerHandler {
-    // Package code mapping for different package types
-    private static final Map<String, String> PACKAGE_CODES = new HashMap<>();
-    static {
-        // DIP packages
-        PACKAGE_CODES.put("N", "DIP");
-        PACKAGE_CODES.put("P", "DIP");
-
-        // Surface mount packages
-        PACKAGE_CODES.put("D", "SOIC");
-        PACKAGE_CODES.put("PW", "TSSOP");
-        PACKAGE_CODES.put("DGK", "MSOP");
-        PACKAGE_CODES.put("DBV", "SOT-23");
-        PACKAGE_CODES.put("DRL", "SOT-553");
-        PACKAGE_CODES.put("DRV", "SON");
-
-        // Power packages
-        PACKAGE_CODES.put("T", "TO-220");
-        PACKAGE_CODES.put("T3", "TO-220");
-        PACKAGE_CODES.put("K", "TO-3");
-        PACKAGE_CODES.put("H", "TO-39");
-        PACKAGE_CODES.put("KC", "TO-252");
-        PACKAGE_CODES.put("KV", "TO-252");
-        PACKAGE_CODES.put("MP", "SOT-223");
-        PACKAGE_CODES.put("DT", "SOT-223");
-
-        // LED packages
-        PACKAGE_CODES.put("SMD", "SMD");  // Surface Mount LED
-        PACKAGE_CODES.put("THT", "THT");  // Through Hole LED
-    }
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.IC);
-        types.add(ComponentType.ANALOG_IC);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_TI);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_TI);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_LINEAR_TI);
-        types.add(ComponentType.VOLTAGE_REGULATOR_SWITCHING_TI);
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_TI);
-        types.add(ComponentType.MCU_TI);
-        types.add(ComponentType.MSP430_MCU);
-        types.add(ComponentType.C2000_MCU);
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_TI);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        types.add(ComponentType.TEMPERATURE_SENSOR_TI);
-        return types;
+        return Set.of(
+                ComponentType.IC,
+                ComponentType.ANALOG_IC,
+                ComponentType.OPAMP,
+                ComponentType.OPAMP_TI,
+                ComponentType.VOLTAGE_REGULATOR,
+                ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
+                ComponentType.VOLTAGE_REGULATOR_SWITCHING_TI,
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_TI,
+                ComponentType.MCU_TI,
+                ComponentType.MSP430_MCU,
+                ComponentType.C2000_MCU,
+                ComponentType.LED,
+                ComponentType.LED_TI,
+                ComponentType.TEMPERATURE_SENSOR,
+                ComponentType.TEMPERATURE_SENSOR_TI
+        );
     }
 
     /**
@@ -189,9 +159,6 @@ public class TIHandler implements ManufacturerHandler {
                 "^(?:LM|UA)7812"
         ));
 
-        // Note: LM7905, LM317, LM350, LM337 defined below in consolidated section
-        // Note: LM358 already defined above
-
         COMPONENT_SERIES.put("LM324", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
                 "^LM324(?:[A-Z0-9]*(?:N|D|P|DG|PW))?$",  // Very specific pattern
@@ -222,11 +189,6 @@ public class TIHandler implements ManufacturerHandler {
                 "^TL072"
         ));
 
-        // Note: LM7905 already defined above
-
-
-
-
 
         // === COMPARATORS ===
         COMPONENT_SERIES.put("LM311", new ComponentSeriesInfo(
@@ -237,8 +199,6 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.OPAMP, ComponentType.IC),  // Add IC as additional type
                 "^LM311"
         ));
-
-        // Note: TL072 already defined above
 
         COMPONENT_SERIES.put("LM7806", new ComponentSeriesInfo(
                 ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
@@ -272,7 +232,6 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.VOLTAGE_REGULATOR),
                 "^(?:LM|UA)7810"
         ));
-        // Note: LM7812 already defined above
 
         COMPONENT_SERIES.put("LM7815", new ComponentSeriesInfo(
                 ComponentType.VOLTAGE_REGULATOR_LINEAR_TI,
@@ -299,13 +258,6 @@ public class TIHandler implements ManufacturerHandler {
                 "^(?:LM|UA)7824"
         ));
 
-        // Note: LM7905 already defined above
-
-
-
-        // Note: TL072 already defined above
-
-        // TL074 - consolidated entry
         COMPONENT_SERIES.put("TL074", new ComponentSeriesInfo(
                 ComponentType.OPAMP_TI,
                 "^TL074[A-Z0-9]*(?:N|D|P|DG|PW)?$",
@@ -324,8 +276,6 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.OPAMP, ComponentType.IC),
                 "^NE5532"
         ));
-
-        // Note: LM35 already defined above
 
         // === LOW DROPOUT REGULATORS (LDO) ===
         COMPONENT_SERIES.put("TPS7350", new ComponentSeriesInfo(
@@ -347,10 +297,7 @@ public class TIHandler implements ManufacturerHandler {
                 "^TL431"
         ));
 
-        // Note: TL072, TL074, LM35 already defined above
-
-
-        // LEDs - RGB Series
+        // === LEDs ===
         COMPONENT_SERIES.put("TLHR5400", new ComponentSeriesInfo(
                 ComponentType.LED_TI,
                 "^TLHR5400[0-9]*$",
@@ -375,8 +322,6 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.LED),
                 "^TLHB5800"
         ));
-
-        // LEDs - White Series
         COMPONENT_SERIES.put("TLW", new ComponentSeriesInfo(
                 ComponentType.LED_TI,
                 "^TLW[A-Z][0-9]{4}[A-Z0-9-]*$",
@@ -385,14 +330,6 @@ public class TIHandler implements ManufacturerHandler {
                 Set.of(ComponentType.LED),
                 "^TLW[A-Z][0-9]{4}"
         ));
-
-
-        // Note: LM7808 already defined above
-
-        // Note: LM7812, LM7905, LM7912, LM317, LM350, LM337, LM338 already defined above
-
-
-        // Note: LM35 already defined above
     }
 
     // Fallback patterns for broad component types
@@ -424,17 +361,6 @@ public class TIHandler implements ManufacturerHandler {
 
     }
 
-    // Component family enum for internal use
-    private enum TIComponentFamily {
-        OPAMP_GENERAL,
-        OPAMP_TL_SERIES,
-        VOLTAGE_REGULATOR_LINEAR_FIXED,
-        VOLTAGE_REGULATOR_LINEAR_ADJUST,
-        TEMPERATURE_SENSOR,
-        LED_RGB,             // TLHx5xxx series
-        LED_WHITE,          // TLWx series
-        UNKNOWN
-    }
     @Override
     public void initializePatterns(PatternRegistry registry) {
         for (Map.Entry<String, ComponentSeriesInfo> entry : COMPONENT_SERIES.entrySet()) {
@@ -525,31 +451,20 @@ public class TIHandler implements ManufacturerHandler {
         String suffix = extractSuffix(upperMpn);
         if (suffix.isEmpty()) return "";
 
-        // Check for known package codes
-        for (Map.Entry<String, String> entry : PACKAGE_CODES.entrySet()) {
-            if (suffix.startsWith(entry.getKey())) {
-                return entry.getValue();
+        // Use centralized PackageCodeRegistry
+        if (PackageCodeRegistry.isKnownCode(suffix)) {
+            return PackageCodeRegistry.resolve(suffix);
+        }
+
+        // Try matching prefix of suffix (e.g., "DGK" in "DGKR")
+        for (int len = Math.min(suffix.length(), 3); len >= 1; len--) {
+            String prefix = suffix.substring(0, len);
+            if (PackageCodeRegistry.isKnownCode(prefix)) {
+                return PackageCodeRegistry.resolve(prefix);
             }
         }
 
         return suffix;
-    }
-
-
-    private TIComponentFamily determineComponentFamily(String mpn) {
-        if (mpn == null) return TIComponentFamily.UNKNOWN;
-        String upperMpn = mpn.toUpperCase();
-
-        // LED families (check first)
-        if (upperMpn.matches("^TLH[RGB][0-9]{4}.*")) {
-            return TIComponentFamily.LED_RGB;
-        }
-        if (upperMpn.matches("^TLW[A-Z][0-9]{4}.*")) {
-            return TIComponentFamily.LED_WHITE;
-        }
-
-        // [Rest of family determination logic]
-        return TIComponentFamily.UNKNOWN;
     }
 
     private String extractSuffix(String mpn) {
