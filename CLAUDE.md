@@ -85,6 +85,7 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/ic` - Microcontrollers, op-amps, voltage regulators
 - `/connector` - Headers, sockets, wire-to-board
 - `/memory` - Flash, EEPROM, SRAM
+- `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
 
 ## Recording Learnings
 
@@ -109,5 +110,26 @@ This ensures institutional knowledge is preserved for future sessions.
 ### Testing
 - `MPNUtilsTest` and `MPNExtractionTest` are the primary tests for MPN parsing logic
 - Many test MPNs are real-world part numbers from datasheets
+- **Test coverage gap**: 50+ handlers and 20+ similarity calculators have no dedicated tests
+
+### Known Technical Debt
+
+**Critical**:
+- `TIHandler.java` has duplicate COMPONENT_SERIES entries (LM358, LM7805, TL072, etc. defined 2-3 times with different patterns)
+- `TIHandlerPatterns.java` was created but never integrated - TIHandler still uses inline definitions
+
+**High**:
+- No `AbstractManufacturerHandler` base class - 50 handlers duplicate package/series extraction logic
+- Package code mappings (DIP, SOIC, TSSOP) duplicated across 10+ handlers
+- `ComponentSeriesInfo` class defined in both TIHandler (line 73) and TIHandlerPatterns (line 265)
+
+**Medium**:
+- `ComponentType.getManufacturer()` method (lines 497-507) returns incorrect results for some types
+- Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
+
+### Architecture Notes
+- `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
+- Similarity calculators registered in `MPNUtils` static initializer (lines 34-48)
+- `ManufacturerHandlerFactory` uses reflection-based classpath scanning - brittle approach
 
 <!-- Add new learnings above this line -->
