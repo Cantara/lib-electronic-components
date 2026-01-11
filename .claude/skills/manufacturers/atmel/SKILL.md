@@ -269,4 +269,19 @@ if (mpn.startsWith("ATMEGA")) {
 - **P suffix importance**: ATMEGA328 and ATMEGA328P are different! The P version has lower power consumption
 - **Memory in name**: ATmega328 has 32KB flash (32), ATtiny85 has 8KB (8), but encoding isn't always consistent
 
+## Handler Cleanup Notes (TODO)
+
+AtmelHandler needs the same cleanup as TIHandler (PR #77):
+- [ ] Replace `HashSet` with `Set.of()` in `getSupportedTypes()`
+- [ ] Handler doesn't use `PackageCodeRegistry` - has local switch statement
+- [ ] Pattern may not handle speed grades like `-20AU` (20MHz before package)
+- [ ] Case sensitivity - some methods use `mpn.startsWith()` without `toUpperCase()`
+
+## Test Notes
+
+When creating AtmelHandlerTest:
+- Put in `no.cantara.electronic.component.lib.handlers` package (NOT `manufacturers`)
+- Use `@BeforeAll` with `MPNUtils.getManufacturerHandler("ATMEGA328P")`
+- Test categories: ATmega, ATtiny, AT90, XMEGA, SAM, Memory (AT24C, AT25), Touch (AT42QT), Crypto (ATECC, ATSHA)
+
 <!-- Add new learnings above this line -->

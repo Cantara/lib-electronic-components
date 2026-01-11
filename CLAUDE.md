@@ -136,6 +136,27 @@ This ensures institutional knowledge is preserved for future sessions.
 - **Test coverage gap**: 50+ handlers and 20+ similarity calculators have no dedicated tests
 - **Flaky tests**: If tests pass individually but fail in suite, check for non-deterministic iteration (HashSet → TreeSet)
 
+### Handler Test Gotchas (IMPORTANT)
+
+**Classpath Shadowing**:
+- NEVER put handler tests in the `manufacturers` package (e.g., `no.cantara.electronic.component.lib.manufacturers`)
+- Test-classes directory shadows main-classes directory, causing `ManufacturerHandlerFactory` to find 0 handlers
+- Solution: Put handler tests in a different package (e.g., `no.cantara.electronic.component.lib.handlers`)
+
+**Circular Initialization**:
+- NEVER use `new TIHandler()` or similar direct instantiation in tests
+- Causes `ExceptionInInitializerError` due to circular deps: ComponentType ↔ ComponentManufacturer ↔ Handler
+- Solution: Use `@BeforeAll` with `MPNUtils.getManufacturerHandler("LM358")` to get handler instance
+
+**Test Isolation vs Full Suite**:
+- Running a single handler test may fail while full suite passes
+- This is due to class loading order - other tests initialize classes first
+- If single test fails with initialization errors, run full suite to verify
+
+**EspressifComponentType Latent Bug**:
+- `EnumSet.allOf(EspressifComponentType.class)` can throw "class not an enum" in certain loading orders
+- This is a circular initialization issue that only manifests in specific test scenarios
+
 ### Critical Implementation Details
 
 **Handler Ordering (IMPORTANT)**:
@@ -153,21 +174,36 @@ This ensures institutional knowledge is preserved for future sessions.
 - Missing types fall through to `default -> this` (returns self, not base type)
 - Check when adding new types: TRANSISTOR_*, OPAMP_*, MOSFET_*, etc.
 
+### Handler Cleanup Checklist
+
+When cleaning up a manufacturer handler, follow this pattern (established in PR #77):
+
+1. **Replace `HashSet` with `Set.of()` in `getSupportedTypes()`** - Prevents duplicates, immutable
+2. **Migrate local package code maps to `PackageCodeRegistry`** - Centralized, consistent
+3. **Remove unused enums and methods** - Dead code cleanup
+4. **Check suffix ordering** - Longer suffixes must be checked before shorter ones (e.g., "DT" before "T")
+5. **Add comprehensive tests** - Use nested test classes by category (see TIHandlerTest)
+
 ### Known Technical Debt
 
-**Fixed (PR #74, #75, #76)**:
+**Fixed (PR #74, #75, #76, #77, #78)**:
 - ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
 - ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
 - ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
 - ~~Flaky tests due to handler order~~ - Fixed with deterministic TreeSet ordering
 - ~~`ComponentType.getManufacturer()` fragile string matching~~ - Fixed with explicit suffix→enum mapping
 - ~~Unused `TIHandlerPatterns.java`~~ - Deleted
+- ~~TIHandler duplicate types in getSupportedTypes()~~ - Fixed with Set.of()
+- ~~TIHandler not using PackageCodeRegistry~~ - Migrated
+- ~~TIHandler suffix ordering bug (DT vs T)~~ - Fixed, longer suffixes checked first
 
 **Medium**:
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
+- EspressifHandler circular initialization bug with `getManufacturerTypes()` - latent issue
 
 **Low**:
 - Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
+- AtmelHandler needs same cleanup as TIHandler (HashSet → Set.of, use PackageCodeRegistry)
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
