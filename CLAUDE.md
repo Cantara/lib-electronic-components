@@ -24,6 +24,23 @@ mvn install -DskipTests
 mvn package -DskipTests
 ```
 
+## Git Workflow
+
+**Always use Pull Requests** - never commit directly to main.
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/short-description
+
+# 2. Make changes and commit
+git add <files>
+git commit -m "feat: description"
+
+# 3. Push and create PR
+git push -u origin feature/short-description
+gh pr create --title "feat: description" --body "## Summary\n..."
+```
+
 ## Project Overview
 
 This is a Java 21 library for working with electronic components in software systems. It provides functionality for:
