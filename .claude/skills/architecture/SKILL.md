@@ -79,29 +79,14 @@ The following issues have been fixed:
    - Changed `ManufacturerHandlerFactory` from `HashSet` to `TreeSet` with deterministic ordering
    - Handler iteration order is now consistent across all test runs
 
----
+5. **ComponentType.getManufacturer() Fragile** - FIXED
+   - Was using string matching on manufacturer names (fragile)
+   - Fixed with explicit `MANUFACTURER_SUFFIX_MAP` for special cases (ON→ON_SEMI, AD→ANALOG_DEVICES)
+   - Direct enum `valueOf()` lookup for standard cases
 
-## Remaining Issues
-
-### 1. ComponentType.getManufacturer() Broken (MEDIUM)
-
-**File**: `ComponentType.java` lines 497-507
-
-```java
-public ComponentManufacturer getManufacturer() {
-    String[] parts = name().split("_");
-    String mfrName = parts[parts.length - 1];  // "TI"
-    return Arrays.stream(ComponentManufacturer.values())
-        .filter(m -> m.getName().toUpperCase().contains(mfrName))
-        // ComponentManufacturer.TI.getName() = "Texas Instruments"
-        // "TEXAS INSTRUMENTS".contains("TI") = true BUT FRAGILE
-        .findFirst().orElse(UNKNOWN);
-}
-```
-
-**Problem**: Relies on manufacturer full name containing the enum suffix.
-
-**Fix**: Add explicit mapping or remove method.
+6. **TIHandlerPatterns.java Unused** - FIXED (deleted)
+   - File existed but was never used after TIHandler consolidation
+   - Safely deleted
 
 ---
 
@@ -176,9 +161,8 @@ boolean isPower = PackageCodeRegistry.isPowerPackage("TO-220"); // Returns true
    - Replace inline PACKAGE_CODES maps with registry calls
    - Files: `*Handler.java` in `manufacturers/`
 
-3. **Delete TIHandlerPatterns.java**
-   - Now unused after TIHandler consolidation
-   - File: `manufacturers/TIHandlerPatterns.java`
+3. ~~**Delete TIHandlerPatterns.java**~~ - DONE
+   - Deleted unused file
 
 ### Priority 2: Medium (Quality Improvements)
 
@@ -186,9 +170,8 @@ boolean isPower = PackageCodeRegistry.isPowerPackage("TO-220"); // Returns true
    - Test each handler's pattern matching
    - New files: `*HandlerTest.java`
 
-5. **Fix ComponentType.getManufacturer()**
-   - Add explicit mapping or deprecate
-   - File: `ComponentType.java`
+5. ~~**Fix ComponentType.getManufacturer()**~~ - DONE
+   - Fixed with explicit MANUFACTURER_SUFFIX_MAP
 
 6. **Add Similarity Calculator Tests**
    - Test each calculator
@@ -252,10 +235,14 @@ When reviewing code, watch for:
 - Missing types fall through to `default -> this` (returns self, not base type)
 - Fixed in PR #74: Added TRANSISTOR_VISHAY, TRANSISTOR_NXP, OPAMP_ON, OPAMP_NXP, OPAMP_ROHM
 
+**ComponentType.getManufacturer() Mapping (PR #76)**:
+- Uses explicit `MANUFACTURER_SUFFIX_MAP` for special cases (ON→ON_SEMI, AD→ANALOG_DEVICES, SILABS→SILICON_LABS, DIODES→DIODES_INC)
+- Falls back to direct `ComponentManufacturer.valueOf(suffix)` for standard cases
+- Much more reliable than previous string-contains matching
+
 ### Known Gotchas
 - Handler order in `ComponentManufacturer` affects detection priority for ambiguous MPNs
 - Some MPNs legitimately match multiple manufacturers (second-source parts)
-- `TIHandlerPatterns.java` exists but is unused - can be safely deleted
 
 ### Historical Context
 - CI test failures (pre-PR #75) were caused by non-deterministic HashSet iteration

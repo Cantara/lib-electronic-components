@@ -132,16 +132,16 @@ This ensures institutional knowledge is preserved for future sessions.
 
 ### Known Technical Debt
 
-**Fixed (PR #74, #75)**:
+**Fixed (PR #74, #75, #76)**:
 - ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
 - ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
 - ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
 - ~~Flaky tests due to handler order~~ - Fixed with deterministic TreeSet ordering
+- ~~`ComponentType.getManufacturer()` fragile string matching~~ - Fixed with explicit suffix→enum mapping
+- ~~Unused `TIHandlerPatterns.java`~~ - Deleted
 
 **Medium**:
-- `ComponentType.getManufacturer()` method (lines 497-507) returns incorrect results for some types
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
-- `TIHandlerPatterns.java` exists but is unused - can be deleted (patterns now in TIHandler)
 
 **Low**:
 - Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests

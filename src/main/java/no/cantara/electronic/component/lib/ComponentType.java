@@ -497,16 +497,39 @@ public enum ComponentType {
     }
 
     /**
-     * Get the manufacturer associated with this component type
+     * Mapping from ComponentType suffix to ComponentManufacturer for cases where
+     * the suffix doesn't match the enum name directly.
+     */
+    private static final java.util.Map<String, ComponentManufacturer> MANUFACTURER_SUFFIX_MAP = java.util.Map.ofEntries(
+            // Special cases where suffix differs from enum name
+            java.util.Map.entry("ON", ComponentManufacturer.ON_SEMI),
+            java.util.Map.entry("ONSEMI", ComponentManufacturer.ON_SEMI),
+            java.util.Map.entry("SILABS", ComponentManufacturer.SILICON_LABS),
+            java.util.Map.entry("AD", ComponentManufacturer.ANALOG_DEVICES),
+            java.util.Map.entry("DIODES", ComponentManufacturer.DIODES_INC)
+    );
+
+    /**
+     * Get the manufacturer associated with this component type.
+     * Uses explicit mapping to avoid fragile string matching.
      */
     public ComponentManufacturer getManufacturer() {
         String[] parts = name().split("_");
         if (parts.length > 1) {
-            String mfrName = parts[parts.length - 1];
-            return Arrays.stream(ComponentManufacturer.values())
-                    .filter(m -> m.getName().toUpperCase().contains(mfrName))
-                    .findFirst()
-                    .orElse(ComponentManufacturer.UNKNOWN);
+            String suffix = parts[parts.length - 1];
+
+            // Check special cases first
+            ComponentManufacturer mapped = MANUFACTURER_SUFFIX_MAP.get(suffix);
+            if (mapped != null) {
+                return mapped;
+            }
+
+            // Try direct enum lookup (most suffixes match the enum name)
+            try {
+                return ComponentManufacturer.valueOf(suffix);
+            } catch (IllegalArgumentException e) {
+                // Suffix doesn't match any enum value
+            }
         }
         return ComponentManufacturer.UNKNOWN;
     }
