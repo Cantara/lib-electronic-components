@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,19 +47,6 @@ public class EspressifHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.IC, "^ESP32-DevKit.*");
         registry.addPattern(ComponentType.IC, "^ESP32-WROOM-DevKit.*");
         registry.addPattern(ComponentType.IC, "^ESP-LAUNCHER.*");
-
-        // Add patterns for Espressif-specific types
-        for (EspressifComponentType type : EspressifComponentType.values()) {
-            switch (type) {
-                case ESP8266_SOC -> registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP8266.*");
-                case ESP32_SOC -> registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32[^S^C].*");
-                case ESP32_S2_SOC -> registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-S2.*");
-                case ESP32_S3_SOC -> registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-S3.*");
-                case ESP32_C3_SOC -> registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-C3.*");
-                case ESP32_WROOM_MODULE -> registry.addPattern(ComponentType.IC, "^ESP32-WROOM-.*");
-                case ESP32_WROVER_MODULE -> registry.addPattern(ComponentType.IC, "^ESP32-WROVER-.*");
-            }
-        }
     }
 
     @Override
@@ -80,7 +67,7 @@ public class EspressifHandler implements ManufacturerHandler {
 
     @Override
     public Set<ManufacturerComponentType> getManufacturerTypes() {
-        return new HashSet<>(EnumSet.allOf(EspressifComponentType.class));
+        return Collections.emptySet();
     }
 
     @Override
