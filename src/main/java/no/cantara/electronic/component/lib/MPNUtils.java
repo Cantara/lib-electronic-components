@@ -425,6 +425,7 @@ public class MPNUtils {
 
     /**
      * Gets the component type for an MPN by checking all handlers.
+     * Returns the most specific matching type (manufacturer-specific types before base types).
      *
      * @param mpn The manufacturer part number
      * @return The component type, or null if not determined
@@ -436,16 +437,28 @@ public class MPNUtils {
 
         System.out.println("\nDetermining component type for MPN: " + mpn);
 
-        // First try manufacturer-specific types
+        // Collect all matching types, then return the most specific one
+        ComponentType mostSpecificType = null;
+        int mostSpecificScore = -1;
+
         Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
         for (ManufacturerHandler handler : handlers) {
             for (ComponentType type : handler.getSupportedTypes()) {
                 if (handler.matches(mpn, type, registry)) {
+                    int score = getTypeSpecificityScore(type);
                     System.out.println("Found match using " + handler.getClass().getSimpleName() +
-                            " for type: " + type);
-                    return type;
+                            " for type: " + type + " (score: " + score + ")");
+                    if (score > mostSpecificScore) {
+                        mostSpecificScore = score;
+                        mostSpecificType = type;
+                    }
                 }
             }
+        }
+
+        if (mostSpecificType != null) {
+            System.out.println("Returning most specific type: " + mostSpecificType);
+            return mostSpecificType;
         }
 
         // Then try generic component types
@@ -458,6 +471,39 @@ public class MPNUtils {
 
         System.out.println("No component type found for MPN: " + mpn);
         return null;
+    }
+
+    /**
+     * Calculate a specificity score for a component type.
+     * Higher scores are more specific types.
+     * Manufacturer-specific types (containing "_") are more specific than base types.
+     * Types like OPAMP are more specific than IC or ANALOG_IC.
+     */
+    private static int getTypeSpecificityScore(ComponentType type) {
+        String name = type.name();
+        int score = 0;
+
+        // Manufacturer-specific types get highest base score
+        if (name.contains("_")) {
+            score += 100;
+        }
+
+        // Penalize very generic types
+        if (name.equals("IC")) {
+            score -= 50;
+        } else if (name.equals("ANALOG_IC") || name.equals("DIGITAL_IC")) {
+            score -= 40;
+        }
+
+        // Bonus for specific functional types
+        if (name.contains("OPAMP") || name.contains("VOLTAGE_REGULATOR") ||
+                name.contains("TEMPERATURE_SENSOR") || name.contains("LED") ||
+                name.contains("MICROCONTROLLER") || name.contains("TRANSISTOR") ||
+                name.contains("MOSFET") || name.contains("DIODE")) {
+            score += 50;
+        }
+
+        return score;
     }
 
     /**

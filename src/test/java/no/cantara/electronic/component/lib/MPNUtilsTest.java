@@ -210,7 +210,7 @@ public class MPNUtilsTest {
     public void shouldExtractPackageCodes() {
         // Now we can properly test package code extraction
         assertEquals("SOIC", MPNUtils.getPackageCode("LM358D"));
-        assertEquals("PU", MPNUtils.getPackageCode("ATMEGA328P-PU"));
+        assertEquals("PDIP", MPNUtils.getPackageCode("ATMEGA328P-PU"));
         assertEquals("T6", MPNUtils.getPackageCode("STM32F103C8T6"));
 
         // Print handler information for debugging

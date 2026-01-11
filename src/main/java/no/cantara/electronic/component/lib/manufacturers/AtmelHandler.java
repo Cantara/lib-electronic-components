@@ -11,41 +11,44 @@ import java.util.Set;
 public class AtmelHandler implements ManufacturerHandler {
     @Override
     public void initializePatterns(PatternRegistry registry) {
-        // ATmega Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATMEGA[0-9].*");     // ATmega series
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATMEGA[0-9].*");
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATMEGA[0-9].*P.*");  // With program memory
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATMEGA[0-9].*P.*");
+        // ATmega Series - register for both base type and manufacturer-specific type
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");  // e.g., ATMEGA328P-PU
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
 
         // ATtiny Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATTINY[0-9].*");     // ATtiny series
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATTINY[0-9].*");
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");  // e.g., ATTINY85-PU
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
 
         // AT90 Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT90[A-Z][0-9].*");  // AT90 series
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT90[A-Z][0-9].*");
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");  // e.g., AT90USB162
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");
 
         // XMEGA Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATX(MEGA)[0-9].*");  // XMEGA series
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATX(MEGA)[0-9].*");
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
 
         // SAM Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATSAM[0-9].*");      // SAM series
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATSAM[0-9].*");
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
 
-        // Memory Products
-        registry.addPattern(ComponentType.MEMORY, "^AT24[A-Z][0-9].*");          // I²C EEPROM
-        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT24[A-Z][0-9].*");
-        registry.addPattern(ComponentType.MEMORY, "^AT25[A-Z][0-9].*");          // SPI EEPROM
-        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT25[A-Z][0-9].*");
+        // Memory Products - specific patterns
+        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT24[A-Z][0-9]+(?:-[A-Z]{2})?$");          // I²C EEPROM
+        registry.addPattern(ComponentType.MEMORY, "^AT24[A-Z][0-9]+(?:-[A-Z]{2})?$");
+        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT25[A-Z][0-9]+(?:-[A-Z]{2})?$");          // SPI EEPROM
+        registry.addPattern(ComponentType.MEMORY, "^AT25[A-Z][0-9]+(?:-[A-Z]{2})?$");
 
-        // Touch Controllers
-        registry.addPattern(ComponentType.TOUCH_ATMEL, "^AT42QT[0-9].*");        // QTouch controllers
-        registry.addPattern(ComponentType.TOUCH_ATMEL, "^ATMXT[0-9].*");         // maXTouch controllers
+        // Touch Controllers - specific patterns
+        registry.addPattern(ComponentType.TOUCH_ATMEL, "^AT42QT[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // QTouch
+        registry.addPattern(ComponentType.TOUCH_ATMEL, "^ATMXT[0-9]+[A-Z]?(?:-[A-Z]{2})?$");         // maXTouch
 
-        // Crypto Products
-        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATECC[0-9].*");        // CryptoAuthentication
-        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATSHA[0-9].*");        // SHA Authentication
+        // Crypto Products - specific patterns
+        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATECC[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // CryptoAuthentication
+        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATSHA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // SHA Authentication
     }
 
     @Override

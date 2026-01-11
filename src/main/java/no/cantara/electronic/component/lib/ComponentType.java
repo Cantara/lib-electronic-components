@@ -432,12 +432,17 @@ public enum ComponentType {
             case MOSFET_INFINEON, MOSFET_ST, MOSFET_VISHAY,
                  MOSFET_ONSEMI, MOSFET_NEXPERIA, MOSFET_ROHM -> MOSFET;
 
+            // Transistor types
+            case TRANSISTOR_VISHAY, TRANSISTOR_NXP,
+                 BIPOLAR_TRANSISTOR_NEXPERIA -> TRANSISTOR;
+
             // Memory types
             case MEMORY_MICROCHIP, MEMORY_ATMEL, MEMORY_ST,
                  MEMORY_INFINEON, MEMORY_NXP -> MEMORY;
 
             // OpAmp types
-            case OPAMP_TI, OPAMP_ST, OPAMP_AD, OPAMP_INFINEON -> OPAMP;
+            case OPAMP_TI, OPAMP_ST, OPAMP_AD, OPAMP_INFINEON,
+                 OPAMP_ON, OPAMP_NXP, OPAMP_ROHM -> OPAMP;
 
             // Resistor types
             case RESISTOR_CHIP_VISHAY, RESISTOR_CHIP_YAGEO,
