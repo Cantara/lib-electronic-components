@@ -54,7 +54,7 @@ public class MPNExtractionTest {
         // Descriptions with package information
         assertMPNAndPackage("LM358N DIP-8", "LM358N", "DIP");
         assertMPNAndPackage("ATMEGA328P-PU DIP-28", "ATMEGA328P-PU", "PDIP");
-        assertMPNAndPackage("STM32F103C8T6 LQFP48", "STM32F103C8T6", "T6");
+        assertMPNAndPackage("STM32F103C8T6 LQFP48", "STM32F103C8T6", "LQFP");
         assertMPNAndPackage("LM7805CT TO-220", "LM7805CT", "TO-220");
     }
 

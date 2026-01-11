@@ -186,24 +186,31 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 ### Known Technical Debt
 
-**Fixed (PR #74, #75, #76, #77, #78)**:
+**Fixed (PR #74, #75, #76, #77, #78, #80, #81)**:
 - ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
 - ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
 - ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
 - ~~Flaky tests due to handler order~~ - Fixed with deterministic TreeSet ordering
 - ~~`ComponentType.getManufacturer()` fragile string matching~~ - Fixed with explicit suffix→enum mapping
 - ~~Unused `TIHandlerPatterns.java`~~ - Deleted
-- ~~TIHandler duplicate types in getSupportedTypes()~~ - Fixed with Set.of()
-- ~~TIHandler not using PackageCodeRegistry~~ - Migrated
-- ~~TIHandler suffix ordering bug (DT vs T)~~ - Fixed, longer suffixes checked first
+- ~~TIHandler: HashSet in getSupportedTypes()~~ - Changed to Set.of()
+- ~~TIHandler: suffix ordering bug (DT vs T)~~ - Longer suffixes checked first
+- ~~AtmelHandler: multi-pattern matching bug~~ - Uses registry.matches() now
+- ~~AtmelHandler: speed grade in package extraction~~ - Strips leading digits
+- ~~AtmelHandler: AT25 pattern too restrictive~~ - Now allows 0-2 letters
+- ~~STHandler: HashSet in getSupportedTypes()~~ - Changed to Set.of()
+- ~~STHandler: package extraction bugs~~ - Fixed STM32 (returns LQFP not T6), MOSFET, regulators
+- ~~STHandler: multi-pattern matching bug~~ - Added explicit type checks
+- ~~AtmelHandler: cross-handler pattern matching~~ - Don't fall through for base MICROCONTROLLER type
 
 **Medium**:
 - Some handlers have commented-out patterns in `ComponentManufacturer.java` - unclear if deprecated
-- EspressifHandler circular initialization bug with `getManufacturerTypes()` - latent issue
+- Other handlers likely have similar bugs as STHandler/AtmelHandler (need audit)
+- `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
 - Test coverage gaps: 50+ handlers and 20+ similarity calculators have no dedicated tests
-- AtmelHandler needs same cleanup as TIHandler (HashSet → Set.of, use PackageCodeRegistry)
+- TIHandler, AtmelHandler, and STHandler now have comprehensive tests - use as template for others
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
