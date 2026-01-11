@@ -5,64 +5,81 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 public class AtmelHandler implements ManufacturerHandler {
     @Override
     public void initializePatterns(PatternRegistry registry) {
         // ATmega Series - register for both base type and manufacturer-specific type
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");  // e.g., ATMEGA328P-PU
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MCU_ATMEL, "^ATMEGA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        // Pattern: ATMEGA + digits + optional variant letter(s) + optional -[speed][package]
+        // Examples: ATMEGA328P, ATMEGA328P-PU, ATMEGA2560-16AU, ATMEGA32U4-AU
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATMEGA[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATMEGA[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATMEGA[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
 
         // ATtiny Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");  // e.g., ATTINY85-PU
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MCU_ATMEL, "^ATTINY[0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        // Examples: ATTINY85, ATTINY85-20PU, ATTINY13A, ATTINY85V-10PU
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATTINY[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATTINY[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATTINY[0-9]+[A-Z]{0,2}(?:-[0-9]*[A-Z]{2,3})?$");
 
         // AT90 Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");  // e.g., AT90USB162
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MCU_ATMEL, "^AT90[A-Z][0-9]+(?:-[A-Z]{2})?$");
+        // Examples: AT90USB162, AT90CAN128
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT90[A-Z]{2,4}[0-9]+(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT90[A-Z]{2,4}[0-9]+(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^AT90[A-Z]{2,4}[0-9]+(?:-[0-9]*[A-Z]{2,3})?$");
 
         // XMEGA Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MCU_ATMEL, "^ATX(?:MEGA)[0-9]+(?:[A-Z][0-9])?(?:-[A-Z]{2})?$");
+        // Examples: ATXMEGA128A1U
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATXMEGA[0-9]+[A-Z][0-9]?[A-Z]?(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATXMEGA[0-9]+[A-Z][0-9]?[A-Z]?(?:-[0-9]*[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATXMEGA[0-9]+[A-Z][0-9]?[A-Z]?(?:-[0-9]*[A-Z]{2,3})?$");
 
-        // SAM Series
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MCU_ATMEL, "^ATSAM[0-9][A-Z][0-9]+[A-Z]?(?:-[A-Z]{2})?$");
+        // SAM Series (ARM-based)
+        // Examples: ATSAM3X8E, ATSAM3X8E-AU, ATSAMD21G18A, ATSAMD21G18A-AU
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ATSAM[A-Z0-9]+(?:-[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^ATSAM[A-Z0-9]+(?:-[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MCU_ATMEL, "^ATSAM[A-Z0-9]+(?:-[A-Z]{2,3})?$");
 
-        // Memory Products - specific patterns
-        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT24[A-Z][0-9]+(?:-[A-Z]{2})?$");          // I²C EEPROM
-        registry.addPattern(ComponentType.MEMORY, "^AT24[A-Z][0-9]+(?:-[A-Z]{2})?$");
-        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT25[A-Z][0-9]+(?:-[A-Z]{2})?$");          // SPI EEPROM
-        registry.addPattern(ComponentType.MEMORY, "^AT25[A-Z][0-9]+(?:-[A-Z]{2})?$");
+        // Memory Products - I2C EEPROM
+        // Examples: AT24C256, AT24C256-PU, AT24C32
+        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT24[A-Z][0-9]+(?:-[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MEMORY, "^AT24[A-Z][0-9]+(?:-[A-Z]{2,3})?$");
 
-        // Touch Controllers - specific patterns
-        registry.addPattern(ComponentType.TOUCH_ATMEL, "^AT42QT[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // QTouch
-        registry.addPattern(ComponentType.TOUCH_ATMEL, "^ATMXT[0-9]+[A-Z]?(?:-[A-Z]{2})?$");         // maXTouch
+        // Memory Products - SPI EEPROM/Flash
+        // Examples: AT25SF041, AT25DF321, AT25080 (note: some have 0-2 letters like SF, DF, or none)
+        registry.addPattern(ComponentType.MEMORY_ATMEL, "^AT25[A-Z]{0,2}[0-9]+(?:-[A-Z]{2,3})?$");
+        registry.addPattern(ComponentType.MEMORY, "^AT25[A-Z]{0,2}[0-9]+(?:-[A-Z]{2,3})?$");
 
-        // Crypto Products - specific patterns
-        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATECC[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // CryptoAuthentication
-        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATSHA[0-9]+[A-Z]?(?:-[A-Z]{2})?$");        // SHA Authentication
+        // Touch Controllers - QTouch
+        // Examples: AT42QT1010, AT42QT1011, AT42QT2120
+        registry.addPattern(ComponentType.TOUCH_ATMEL, "^AT42QT[0-9]+[A-Z]?(?:-[A-Z]{2,3})?$");
+
+        // Touch Controllers - maXTouch
+        // Examples: ATMXT336S, ATMXT224
+        registry.addPattern(ComponentType.TOUCH_ATMEL, "^ATMXT[0-9]+[A-Z]?(?:-[A-Z]{2,3})?$");
+
+        // Crypto Products - CryptoAuthentication
+        // Examples: ATECC608A, ATECC508A, ATECC108A
+        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATECC[0-9]+[A-Z]?(?:-[A-Z]{2,3})?$");
+
+        // Crypto Products - SHA Authentication
+        // Examples: ATSHA204A, ATSHA206A
+        registry.addPattern(ComponentType.CRYPTO_ATMEL, "^ATSHA[0-9]+[A-Z]?(?:-[A-Z]{2,3})?$");
     }
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_ATMEL);
-        types.add(ComponentType.MCU_ATMEL);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_ATMEL);
-        types.add(ComponentType.AVR_MCU);
-        types.add(ComponentType.TOUCH_ATMEL);
-        types.add(ComponentType.CRYPTO_ATMEL);
-        return types;
+        return Set.of(
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_ATMEL,
+                ComponentType.MCU_ATMEL,
+                ComponentType.MEMORY,
+                ComponentType.MEMORY_ATMEL,
+                ComponentType.AVR_MCU,
+                ComponentType.TOUCH_ATMEL,
+                ComponentType.CRYPTO_ATMEL
+        );
     }
 
 
@@ -72,16 +89,20 @@ public class AtmelHandler implements ManufacturerHandler {
 
         String upperMpn = mpn.toUpperCase();
 
-        // Special case for microcontrollers
-        if (type == ComponentType.MICROCONTROLLER_ATMEL &&
-                (upperMpn.startsWith("ATMEGA") || upperMpn.startsWith("ATTINY") ||
-                        upperMpn.startsWith("AT90") || upperMpn.startsWith("ATXMEGA") ||
-                        upperMpn.startsWith("ATSAM"))) {
-            return true;
+        // Special case for microcontrollers - quick prefix check
+        if (type == ComponentType.MICROCONTROLLER_ATMEL ||
+                type == ComponentType.MCU_ATMEL ||
+                type == ComponentType.MICROCONTROLLER) {
+            if (upperMpn.startsWith("ATMEGA") || upperMpn.startsWith("ATTINY") ||
+                    upperMpn.startsWith("AT90") || upperMpn.startsWith("ATXMEGA") ||
+                    upperMpn.startsWith("ATSAM")) {
+                return true;
+            }
         }
 
-        // Fallback to default pattern matching
-        return ManufacturerHandler.super.matches(mpn, type, patterns);
+        // For all other types, use the registry's matches() which checks ALL patterns
+        // (The default ManufacturerHandler.matches() only checks ONE pattern via getPattern())
+        return patterns.matches(upperMpn, type);
     }
 
     @Override
@@ -91,8 +112,16 @@ public class AtmelHandler implements ManufacturerHandler {
         // Extract suffix after the last hyphen
         String[] parts = mpn.split("-");
         if (parts.length > 1) {
-            String suffix = parts[parts.length - 1];
-            return switch (suffix) {
+            String suffix = parts[parts.length - 1].toUpperCase();
+
+            // Handle speed grade + package (e.g., "20PU", "16AU")
+            // Extract just the letter portion (package code)
+            String packageCode = suffix.replaceAll("^[0-9]+", "");
+            if (packageCode.isEmpty()) {
+                return suffix; // No letters found, return as-is
+            }
+
+            return switch (packageCode) {
                 case "PU" -> "PDIP";             // Plastic DIP
                 case "AU" -> "TQFP";             // Thin QFP
                 case "MU" -> "QFN/MLF";          // QFN/Micro Lead Frame
@@ -100,7 +129,8 @@ public class AtmelHandler implements ManufacturerHandler {
                 case "SU" -> "SOIC";             // Small Outline IC
                 case "TU" -> "QFP";              // Quad Flat Pack
                 case "XU" -> "TSSOP";            // Thin Shrink Small Outline Package
-                default -> suffix;
+                case "SS" -> "SSOP";             // Shrink Small Outline Package
+                default -> packageCode;
             };
         }
 
@@ -155,22 +185,12 @@ public class AtmelHandler implements ManufacturerHandler {
     public boolean isOfficialReplacement(String mpn1, String mpn2) {
         if (mpn1 == null || mpn2 == null) return false;
 
-        String series1 = extractSeries(mpn1);
-        String series2 = extractSeries(mpn2);
+        String series1 = extractSeries(mpn1.toUpperCase());
+        String series2 = extractSeries(mpn2.toUpperCase());
 
-        // Must be same series
-        if (!series1.equals(series2)) return false;
-
-        // Check package compatibility
-        String pkg1 = extractPackageCode(mpn1);
-        String pkg2 = extractPackageCode(mpn2);
-
-        // If packages are specified and different, they're not compatible
-        if (!pkg1.isEmpty() && !pkg2.isEmpty() && !pkg1.equals(pkg2)) {
-            return false;
-        }
-
-        return true;
+        // Must be same series - different packages of the same series ARE replacements
+        // (e.g., ATMEGA328P-PU and ATMEGA328P-AU are pin-compatible just different footprints)
+        return !series1.isEmpty() && series1.equals(series2);
     }
 
     @Override
