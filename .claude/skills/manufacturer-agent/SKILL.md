@@ -174,7 +174,13 @@ Create `src/test/java/no/cantara/electronic/component/lib/handlers/{Handler}Test
 ```java
 package no.cantara.electronic.component.lib.handlers;
 
-import ...;
+import no.cantara.electronic.component.lib.ComponentType;
+import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.manufacturers.{Handler};
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class {Handler}Test {
 
@@ -183,11 +189,9 @@ class {Handler}Test {
 
     @BeforeAll
     static void setUp() {
-        // MUST use MPNUtils to avoid circular initialization
-        ManufacturerHandler h = MPNUtils.getManufacturerHandler("{known-mpn}");
-        assertNotNull(h, "Should find handler");
-        assertTrue(h instanceof {Handler}, "Handler should be {Handler}");
-        handler = ({Handler}) h;
+        // Direct instantiation - avoids MPNUtils.getManufacturerHandler bug
+        // where alphabetical handler ordering can return wrong handler
+        handler = new {Handler}();
 
         registry = new PatternRegistry();
         handler.initializePatterns(registry);
@@ -267,7 +271,7 @@ class {Handler}Test {
 
 ## Common Handler Issues to Check
 
-From previous work on TI and Atmel handlers:
+From previous work on TI, Atmel, and ST handlers:
 
 1. **HashSet in getSupportedTypes()** → Change to `Set.of()`
 2. **Multi-pattern types** → Override `matches()` to use `registry.matches()`
@@ -275,6 +279,60 @@ From previous work on TI and Atmel handlers:
 4. **Speed grades** → Strip digits before package lookup
 5. **Case sensitivity** → Ensure `toUpperCase()` is called
 6. **Local package maps** → Migrate to `PackageCodeRegistry`
+7. **Cross-handler pattern matching** → Don't fall through to `patterns.matches()` for base types (MICROCONTROLLER, MOSFET, etc.)
+8. **Debug println statements** → Remove any `System.out.println` debug code
+9. **Package location varies by component type** → MCUs often have suffix, MOSFETs have prefix, regulators have grade+suffix
+
+---
+
+## Learnings from ST Test Run (PR #81)
+
+### Test Setup: Direct Instantiation Preferred
+
+```java
+// PROBLEM: MPNUtils.getManufacturerHandler can return wrong handler
+// due to alphabetical ordering (AtmelHandler < STHandler)
+ManufacturerHandler h = MPNUtils.getManufacturerHandler("STM32F103C8T6");
+// Returns AtmelHandler instead of STHandler!
+
+// SOLUTION: Use direct instantiation for handler tests
+handler = new STHandler();
+registry = new PatternRegistry();
+handler.initializePatterns(registry);
+```
+
+### Cross-Handler Pattern Matching Bug
+
+When a handler's `matches()` method falls through to `patterns.matches(mpn, type)`, it can accidentally match patterns registered by OTHER handlers because the PatternRegistry is shared.
+
+**Example**: AtmelHandler checking STM32F103C8T6 for MICROCONTROLLER type:
+1. Quick prefix check fails (not ATMEGA, ATTINY, etc.)
+2. Falls through to `patterns.matches(mpn, MICROCONTROLLER)`
+3. STHandler's STM32 pattern is in the registry for MICROCONTROLLER
+4. Pattern matches → AtmelHandler incorrectly returns true!
+
+**Fix**: For base types like MICROCONTROLLER, MOSFET, VOLTAGE_REGULATOR, handlers should:
+- Return `true` only if their prefix check passes
+- Return `false` if prefix check fails (don't fall through)
+- Only use `patterns.matches()` for manufacturer-specific types
+
+### Package Extraction by Component Type
+
+Different component families encode package info differently:
+
+| Component | Package Location | Example |
+|-----------|-----------------|---------|
+| STM32 MCU | Second-to-last char | STM32F103C8**T**6 → T=LQFP |
+| ST MOSFET | Prefix | **STF**5N52U → STF=TO-220FP |
+| L78xx Regulator | Grade + Suffix | L7805**CV** → CV=TO-220 |
+| Atmel MCU | After hyphen | ATMEGA328P-**PU** → PU=PDIP |
+
+### Test Expectations
+
+When fixing package extraction, existing tests may expect the OLD (wrong) behavior:
+- `MPNExtractionTest` expected "T6" for STM32F103C8T6
+- After fix, it should expect "LQFP"
+- Update ALL affected tests when fixing extraction logic
 
 ---
 
