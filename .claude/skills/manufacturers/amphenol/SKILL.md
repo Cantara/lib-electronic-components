@@ -77,4 +77,4 @@ When testing AmphenolHandler:
 3. Instantiate directly: `new AmphenolHandler()`
 
 ## Known Handler Issues
-- Uses HashSet in getSupportedTypes() - should use Set.of()
+*All issues fixed in PR #86*

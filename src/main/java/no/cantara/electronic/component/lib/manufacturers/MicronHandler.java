@@ -5,7 +5,6 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.Collections;
 
 public class MicronHandler implements ManufacturerHandler {
@@ -81,13 +80,12 @@ public class MicronHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_MICRON);
-        types.add(ComponentType.MEMORY_FLASH);
-        types.add(ComponentType.MEMORY_EEPROM);
-        // Add any other specific Micron memory types from ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_MICRON,
+            ComponentType.MEMORY_FLASH,
+            ComponentType.MEMORY_EEPROM
+        );
     }
 
     @Override

@@ -128,17 +128,12 @@ class WurthHandlerTest {
         @CsvSource({
             "61300211121, 61300",
             "61300411121, 61300",
-            "61301011121, 61301"
+            "61301011121, 61301",
+            "62200211121, 62200",
+            "62200411121, 62200"
         })
         void shouldExtractSeries(String mpn, String expected) {
             assertEquals(expected, handler.extractSeries(mpn));
-        }
-
-        @Test
-        void documentSocketHeaderSeriesExtraction() {
-            // Handler's HEADER_PATTERN only matches 61xxx, not 62xxx
-            String series = handler.extractSeries("62200211121");
-            System.out.println("62200211121 -> series = '" + series + "' (empty because HEADER_PATTERN only matches 61xxx)");
         }
     }
 

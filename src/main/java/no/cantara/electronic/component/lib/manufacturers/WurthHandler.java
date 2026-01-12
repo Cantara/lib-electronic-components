@@ -5,13 +5,13 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 public class WurthHandler implements ManufacturerHandler {
-    private static final Pattern HEADER_PATTERN = Pattern.compile("(61\\d{3})(\\d{2})(\\d{3})(\\d{1})");
+    // Pattern matches both 61xxx (pin headers) and 62xxx (socket headers)
+    private static final Pattern HEADER_PATTERN = Pattern.compile("(6[12]\\d{3})(\\d{2})(\\d{3})(\\d{1})");
 
     @Override
     public void initializePatterns(PatternRegistry registry) {
@@ -30,14 +30,14 @@ public class WurthHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CONNECTOR);
-        types.add(ComponentType.CONNECTOR_WURTH);
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_STANDARD_WURTH);
-        types.add(ComponentType.LED_RGB_WURTH);
-        types.add(ComponentType.LED_SMD_WURTH);
-        return types;
+        return Set.of(
+            ComponentType.CONNECTOR,
+            ComponentType.CONNECTOR_WURTH,
+            ComponentType.LED,
+            ComponentType.LED_STANDARD_WURTH,
+            ComponentType.LED_RGB_WURTH,
+            ComponentType.LED_SMD_WURTH
+        );
     }
 
     @Override

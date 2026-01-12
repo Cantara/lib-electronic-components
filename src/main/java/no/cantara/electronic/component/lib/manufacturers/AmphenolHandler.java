@@ -6,7 +6,6 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
@@ -22,11 +21,10 @@ public class AmphenolHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CONNECTOR);
-        types.add(ComponentType.CONNECTOR_AMPHENOL);
-        // Add other Amphenol-specific connector types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.CONNECTOR,
+            ComponentType.CONNECTOR_AMPHENOL
+        );
     }
 
     // Series to family mapping

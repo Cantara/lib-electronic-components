@@ -5,7 +5,6 @@ import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -59,15 +58,16 @@ public class AVXHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_TANTALUM_AVX);
-        types.add(ComponentType.CAPACITOR_CERAMIC_AVX);
-        types.add(ComponentType.CAPACITOR_FILM_AVX);
-        types.add(ComponentType.CAPACITOR_POLYMER_AVX);
-        types.add(ComponentType.SUPERCAP_AVX);
-        types.add(ComponentType.FILTER_AVX);
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_TANTALUM_AVX,
+            ComponentType.CAPACITOR_CERAMIC_AVX,
+            ComponentType.CAPACITOR_FILM_AVX,
+            ComponentType.CAPACITOR_POLYMER_AVX,
+            ComponentType.SUPERCAP_AVX,
+            ComponentType.FILTER_AVX,
+            ComponentType.IC
+        );
     }
 
     @Override

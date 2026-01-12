@@ -279,32 +279,14 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - Test coverage: 31 handlers now have comprehensive tests (1821+ total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
-*BroadcomHandler (2 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- getSupportedTypes() returns empty set despite having IC patterns
-
-*SiliconLabsHandler (1 bug)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-
-*AVXHandler (2 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- Ceramic package extraction reads positions 2-3 after 08/12 prefix (e.g., "0805" extracts "05" not "0805")
-
-*TEHandler (1 bug)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-
-*AmphenolHandler (1 bug)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-
-*NichiconHandler (1 bug)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-
-*WurthHandler (2 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- HEADER_PATTERN only matches 61xxx (pin headers), not 62xxx (socket headers) - series extraction returns empty for socket headers
-
-*MicronHandler (1 bug)*:
-- HashSet in getSupportedTypes() - should use Set.of()
+*BroadcomHandler*: Fixed - uses Set.of(), includes IC type
+*SiliconLabsHandler*: Fixed - uses Set.of(), includes all MCU, IC, CRYSTAL, OSCILLATOR types
+*AVXHandler*: Fixed - uses Set.of(); Note: Ceramic package extraction reads positions 2-3 after 08/12 prefix (design choice, not bug)
+*TEHandler*: Fixed - uses Set.of()
+*AmphenolHandler*: Fixed - uses Set.of()
+*NichiconHandler*: Fixed - uses Set.of()
+*WurthHandler*: Fixed - uses Set.of(), HEADER_PATTERN now matches both 61xxx and 62xxx
+*MicronHandler*: Fixed - uses Set.of()
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
