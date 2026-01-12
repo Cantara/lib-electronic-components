@@ -321,12 +321,15 @@ When reviewing code, watch for:
 - Default `ManufacturerHandler.matches()` was using `PatternRegistry.getPattern(type)` which returned the first pattern from ANY handler
 - This caused false matches when handlers were tested in alphabetical order (e.g., CypressHandler before STHandler)
 - Fix: Added `matchesForCurrentHandler()` to PatternRegistry that only checks patterns for the current handler
+- **IMPORTANT**: 7 handlers had custom `matches()` overrides with the same bug (using `patterns.getPattern(type)` as fallback):
+  - NXPHandler, FairchildHandler, OnSemiHandler, MaximHandler, KemetHandler, WinbondHandler, TIHandler
+  - All fixed by replacing fallback with `patterns.matchesForCurrentHandler()`
 - Key insight: If tests pass locally but fail in CI, check for HashMap iteration order differences
 
 ### Known Gotchas
 - Handler order in `ComponentManufacturer` affects detection priority for ambiguous MPNs
 - Some MPNs legitimately match multiple manufacturers (second-source parts)
-- **Handlers without matches() override**: Will use default implementation which now correctly uses handler-specific patterns
+- **Handlers with custom matches() overrides**: Must use `patterns.matchesForCurrentHandler()` NOT `patterns.getPattern(type)` for fallback matching
 - **CI vs Local differences**: Usually caused by HashMap/HashSet iteration order - always use deterministic collections
 
 ### Historical Context
