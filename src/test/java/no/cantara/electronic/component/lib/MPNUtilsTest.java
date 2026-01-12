@@ -204,6 +204,26 @@ public class MPNUtilsTest {
 
         System.out.println("\nHandlers for MICROCONTROLLER:");
         mcuHandlers.forEach(h -> System.out.println("- " + h.getClass().getSimpleName()));
+
+        // Verify STHandler is in the MICROCONTROLLER handlers
+        boolean hasSTHandler = mcuHandlers.stream()
+            .anyMatch(h -> h.getClass().getSimpleName().equals("STHandler"));
+        assertTrue(hasSTHandler, "STHandler should be in MICROCONTROLLER handlers");
+
+        // Verify STHandler can match STM32 MPNs
+        if (hasSTHandler) {
+            ManufacturerHandler stHandler = mcuHandlers.stream()
+                .filter(h -> h.getClass().getSimpleName().equals("STHandler"))
+                .findFirst().orElse(null);
+            if (stHandler != null) {
+                PatternRegistry testRegistry = new PatternRegistry();
+                testRegistry.setCurrentHandlerClass(stHandler.getClass());
+                stHandler.initializePatterns(testRegistry);
+                boolean stm32Matches = stHandler.matches("STM32F103C8T6", ComponentType.MICROCONTROLLER, testRegistry);
+                System.out.println("STHandler.matches(STM32F103C8T6, MICROCONTROLLER) = " + stm32Matches);
+                assertTrue(stm32Matches, "STHandler should match STM32F103C8T6 for MICROCONTROLLER type");
+            }
+        }
     }
 
     @Test
