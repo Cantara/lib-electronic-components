@@ -6,7 +6,6 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,31 +14,60 @@ import java.util.Set;
 public class EspressifHandler implements ManufacturerHandler {
     @Override
     public void initializePatterns(PatternRegistry registry) {
-        // WiFi SoCs
+        // WiFi SoCs - ESP8266
         registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP8266.*");
         registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP8266.*");
         registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP8266.*");
+        registry.addPattern(ComponentType.ESP8266_SOC, "^ESP8266.*");
 
-        // WiFi + Bluetooth SoCs
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32.*");
-        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32.*");
-        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32.*");
+        // WiFi + Bluetooth SoCs - ESP32 base
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32[^-].*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32[^-].*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32[^-].*");
+        registry.addPattern(ComponentType.ESP32_SOC, "^ESP32[^-].*");
 
-        // ESP32 specific variants
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-S.*");
-        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-S.*");
-        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-S.*");
+        // ESP32-S2 variant
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-S2.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-S2.*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-S2.*");
+        registry.addPattern(ComponentType.ESP32_S2_SOC, "^ESP32-S2.*");
 
-        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-C.*");
-        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-C.*");
-        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-C.*");
+        // ESP32-S3 variant
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-S3.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-S3.*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-S3.*");
+        registry.addPattern(ComponentType.ESP32_S3_SOC, "^ESP32-S3.*");
 
-        // Modules
+        // ESP32-C3 variant
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-C3.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-C3.*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-C3.*");
+        registry.addPattern(ComponentType.ESP32_C3_SOC, "^ESP32-C3.*");
+
+        // ESP32-C6 variant
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-C6.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-C6.*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-C6.*");
+
+        // ESP32-H variant
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32-H.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_ESPRESSIF, "^ESP32-H.*");
+        registry.addPattern(ComponentType.MCU_ESPRESSIF, "^ESP32-H.*");
+
+        // WROOM Modules
         registry.addPattern(ComponentType.IC, "^ESP-WROOM-.*");
-        registry.addPattern(ComponentType.IC, "^ESP-WROVER-.*");
-        registry.addPattern(ComponentType.IC, "^ESP-MODULE-.*");
         registry.addPattern(ComponentType.IC, "^ESP32-WROOM-.*");
+        registry.addPattern(ComponentType.ESP32_WROOM_MODULE, "^ESP-WROOM-.*");
+        registry.addPattern(ComponentType.ESP32_WROOM_MODULE, "^ESP32-WROOM-.*");
+
+        // WROVER Modules
+        registry.addPattern(ComponentType.IC, "^ESP-WROVER-.*");
         registry.addPattern(ComponentType.IC, "^ESP32-WROVER-.*");
+        registry.addPattern(ComponentType.ESP32_WROVER_MODULE, "^ESP-WROVER-.*");
+        registry.addPattern(ComponentType.ESP32_WROVER_MODULE, "^ESP32-WROVER-.*");
+
+        // Other Modules
+        registry.addPattern(ComponentType.IC, "^ESP-MODULE-.*");
         registry.addPattern(ComponentType.IC, "^ESP32-MINI-.*");
         registry.addPattern(ComponentType.IC, "^ESP32-PICO-.*");
 
@@ -51,18 +79,19 @@ public class EspressifHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_ESPRESSIF);
-        types.add(ComponentType.MCU_ESPRESSIF);
-        types.add(ComponentType.ESP8266_SOC);
-        types.add(ComponentType.ESP32_SOC);
-        types.add(ComponentType.ESP32_S2_SOC);
-        types.add(ComponentType.ESP32_S3_SOC);
-        types.add(ComponentType.ESP32_C3_SOC);
-        types.add(ComponentType.ESP32_WROOM_MODULE);
-        types.add(ComponentType.ESP32_WROVER_MODULE);
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_ESPRESSIF,
+            ComponentType.MCU_ESPRESSIF,
+            ComponentType.IC,
+            ComponentType.ESP8266_SOC,
+            ComponentType.ESP32_SOC,
+            ComponentType.ESP32_S2_SOC,
+            ComponentType.ESP32_S3_SOC,
+            ComponentType.ESP32_C3_SOC,
+            ComponentType.ESP32_WROOM_MODULE,
+            ComponentType.ESP32_WROVER_MODULE
+        );
     }
 
     @Override
@@ -150,8 +179,11 @@ public class EspressifHandler implements ManufacturerHandler {
         if (series1.equals("ESP32")) {
             // Within same series, different memory configurations might be compatible
             // Example: ESP32-D0WDQ6 and ESP32-D0WD are compatible
-            String base1 = mpn1.substring(0, mpn1.indexOf('-'));
-            String base2 = mpn2.substring(0, mpn2.indexOf('-'));
+            int dash1 = mpn1.indexOf('-');
+            int dash2 = mpn2.indexOf('-');
+            // If no dash found, use entire MPN as base
+            String base1 = dash1 >= 0 ? mpn1.substring(0, dash1) : mpn1;
+            String base2 = dash2 >= 0 ? mpn2.substring(0, dash2) : mpn2;
             if (base1.equals(base2)) return true;
         }
 

@@ -336,8 +336,147 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - Similarity calculators registered in `MPNUtils` static initializer (lines 34-48)
 - `ManufacturerHandlerFactory` uses reflection-based classpath scanning with TreeSet for deterministic order
 
+---
+
+## Codebase Analysis Findings (January 2026)
+
+### Test Coverage Status
+
+| Category | Total | With Tests | Without Tests | Coverage |
+|----------|-------|------------|---------------|----------|
+| Handlers | 56 | 40 | 16 | 71.4% |
+| Similarity Calculators | 20 | 0 | 20 | 0% |
+
+**Handlers Without Tests (16)**: Abracon, AKM, Cree, DiodesInc, Epson, Fairchild, IQD, LG, LogicIC, Lumileds, NDK, Nexteria, OSRAM, Qualcomm, Spansion, Unknown
+
+**Similarity Calculators (ALL untested)**: CapacitorSimilarityCalculator, ConnectorSimilarityCalculator, DiodeSimilarityCalculator, LEDSimilarityCalculator, MCUSimilarityCalculator, MemorySimilarityCalculator, MosfetSimilarityCalculator, OpAmpSimilarityCalculator, ResistorSimilarityCalculator, SensorSimilarityCalculator, TransistorSimilarityCalculator, VoltageRegulatorSimilarityCalculator, and 8 more
+
+### Technical Debt Inventory
+
+| Issue | Count | Severity | Location |
+|-------|-------|----------|----------|
+| System.out.println debug statements | 181 | HIGH | 19 files, primarily MPNUtils (35), ManufacturerHandlerFactory (17), similarity calculators (97) |
+| printStackTrace() calls | 9 | HIGH | ManufacturerHandlerFactory (8), MPNUtils (1) |
+| Magic numbers in scoring | 108+ | MEDIUM | All similarity calculators - hardcoded weights |
+| Inconsistent getSupportedTypes() | 59 | MEDIUM | 34 use HashSet, 23 use Set.of() |
+
+### Pattern Inconsistencies Found
+
+**getSupportedTypes() Pattern Split**:
+- **Set.of() (modern, preferred)**: 23 handlers - AtmelHandler, STHandler, TIHandler, BoschHandler, HiroseHandler, etc.
+- **HashSet (legacy, mutable)**: 34 handlers - CreeHandler, AbraconHandler, LGHandler, PanasonicHandler, VishayHandler, etc.
+
+**Type Declaration vs Pattern Registration Mismatches**:
+| Handler | Issue |
+|---------|-------|
+| MaximHandler | Declares INTERFACE_IC_MAXIM, RTC_MAXIM, BATTERY_MANAGEMENT_MAXIM but doesn't register patterns |
+| EspressifHandler | Declares ESP8266_SOC, ESP32_SOC, all module types but only registers MICROCONTROLLER patterns |
+| PanasonicHandler | Declares capacitor/inductor types but registers NO patterns for them |
+
+### Code Quality Issues Found
+
+| File | Issue | Line(s) |
+|------|-------|---------|
+| LogicICHandler.java | Debug System.out.println in production | 70, 75, 84, 85 |
+| EspressifHandler.java | NPE risk - substring without checking indexOf result | 153-154 |
+| InfineonHandler.java | Commented-out code | 44, 49, 51 |
+
+### Priority Action Items
+
+1. **IMMEDIATE**: Replace 181 debug statements with SLF4J logging
+2. **IMMEDIATE**: Replace 9 printStackTrace() calls with logger.error()
+3. **HIGH**: Add tests for remaining 16 handlers
+4. **HIGH**: Standardize all getSupportedTypes() to Set.of()
+5. **HIGH**: Fix type/pattern mismatches in MaximHandler, EspressifHandler, PanasonicHandler
+6. **MEDIUM**: Add similarity calculator test suite (0% coverage)
+7. **MEDIUM**: Extract magic numbers to configurable constants
+
 ### Recent Infrastructure (PR #74)
 - **`PackageCodeRegistry`** - Centralized package code mappings (PU→PDIP, AU→TQFP, etc.)
 - **`AbstractManufacturerHandler`** - Base class with `extractSuffixAfterHyphen()`, `extractTrailingSuffix()`, `findFirstDigitIndex()`, `findLastDigitIndex()` helpers
+
+---
+
+## Bug Fix Learnings (PR #89 - January 2026)
+
+### Bug Patterns & Fixes
+
+**1. NPE Prevention in substring() Operations**
+```java
+// BAD - throws StringIndexOutOfBoundsException if no dash
+String base = mpn.substring(0, mpn.indexOf('-'));
+
+// GOOD - guard against missing delimiter
+int dash = mpn.indexOf('-');
+String base = dash >= 0 ? mpn.substring(0, dash) : mpn;
+```
+*Affected*: EspressifHandler line 153-154
+
+**2. Pattern Ordering for Series Extraction**
+```java
+// BAD - generic pattern matches first, returns wrong series
+if (mpn.matches("1N4[0-9]{3}.*")) return "1N4000";  // Matches 1N4148!
+if (mpn.matches("1N4148.*")) return "1N4148";       // Never reached
+
+// GOOD - specific patterns before generic
+if (mpn.matches("1N4148.*")) return "1N4148";       // Check FIRST
+if (mpn.matches("1N914.*")) return "1N914";
+if (mpn.matches("1N47[0-9]{2}.*")) return "1N47xx";
+if (mpn.matches("1N4[0-9]{3}.*")) return "1N4000";  // Generic LAST
+```
+*Affected*: VishayHandler extractSeries()
+
+**3. Type/Pattern Registration Mismatch**
+```java
+// BAD - declares type but doesn't register patterns
+getSupportedTypes() → includes ESP32_SOC
+initializePatterns() → only registers MICROCONTROLLER
+
+// GOOD - every declared type must have patterns
+initializePatterns() {
+    registry.addPattern(ComponentType.ESP32_SOC, "^ESP32[^-].*");
+    registry.addPattern(ComponentType.MICROCONTROLLER, "^ESP32[^-].*");
+}
+```
+*Affected*: EspressifHandler, MaximHandler, PanasonicHandler
+
+**4. Hyphenated MPN Normalization**
+```java
+// BAD - hyphen breaks position-based extraction
+"ERJ-3GEYJ103V" → position 3 returns '-' not '3'
+
+// GOOD - normalize first
+String normalized = mpn.replace("-", "");
+"ERJ3GEYJ103V" → position 3 returns '3' (size code)
+```
+*Affected*: PanasonicHandler extractPackageCode()
+
+**5. Missing matches() Override for Manufacturer-Specific Types**
+```java
+// BAD - falls through to registry which may not find MOSFET_VISHAY
+// Because pattern was only registered for MOSFET base type
+
+// GOOD - explicit check in matches()
+if (type == ComponentType.MOSFET || type == ComponentType.MOSFET_VISHAY) {
+    if (upperMpn.matches("^SI[0-9]+.*") || upperMpn.matches("^SIH.*")) {
+        return true;
+    }
+}
+```
+*Affected*: VishayHandler
+
+### Quick Reference: Handler Bug Checklist
+
+When reviewing/fixing a handler, check for:
+
+| Check | Issue | Fix |
+|-------|-------|-----|
+| `indexOf()` without guard | NPE risk | Add `>= 0` check before substring |
+| Generic pattern before specific | Wrong match | Reorder: specific first |
+| Type in getSupportedTypes() | Missing pattern | Add to initializePatterns() |
+| Position-based extraction | Hyphen breaks it | Normalize: `mpn.replace("-", "")` |
+| Base type matches, specific doesn't | Missing override | Add explicit check in matches() |
+| System.out.println | Debug leak | Remove or replace with logger |
+| HashSet in getSupportedTypes() | Mutable | Change to Set.of() |
 
 <!-- Add new learnings above this line -->

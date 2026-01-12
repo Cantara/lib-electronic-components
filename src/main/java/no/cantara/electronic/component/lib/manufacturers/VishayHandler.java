@@ -5,7 +5,8 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Set;
 
 public class VishayHandler implements ManufacturerHandler {
     @Override
@@ -119,47 +120,60 @@ public class VishayHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.RESISTOR);
-        types.add(ComponentType.RESISTOR_CHIP_VISHAY);
-        types.add(ComponentType.RESISTOR_THT_VISHAY);
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_VISHAY);
-        types.add(ComponentType.DIODE);
-        types.add(ComponentType.DIODE_VISHAY);
-    //    types.add(ComponentType.OPTOCOUPLER);
-        types.add(ComponentType.OPTOCOUPLER_VISHAY);
-        types.add(ComponentType.TRANSISTOR);
-        types.add(ComponentType.TRANSISTOR_VISHAY);
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_STANDARD_VISHAY);
-        types.add(ComponentType.LED_RGB_VISHAY);
-        types.add(ComponentType.LED_SMD_VISHAY);
-        return types;
+        return Set.of(
+            ComponentType.RESISTOR,
+            ComponentType.RESISTOR_CHIP_VISHAY,
+            ComponentType.RESISTOR_THT_VISHAY,
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_VISHAY,
+            ComponentType.DIODE,
+            ComponentType.DIODE_VISHAY,
+            ComponentType.TRANSISTOR,
+            ComponentType.TRANSISTOR_VISHAY,
+            ComponentType.LED,
+            ComponentType.LED_STANDARD_VISHAY,
+            ComponentType.LED_RGB_VISHAY,
+            ComponentType.LED_SMD_VISHAY
+        );
+        // Note: OPTOCOUPLER_VISHAY removed - no patterns registered for optocouplers
     }
     @Override
     public boolean matches(String mpn, ComponentType type, PatternRegistry patterns) {
         if (mpn == null || type == null) return false;
 
+        String upperMpn = mpn.toUpperCase();
+
         // Direct check for common resistor series
         if (type == ComponentType.RESISTOR ||
                 type == ComponentType.RESISTOR_CHIP_VISHAY ||
                 type == ComponentType.RESISTOR_THT_VISHAY) {
-
-            String upperMpn = mpn.toUpperCase();
             if (upperMpn.matches("^CRCW[0-9]{4}[0-9R][0-9A-Z]*") ||  // CRCW series
                     upperMpn.matches("^(RCG|RCWP|RCA|RCL)[0-9].*") ||    // Other chip series
-                    upperMpn.matches("^(PAT|PTN|PNM)[0-9].*")) {         // Precision series
+                    upperMpn.matches("^(PAT|PTN|PNM)[0-9].*") ||         // Precision series
+                    upperMpn.matches("^CRMA[0-9].*") ||                  // High precision thin film
+                    upperMpn.matches("^CRHV[0-9].*") ||                  // High voltage
+                    upperMpn.matches("^RCS[0-9].*") ||                   // Current sense
+                    upperMpn.matches("^WSL[0-9].*")) {                   // Power resistors
                 return true;
             }
         }
 
-        String upperMpn = mpn.toUpperCase();
+        // Direct matching for MOSFETs
+        if (type == ComponentType.MOSFET || type == ComponentType.MOSFET_VISHAY) {
+            if (upperMpn.matches("^SI[0-9].*") ||         // SI series
+                    upperMpn.matches("^SIS[0-9].*") ||    // SIS series
+                    upperMpn.matches("^SIR[0-9].*") ||    // SIR series
+                    upperMpn.matches("^SIB[0-9].*") ||    // SIB series
+                    upperMpn.matches("^SIH[A-Z0-9].*") || // SIH series (e.g., SIHF)
+                    upperMpn.matches("^SIHF[0-9].*")) {   // SIHF series
+                return true;
+            }
+        }
 
         // Direct matching for transistors
         if (type == ComponentType.TRANSISTOR || type == ComponentType.TRANSISTOR_VISHAY) {
             if (upperMpn.matches("^2N[0-9]{4}.*") ||     // 2N series
-                    upperMpn.matches("^BC[0-9]{3}.*")) {      // BC series
+                    upperMpn.matches("^BC[0-9]{3}.*")) {  // BC series
                 return true;
             }
         }
@@ -179,9 +193,14 @@ public class VishayHandler implements ManufacturerHandler {
             }
         }
 
-        // Special case for CRCW resistors
-        if (type == ComponentType.RESISTOR_CHIP_VISHAY && upperMpn.startsWith("CRCW")) {
-            return true;
+        // Direct matching for LEDs
+        if (type == ComponentType.LED || type == ComponentType.LED_STANDARD_VISHAY ||
+                type == ComponentType.LED_RGB_VISHAY || type == ComponentType.LED_SMD_VISHAY) {
+            if (upperMpn.matches("^VLMU[0-9].*") ||       // Standard LEDs
+                    upperMpn.matches("^VLMRGB[0-9].*") || // RGB LEDs
+                    upperMpn.matches("^VLMS[0-9].*")) {   // SMD LEDs
+                return true;
+            }
         }
 
         // Fallback to default pattern matching
@@ -246,15 +265,20 @@ public class VishayHandler implements ManufacturerHandler {
     public String extractSeries(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        // Diode series
+        // Diode series - check specific patterns BEFORE generic ones
+        // Signal diodes (more specific patterns first)
+        if (mpn.matches("(?i)^1N4148.*")) return "1N4148";       // Signal diode - check before 1N4xxx
+        if (mpn.matches("(?i)^1N914.*")) return "1N914";         // Signal diode
+        // Zener diodes (1N47xx - check before generic 1N4xxx)
+        if (mpn.matches("(?i)^1N47[0-9]{2}.*")) return "1N47xx"; // Zener series
+        // Rectifier series (generic patterns last)
         if (mpn.matches("(?i)^1N4[0-9]{3}.*")) return "1N4000";  // 1N4000 series
         if (mpn.matches("(?i)^1N5[0-9]{3}.*")) return "1N5000";  // 1N5000 series
-        if (mpn.matches("(?i)^1N4148.*")) return "1N4148";       // Signal diode
-        if (mpn.matches("(?i)^1N914.*")) return "1N914";         // Signal diode
-        if (mpn.matches("(?i)^BAT[0-9].*")) return mpn.substring(0, 5);  // BAT series
-        if (mpn.matches("(?i)^BYV[0-9].*")) return mpn.substring(0, 5);  // BYV series
-        if (mpn.matches("(?i)^UF[0-9].*")) return mpn.substring(0, 4);   // UF series
-        if (mpn.matches("(?i)^BZX[0-9].*")) return mpn.substring(0, 5);  // BZX series
+        // Schottky, fast recovery, Zener
+        if (mpn.matches("(?i)^BAT[0-9].*")) return mpn.substring(0, Math.min(5, mpn.length()));  // BAT series
+        if (mpn.matches("(?i)^BYV[0-9].*")) return mpn.substring(0, Math.min(5, mpn.length()));  // BYV series
+        if (mpn.matches("(?i)^UF[0-9].*")) return mpn.substring(0, Math.min(4, mpn.length()));   // UF series
+        if (mpn.matches("(?i)^BZX[0-9].*")) return mpn.substring(0, Math.min(5, mpn.length()));  // BZX series
 
         // Resistors
         if (mpn.startsWith("CRCW")) return "CRCW";
