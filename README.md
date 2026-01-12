@@ -183,6 +183,56 @@ boolean isDigital1 = MPNUtils.isDigitalIC("74LS00");  // true
 boolean isDigital2 = MPNUtils.isDigitalIC("LM317");   // false
 ```
 
+### Similarity Calculators
+
+The library includes 17 specialized similarity calculators that compare components based on electrical characteristics rather than just string matching:
+
+| Calculator | Component Type | Key Matching Criteria |
+|------------|---------------|----------------------|
+| ResistorSimilarityCalculator | Resistors | Value, package (0603, 0805), tolerance |
+| CapacitorSimilarityCalculator | Capacitors | Capacitance (104=100nF), voltage, dielectric (X7R) |
+| TransistorSimilarityCalculator | BJT Transistors | Polarity (NPN/PNP), equivalent groups (2N2222≈PN2222) |
+| DiodeSimilarityCalculator | Diodes | Type (signal/rectifier/zener), voltage, equivalents (1N4148≈1N914) |
+| MosfetSimilarityCalculator | MOSFETs | Channel type (N/P), voltage/current ratings, IRF families |
+| OpAmpSimilarityCalculator | Op-Amps | Channel count (single/dual/quad), manufacturer families |
+| MCUSimilarityCalculator | Microcontrollers | Family (50%), series (30%), features (20%) weighted |
+| MemorySimilarityCalculator | Memory ICs | Interface (I2C/SPI), density, package |
+| SensorSimilarityCalculator | Sensors | Sensor type, interface, measurement range |
+| LEDSimilarityCalculator | LEDs | Color bin, brightness bin, package |
+| ConnectorSimilarityCalculator | Connectors | Pin count (must match), pitch, mounting type |
+| VoltageRegulatorSimilarityCalculator | Regulators | Fixed (78xx) vs adjustable (LM317), voltage |
+| LogicICSimilarityCalculator | Logic ICs | Function (NAND/NOR), technology (LS/HC/HCT) |
+
+#### Similarity Thresholds
+
+```java
+// Common thresholds used by calculators
+HIGH_SIMILARITY = 0.9;    // Equivalent/interchangeable parts
+MEDIUM_SIMILARITY = 0.7;  // Compatible, same family
+LOW_SIMILARITY = 0.3;     // Same type, different specs
+```
+
+#### Usage Examples
+
+```java
+// Cross-manufacturer transistor equivalents
+double sim = MPNUtils.calculateSimilarity("2N2222A", "PN2222A");  // 0.9
+
+// Same op-amp family
+sim = MPNUtils.calculateSimilarity("LM358N", "MC1458");  // 0.9
+
+// Rectifier diode equivalents (same voltage rating)
+sim = MPNUtils.calculateSimilarity("1N4007", "RL207");   // 0.9
+
+// Logic IC - same function, different technology
+sim = MPNUtils.calculateSimilarity("74LS00", "74HC00"); // 0.9
+
+// MCU - same family, different series
+sim = MPNUtils.calculateSimilarity("STM32F103C8T6", "STM32F407VGT6"); // ~0.7
+
+// Connector - different pin counts = incompatible
+sim = MPNUtils.calculateSimilarity("10-pin", "20-pin"); // 0.3
+```
 
 ### ComponentType
 ```java

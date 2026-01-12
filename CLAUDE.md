@@ -104,6 +104,24 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/memory` - Flash, EEPROM, SRAM
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
 
+## Similarity Calculator Skills
+
+Skills for working with component similarity calculations in `.claude/skills/similarity*/`:
+- `/similarity` - **Main skill**: Architecture, interfaces, calculator selection
+- `/similarity-resistor` - Value, package, tolerance matching
+- `/similarity-capacitor` - Capacitance, voltage, dielectric matching
+- `/similarity-transistor` - NPN/PNP, equivalent groups (2N2222≈PN2222)
+- `/similarity-mosfet` - N/P channel, IRF/IRFP families
+- `/similarity-diode` - Signal/rectifier/zener, 1N400x equivalents
+- `/similarity-opamp` - Single/dual/quad, LM358≈MC1458 families
+- `/similarity-mcu` - Family/series/feature weighted comparison
+- `/similarity-memory` - I2C/SPI EEPROM, Flash equivalents
+- `/similarity-sensor` - Temperature, accelerometer, humidity families
+- `/similarity-led` - Color bin, brightness bin, family matching
+- `/similarity-connector` - Pin count, pitch, mounting type
+- `/similarity-regulator` - 78xx/79xx fixed, LM317 adjustable
+- `/similarity-logic` - 74xx/CD4000 series, LS/HC/HCT technologies
+
 ## Manufacturer Skills
 
 Manufacturer-specific skills for complex MPN encoding patterns:
@@ -142,7 +160,7 @@ This ensures institutional knowledge is preserved for future sessions.
 ### Testing
 - `MPNUtilsTest` and `MPNExtractionTest` are the primary tests for MPN parsing logic
 - Many test MPNs are real-world part numbers from datasheets
-- **Test coverage gap**: 50+ handlers and 20+ similarity calculators have no dedicated tests
+- **Test coverage**: 41+ handlers have tests (2613+ tests), 17 similarity calculators have tests (302 tests)
 - **Flaky tests**: If tests pass individually but fail in suite, check for non-deterministic iteration (HashSet → TreeSet)
 
 ### Handler Test Gotchas (IMPORTANT)
@@ -344,12 +362,12 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 | Category | Total | With Tests | Without Tests | Coverage |
 |----------|-------|------------|---------------|----------|
-| Handlers | 56 | 40 | 16 | 71.4% |
-| Similarity Calculators | 20 | 0 | 20 | 0% |
+| Handlers | 56 | 41 | 15 | 73.2% |
+| Similarity Calculators | 17 | 17 | 0 | 100% |
 
-**Handlers Without Tests (16)**: Abracon, AKM, Cree, DiodesInc, Epson, Fairchild, IQD, LG, LogicIC, Lumileds, NDK, Nexteria, OSRAM, Qualcomm, Spansion, Unknown
+**Handlers Without Tests (15)**: Abracon, AKM, Cree, DiodesInc, Epson, Fairchild, IQD, LG, Lumileds, NDK, Nexteria, OSRAM, Qualcomm, Spansion, Unknown
 
-**Similarity Calculators (ALL untested)**: CapacitorSimilarityCalculator, ConnectorSimilarityCalculator, DiodeSimilarityCalculator, LEDSimilarityCalculator, MCUSimilarityCalculator, MemorySimilarityCalculator, MosfetSimilarityCalculator, OpAmpSimilarityCalculator, ResistorSimilarityCalculator, SensorSimilarityCalculator, TransistorSimilarityCalculator, VoltageRegulatorSimilarityCalculator, and 8 more
+**Similarity Calculators (ALL tested)**: ResistorSimilarityCalculator, CapacitorSimilarityCalculator, TransistorSimilarityCalculator, DiodeSimilarityCalculator, MosfetSimilarityCalculator, OpAmpSimilarityCalculator, MCUSimilarityCalculator, MicrocontrollerSimilarityCalculator, MemorySimilarityCalculator, SensorSimilarityCalculator, ConnectorSimilarityCalculator, LEDSimilarityCalculator, VoltageRegulatorSimilarityCalculator, LogicICSimilarityCalculator, PassiveComponentCalculator, LevenshteinCalculator, DefaultSimilarityCalculator (302 tests total)
 
 ### Technical Debt Inventory
 
@@ -385,10 +403,10 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 1. **IMMEDIATE**: Replace 181 debug statements with SLF4J logging
 2. **IMMEDIATE**: Replace 9 printStackTrace() calls with logger.error()
-3. **HIGH**: Add tests for remaining 16 handlers
+3. **HIGH**: Add tests for remaining 15 handlers
 4. **HIGH**: Standardize all getSupportedTypes() to Set.of()
 5. **HIGH**: Fix type/pattern mismatches in MaximHandler, EspressifHandler, PanasonicHandler
-6. **MEDIUM**: Add similarity calculator test suite (0% coverage)
+6. ~~**MEDIUM**: Add similarity calculator test suite (0% coverage)~~ ✓ DONE (302 tests)
 7. **MEDIUM**: Extract magic numbers to configurable constants
 
 ### Recent Infrastructure (PR #74)
@@ -507,5 +525,90 @@ When reviewing/fixing a handler, check for:
 2. Check for cross-handler pattern matching (see #6 above)
 3. Check handler alphabetical order - first matching handler wins
 4. Verify TreeSet comparators are truly deterministic
+
+---
+
+## Similarity Calculator Learnings (January 2026)
+
+### Calculator Architecture
+
+**Two Interface Types**:
+1. **`SimilarityCalculator`** - Simple interface: `calculateSimilarity(String mpn1, String mpn2)` → double
+   - Used by: `MCUSimilarityCalculator`, `LevenshteinCalculator`, `PassiveComponentCalculator`
+   - No registry required, pattern-based matching
+
+2. **`ComponentSimilarityCalculator`** - Type-aware: `isApplicable(ComponentType)` + `calculateSimilarity(String, String, PatternRegistry)`
+   - Used by: `ResistorSimilarityCalculator`, `CapacitorSimilarityCalculator`, etc.
+   - Requires PatternRegistry for manufacturer handler integration
+
+### Similarity Thresholds (Common Pattern)
+
+```java
+HIGH_SIMILARITY = 0.9;    // Equivalent/interchangeable parts
+MEDIUM_SIMILARITY = 0.7;  // Compatible but different (same family)
+LOW_SIMILARITY = 0.3;     // Same type, different specs
+```
+
+### Test Writing Gotchas
+
+**1. Avoid Exact Equality Assertions**
+```java
+// BAD - breaks when calculator tuning changes
+assertEquals(0.9, similarity);
+
+// GOOD - uses threshold ranges
+assertTrue(similarity >= MEDIUM_SIMILARITY);
+assertTrue(similarity > 0.5 && similarity < 1.0);
+```
+
+**2. Equivalent Groups Don't Always Score 0.9**
+- Some calculators return MEDIUM_SIMILARITY (0.7) for variants
+- Example: `LM35DZ` vs `LM35CZ` may return 0.7, not 0.9
+- Test with `>= MEDIUM_SIMILARITY` instead of `== HIGH_SIMILARITY`
+
+**3. Cross-Manufacturer Equivalents**
+- 1N4148 ≈ 1N914 (signal diodes) → 0.9
+- 2N2222 ≈ PN2222 ≈ MMBT2222 (transistors) → 0.9
+- LM358 ≈ MC1458 (op-amps) → 0.9
+
+**4. Package Variants Have High Similarity**
+- Same part, different package = 0.9 (e.g., ATMEGA328P-AU vs ATMEGA328P-PU)
+- Package doesn't affect core part equivalence
+
+**5. Unknown Parts Default to Levenshtein**
+- When type can't be determined, falls back to string similarity
+- Ensures non-zero scores for similar-looking MPNs
+
+### Calculator-Specific Notes
+
+| Calculator | Key Behavior |
+|------------|--------------|
+| ResistorSimilarityCalculator | Compares value (10K), package (0603), tolerance (1%) |
+| CapacitorSimilarityCalculator | Compares capacitance (104=100nF), voltage, dielectric (X7R) |
+| TransistorSimilarityCalculator | Uses equivalent groups (2N2222≈PN2222), polarity matching |
+| DiodeSimilarityCalculator | Signal/rectifier/zener grouping, 1N400x family matching |
+| MosfetSimilarityCalculator | N/P channel, voltage/current ratings, IRF/IRFP families |
+| OpAmpSimilarityCalculator | Single/dual/quad variants, manufacturer families |
+| MCUSimilarityCalculator | Family (50%), series (30%), features (20%) weighted |
+| MemorySimilarityCalculator | Interface (I2C/SPI), density, temperature grade |
+| SensorSimilarityCalculator | Sensor type (temp/accel/humidity), interface, accuracy |
+| LEDSimilarityCalculator | Color bin, brightness bin, package |
+| ConnectorSimilarityCalculator | Pin count (MUST match), pitch, mounting type |
+| VoltageRegulatorSimilarityCalculator | Fixed (78xx) vs adjustable (LM317), voltage rating |
+| LogicICSimilarityCalculator | Function (00=NAND), technology (LS/HC/HCT), family |
+
+### Skills Documentation
+
+Similarity calculator skills are in `.claude/skills/similarity*/`:
+- Main skill: `similarity/SKILL.md` - Overview and architecture
+- Specialized skills: `similarity-resistor/`, `similarity-mcu/`, etc.
+
+Each skill documents:
+- Applicable ComponentTypes
+- Similarity thresholds and weights
+- Equivalent groups
+- MPN pattern examples
+- Test examples
+- Learnings & quirks section (append new discoveries here)
 
 <!-- Add new learnings above this line -->
