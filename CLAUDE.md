@@ -814,4 +814,80 @@ List<StatusChange> history = lifecycle.getStatusHistory();
 
 See `.claude/skills/lifecycle/SKILL.md` for detailed guidance.
 
+---
+
+## Parametric Search (January 2026)
+
+The library provides unit-aware parametric search for filtering components by specifications.
+
+### Query Syntax
+
+| Syntax | Example | Description |
+|--------|---------|-------------|
+| `>= value` | `>= 10nF` | Greater than or equal |
+| `<= value` | `<= 50V` | Less than or equal |
+| `> value` | `> 1k` | Greater than |
+| `< value` | `< 1uF` | Less than |
+| `= value` | `= X7R` | Exact match |
+| `!= value` | `!= X5R` | Not equal |
+| `min..max` | `10nF..1uF` | Range (inclusive) |
+| `IN(a, b, c)` | `IN(X7R, X5R, C0G)` | Set membership |
+
+### Supported Units
+
+Values are automatically parsed with unit awareness:
+- **Capacitance**: pF, nF, uF/µF, mF, F
+- **Resistance**: Ω, kΩ/k, MΩ/M, GΩ
+- **Voltage**: mV, V, kV
+- **Current**: nA, µA, mA, A
+- **Percentage**: %
+
+### Usage Examples
+
+```java
+// Static filter method
+List<ElectronicPart> results = ParametricSearch.filter(capacitors, Map.of(
+    "capacitance", ">= 10nF",
+    "voltage", ">= 25V",
+    "dielectric", "IN(X7R, X5R)"
+));
+
+// Fluent builder
+List<ElectronicPart> results = ParametricSearch.search(capacitors)
+    .min("capacitance", "10nF")
+    .max("voltage", "50V")
+    .in("dielectric", "X7R", "X5R")
+    .find();
+
+// Range query
+List<ElectronicPart> results = ParametricSearch.search(resistors)
+    .range("resistance", "1k", "100k")
+    .where("tolerance", "<= 1%")
+    .find();
+
+// Check single part
+boolean matches = ParametricSearch.meets(part, "capacitance", ">= 10nF");
+
+// Utility methods
+long count = ParametricSearch.search(parts).min("voltage", "25V").count();
+boolean any = ParametricSearch.search(parts).equals("dielectric", "X7R").anyMatch();
+Optional<ElectronicPart> first = ParametricSearch.search(parts).min("capacitance", "1uF").findFirst();
+```
+
+### Built-in Fields
+
+The search also checks common ElectronicPart fields:
+- `value` - Component value
+- `package` / `pkg` - Package type
+- `manufacturer` / `mfr` - Manufacturer name
+- `description` / `desc` - Description
+- `mpn` - Manufacturer part number
+
+### Gotchas
+
+1. **Unit prefixes are case-sensitive for some**: `k` and `K` both work for kilo, but `m` is milli, `M` is mega
+2. **Missing specs return no match**: Parts without the requested spec are filtered out
+3. **String comparisons are case-insensitive**: `= X7R` matches `x7r`
+4. **IN clause is case-insensitive**: `IN(x7r, X5R)` works
+
 <!-- Add new learnings above this line -->
