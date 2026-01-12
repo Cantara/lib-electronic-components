@@ -1,7 +1,6 @@
 package no.cantara.electronic.component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -10,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BOMSerializationTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    // Jackson 3.x has built-in Java 8 date/time support
+    private final JsonMapper objectMapper = JsonMapper.builder().build();
 
     @Test
     void shouldSerializeAndDeserializeBasicBOM() throws Exception {
@@ -113,8 +112,7 @@ class BOMSerializationTest {
         pcbaBom.setBomEntries(entries);
 
         // Serialize to JSON
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        JsonMapper mapper = JsonMapper.builder().build();
         String json = mapper.writeValueAsString(pcbaBom);
         System.out.println("Serialized PCBA BOM:");
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(pcbaBom));
@@ -292,8 +290,7 @@ class BOMSerializationTest {
         mechBom.setBomEntries(entries);
 
         // Serialize to JSON
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        JsonMapper mapper = JsonMapper.builder().build();
         String json = mapper.writeValueAsString(mechBom);
         System.out.println("Serialized Mechanical BOM:");
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mechBom));

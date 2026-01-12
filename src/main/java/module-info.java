@@ -17,31 +17,31 @@ module lib.electronic.components {
     //exports no.cantara.electronic.component.lib.specs.comparison;
     //exports no.cantara.electronic.component.lib.specs.util;
 
-    // Add opens directives for Jackson serialization
-    opens no.cantara.electronic.component to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.advanced to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.componentsimilaritycalculators to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.connectors to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.manufacturers to com.fasterxml.jackson.databind;
+    // Add opens directives for Jackson 3.x serialization
+    opens no.cantara.electronic.component to tools.jackson.databind;
+    opens no.cantara.electronic.component.advanced to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.componentsimilaritycalculators to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.connectors to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.manufacturers to tools.jackson.databind;
 
     // Open new specification packages to Jackson
-    opens no.cantara.electronic.component.lib.specs.base to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.specs.passive to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.specs.semiconductor to com.fasterxml.jackson.databind;
-    opens no.cantara.electronic.component.lib.specs.power to com.fasterxml.jackson.databind;
-    //opens no.cantara.electronic.component.lib.specs.mechanical to com.fasterxml.jackson.databind;
-    //opens no.cantara.electronic.component.lib.specs.validation to com.fasterxml.jackson.databind;
-    //opens no.cantara.electronic.component.lib.specs.comparison to com.fasterxml.jackson.databind;
-    //opens no.cantara.electronic.component.lib.specs.util to com.fasterxml.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.base to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.passive to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.semiconductor to tools.jackson.databind;
+    opens no.cantara.electronic.component.lib.specs.power to tools.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.mechanical to tools.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.validation to tools.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.comparison to tools.jackson.databind;
+    //opens no.cantara.electronic.component.lib.specs.util to tools.jackson.databind;
 
     // Required dependencies
     requires org.slf4j;
 
-    // Transitive dependencies that should be visible to consumers of this module
-    requires transitive com.fasterxml.jackson.core;
+    // Jackson 3.x dependencies
+    requires transitive tools.jackson.core;
+    requires transitive tools.jackson.databind;
+    // Annotations remain on 2.x
     requires transitive com.fasterxml.jackson.annotation;
-    requires transitive com.fasterxml.jackson.databind;
-    requires transitive com.fasterxml.jackson.datatype.jsr310;
-    requires transitive com.fasterxml.jackson.datatype.jdk8;
+    // Note: Java 8 date/time support is built-in to Jackson 3.x
 }

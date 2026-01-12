@@ -611,4 +611,79 @@ Each skill documents:
 - Test examples
 - Learnings & quirks section (append new discoveries here)
 
+---
+
+## Jackson 3 Migration (January 2026)
+
+This project uses **Jackson 3.0.3** for JSON serialization.
+
+### Key Changes from Jackson 2.x
+
+| Aspect | Jackson 2.x | Jackson 3.x |
+|--------|-------------|-------------|
+| GroupId | `com.fasterxml.jackson.core` | `tools.jackson.core` |
+| Main class | `ObjectMapper` | `JsonMapper` |
+| Construction | `new ObjectMapper()` | `JsonMapper.builder().build()` |
+| Package | `com.fasterxml.jackson.databind` | `tools.jackson.databind.json` |
+| Java 8 date/time | Requires `JavaTimeModule` | Built-in |
+| Annotations | `com.fasterxml.jackson.annotation` | Stays on 2.x (`2.20`) |
+
+### Maven Dependencies
+
+```xml
+<!-- Jackson 3.x databind -->
+<dependency>
+    <groupId>tools.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>3.0.3</version>
+</dependency>
+<!-- Annotations stay on 2.x for compatibility -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-annotations</artifactId>
+    <version>2.20</version>
+</dependency>
+```
+
+### Module System (module-info.java)
+
+```java
+// Jackson 3.x module names
+requires transitive tools.jackson.core;
+requires transitive tools.jackson.databind;
+requires transitive com.fasterxml.jackson.annotation; // Still 2.x
+
+// Opens for reflection
+opens my.package to tools.jackson.databind;
+```
+
+### Code Migration Examples
+
+```java
+// BEFORE (Jackson 2.x)
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+ObjectMapper mapper = new ObjectMapper();
+mapper.registerModule(new JavaTimeModule());
+
+// AFTER (Jackson 3.x)
+import tools.jackson.databind.json.JsonMapper;
+
+JsonMapper mapper = JsonMapper.builder().build();
+// Java 8 date/time support is built-in, no module needed
+```
+
+### Gotchas
+
+1. **Annotations package unchanged** - `@JsonProperty`, `@JsonCreator` etc. stay at `com.fasterxml.jackson.annotation`
+2. **ObjectMapper still exists** but `JsonMapper` is preferred and provides the builder pattern
+3. **JavaTimeModule not needed** - LocalDate, LocalDateTime, Instant work out of the box
+4. **SerializationFeature** - Use builder: `JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT).build()`
+5. **Maven Central API lag** - Search API may not show latest versions, but they download fine with Maven
+
+### Jackson 3 Skills
+
+See `.claude/skills/jackson/SKILL.md` for detailed migration guidance.
+
 <!-- Add new learnings above this line -->
