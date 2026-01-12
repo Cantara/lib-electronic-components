@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Collections;
 
@@ -41,13 +41,13 @@ public class InvSenseHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.SENSOR);
-        types.add(ComponentType.ACCELEROMETER);
-        types.add(ComponentType.GYROSCOPE);
-        types.add(ComponentType.MAGNETOMETER);
-        // Add specific sensors for InvenSense MPU series
-        return types;
+        return Set.of(
+            ComponentType.SENSOR,
+            ComponentType.ACCELEROMETER,
+            ComponentType.GYROSCOPE,
+            ComponentType.MAGNETOMETER,
+            ComponentType.IC  // For audio/motion processors
+        );
     }
 
     @Override

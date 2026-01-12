@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Collections;
 
@@ -56,14 +56,11 @@ public class MelexisHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.SENSOR);
-     //   types.add(ComponentType.HALL_SENSOR);
-        types.add(ComponentType.MAGNETOMETER);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        // Could add Melexis-specific sensor types if they exist in ComponentType enum
-        // Like MLX90614 (IR temperature), MLX90393 (3D magnetic), etc.
-        return types;
+        return Set.of(
+            ComponentType.SENSOR,
+            ComponentType.MAGNETOMETER,
+            ComponentType.TEMPERATURE_SENSOR
+        );
     }
 
     @Override

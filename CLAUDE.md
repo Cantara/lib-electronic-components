@@ -152,10 +152,11 @@ This ensures institutional knowledge is preserved for future sessions.
 - Test-classes directory shadows main-classes directory, causing `ManufacturerHandlerFactory` to find 0 handlers
 - Solution: Put handler tests in a different package (e.g., `no.cantara.electronic.component.lib.handlers`)
 
-**Circular Initialization**:
-- NEVER use `new TIHandler()` or similar direct instantiation in tests
-- Causes `ExceptionInInitializerError` due to circular deps: ComponentType ↔ ComponentManufacturer ↔ Handler
-- Solution: Use `@BeforeAll` with `MPNUtils.getManufacturerHandler("LM358")` to get handler instance
+**Circular Initialization (UPDATED)**:
+- Direct instantiation (`new TIHandler()`) works in `@BeforeAll` when the test class doesn't trigger ComponentManufacturer loading first
+- If you get `ExceptionInInitializerError`, it's due to circular deps: ComponentType ↔ ComponentManufacturer ↔ Handler
+- **Recommended approach**: Use direct instantiation in `@BeforeAll` - simpler and avoids MPN lookup dependency
+- **Alternative**: Use `MPNUtils.getManufacturerHandler("LM358")` if direct instantiation fails
 
 **Test Isolation vs Full Suite**:
 - Running a single handler test may fail while full suite passes
@@ -276,7 +277,7 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage: 31 handlers now have comprehensive tests (1821+ total tests)
+- Test coverage: 41 handlers now have comprehensive tests (2613+ total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
 *BroadcomHandler*: Fixed - uses Set.of(), includes IC type
@@ -287,6 +288,48 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 *NichiconHandler*: Fixed - uses Set.of()
 *WurthHandler*: Fixed - uses Set.of(), HEADER_PATTERN now matches both 61xxx and 62xxx
 *MicronHandler*: Fixed - uses Set.of()
+
+**Batch 6 Handlers (PR #87):**
+*MolexHandler*: Fixed - uses Set.of()
+*HiroseHandler*: Fixed - uses Set.of()
+*JSTHandler*: Fixed - uses Set.of()
+*WinbondHandler*: Fixed - uses Set.of()
+*ISSIHandler*: Fixed - uses Set.of(), includes IC for LED drivers
+*QorvoHandler*: Fixed - uses Set.of(), includes IC
+*SkyworksHandler*: Fixed - uses Set.of(), includes IC and MICROCONTROLLER
+*BoschHandler*: Fixed - uses Set.of()
+*InvSenseHandler*: Fixed - uses Set.of(), includes IC for audio/motion processors
+*MelexisHandler*: Fixed - uses Set.of()
+
+### Batch 6 Learnings (PR #88)
+
+**Connector Handlers (Molex, Hirose, JST)**:
+- Connector MPNs typically have format: `SERIES-PACKAGE` (e.g., "43045-0802")
+- Package code often encodes: pin count (first 2 digits) + mounting type (last 2 digits)
+- Series numbers often indicate gender: odd = male/header, even = female/receptacle
+- Helper methods like `getPitch()`, `getMountingType()`, `getRatedCurrent()` are useful additions
+
+**Memory Handlers (Winbond, ISSI)**:
+- Memory handlers should support multiple component types (MEMORY, MEMORY_FLASH, MEMORY_EEPROM, etc.)
+- ISSI also makes LED drivers (IS31FL series) - add `IC` type to getSupportedTypes()
+- Package codes are typically suffix letters mapped to package types (S=SOIC, F=QFN, etc.)
+- Winbond overrides `matches()` for direct pattern matching - faster than registry lookup
+
+**RF Handlers (Qorvo, Skyworks)**:
+- RF handlers register patterns under `ComponentType.IC` - must include IC in getSupportedTypes()
+- Series extraction often takes prefix letters + first 4 digits (not all digits)
+- Skyworks includes Silicon Labs legacy MCUs (EFM8, EFM32, EFR32) - add MICROCONTROLLER type
+- Package codes often indicate tape & reel (-TR1, -REEL) or package type (-QFN, -WLCSP)
+
+**Sensor Handlers (Bosch, InvenSense, Melexis)**:
+- Sensor handlers need many component types (SENSOR, ACCELEROMETER, GYROSCOPE, MAGNETOMETER, etc.)
+- InvenSense also makes audio/motion processors (ICS, IAC series) - add IC type
+- Melexis package code extraction has a bug: regex `^[A-Z0-9]+` removes all alphanumerics
+- Series extraction typically returns first 6-8 characters of the MPN
+
+**General Handler Bug Pattern**:
+- When handler registers patterns for `ComponentType.IC`, must include `IC` in getSupportedTypes()
+- Otherwise `matches()` may return true but `getSupportedTypes()` won't contain the type
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused

@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Collections;
 
@@ -48,23 +48,23 @@ public class BoschHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.SENSOR);
-        types.add(ComponentType.ACCELEROMETER);
-        types.add(ComponentType.ACCELEROMETER_BOSCH);
-        types.add(ComponentType.GYROSCOPE);
-        types.add(ComponentType.GYROSCOPE_BOSCH);
-        types.add(ComponentType.IMU_BOSCH);
-        types.add(ComponentType.MAGNETOMETER);
-        types.add(ComponentType.MAGNETOMETER_BOSCH);
-        types.add(ComponentType.PRESSURE_SENSOR);
-        types.add(ComponentType.PRESSURE_SENSOR_BOSCH);
-        types.add(ComponentType.HUMIDITY_SENSOR);
-        types.add(ComponentType.HUMIDITY_SENSOR_BOSCH);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        types.add(ComponentType.TEMPERATURE_SENSOR_BOSCH);
-        types.add(ComponentType.GAS_SENSOR_BOSCH);
-        return types;
+        return Set.of(
+            ComponentType.SENSOR,
+            ComponentType.ACCELEROMETER,
+            ComponentType.ACCELEROMETER_BOSCH,
+            ComponentType.GYROSCOPE,
+            ComponentType.GYROSCOPE_BOSCH,
+            ComponentType.IMU_BOSCH,
+            ComponentType.MAGNETOMETER,
+            ComponentType.MAGNETOMETER_BOSCH,
+            ComponentType.PRESSURE_SENSOR,
+            ComponentType.PRESSURE_SENSOR_BOSCH,
+            ComponentType.HUMIDITY_SENSOR,
+            ComponentType.HUMIDITY_SENSOR_BOSCH,
+            ComponentType.TEMPERATURE_SENSOR,
+            ComponentType.TEMPERATURE_SENSOR_BOSCH,
+            ComponentType.GAS_SENSOR_BOSCH
+        );
     }
 
     @Override

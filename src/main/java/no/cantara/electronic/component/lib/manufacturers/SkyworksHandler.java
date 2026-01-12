@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Collections;
 
@@ -79,10 +79,11 @@ public class SkyworksHandler implements ManufacturerHandler {
     }
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.RF_IC_SKYWORKS);
-        //types.add(ComponentType.RF_IC);
-        return types;
+        return Set.of(
+            ComponentType.RF_IC_SKYWORKS,
+            ComponentType.IC,
+            ComponentType.MICROCONTROLLER  // For EFM/EFR MCUs
+        );
     }
 
     @Override
