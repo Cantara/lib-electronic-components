@@ -71,4 +71,4 @@ When testing HiroseHandler:
 3. Instantiate directly: `new HiroseHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*

@@ -76,4 +76,4 @@ When testing MolexHandler:
 3. Instantiate directly: `new MolexHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*

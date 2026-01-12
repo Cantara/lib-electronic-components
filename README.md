@@ -230,6 +230,26 @@ String stdName = manufacturer.getStandardizedName();
 
 
 
-As the market changes daily, this will never be 100% - but we believe that it 
+## Manufacturer Coverage
+
+The library supports 55+ manufacturers with dedicated handlers for MPN parsing, type detection, and component matching:
+
+| Category | Manufacturers |
+|----------|---------------|
+| **MCUs & Processors** | TI, ST, Microchip, Atmel, NXP, Renesas, Silicon Labs, Espressif, Nordic, Cypress, Infineon |
+| **Analog & Discrete** | Analog Devices, Maxim, ON Semi, Toshiba, ROHM, Broadcom |
+| **Memory** | Micron, Winbond, ISSI |
+| **Passives** | Murata, KEMET, Samsung, TDK, Panasonic, AVX, Nichicon, Vishay, Yageo, Bourns |
+| **Connectors** | TE Connectivity, Amphenol, Wurth, Molex, Hirose, JST |
+| **RF** | Qorvo, Skyworks |
+| **Sensors** | Bosch, InvenSense, Melexis |
+
+Each handler provides:
+- MPN pattern matching and validation
+- Package code extraction
+- Series identification
+- Replacement/equivalent detection
+
+As the market changes daily, this will never be 100% - but we believe that it
 should bring value to systems dealing with electronic components.
 

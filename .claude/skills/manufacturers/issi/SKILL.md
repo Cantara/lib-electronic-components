@@ -76,7 +76,7 @@ When testing ISSIHandler:
 3. Instantiate directly: `new ISSIHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
 - Package code extraction regex may not work correctly for all formats
 
 ## Common Part Numbers

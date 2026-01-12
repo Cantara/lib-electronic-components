@@ -94,7 +94,7 @@ When testing BoschHandler:
 3. Instantiate directly: `new BoschHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
 
 ## Common Part Numbers
 | Part Number | Description |

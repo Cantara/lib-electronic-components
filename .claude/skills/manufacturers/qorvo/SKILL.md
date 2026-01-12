@@ -78,7 +78,7 @@ When testing QorvoHandler:
 3. Instantiate directly: `new QorvoHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
 - Series extraction takes only 4 digits after prefix
 
 ## Common Part Numbers

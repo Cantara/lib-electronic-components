@@ -101,7 +101,7 @@ When testing MelexisHandler:
 3. Instantiate directly: `new MelexisHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
 - Package code extraction regex removes all alphanumerics, always returns empty
 
 ## Common Part Numbers

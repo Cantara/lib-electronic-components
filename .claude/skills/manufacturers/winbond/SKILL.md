@@ -62,7 +62,7 @@ When testing WinbondHandler:
 3. Instantiate directly: `new WinbondHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
 
 ## Common Part Numbers
 | Part Number | Description |

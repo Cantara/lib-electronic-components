@@ -81,4 +81,4 @@ When testing JSTHandler:
 3. Instantiate directly: `new JSTHandler()`
 
 ## Known Handler Issues
-*All issues fixed in PR #87*
+*All issues fixed in PR #88*
