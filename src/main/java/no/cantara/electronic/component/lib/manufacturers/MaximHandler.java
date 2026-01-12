@@ -5,9 +5,8 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class MaximHandler implements ManufacturerHandler {
@@ -22,36 +21,58 @@ public class MaximHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.TEMPERATURE_SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*$");
         registry.addPattern(ComponentType.SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*$");
 
-        // Real-Time Clocks
-        registry.addPattern(ComponentType.IC, "^DS12.*");           // RTC
-        registry.addPattern(ComponentType.IC, "^DS13.*");           // RTC
+        // Real-Time Clocks (DS12xx, DS13xx, DS32xx)
+        registry.addPattern(ComponentType.RTC_MAXIM, "^DS12[0-9]{2}.*");
+        registry.addPattern(ComponentType.RTC_MAXIM, "^DS13[0-9]{2}.*");
+        registry.addPattern(ComponentType.RTC_MAXIM, "^DS32[0-9]{2}.*");
+        registry.addPattern(ComponentType.IC, "^DS12[0-9]{2}.*");
+        registry.addPattern(ComponentType.IC, "^DS13[0-9]{2}.*");
+        registry.addPattern(ComponentType.IC, "^DS32[0-9]{2}.*");
 
         // Memory
         registry.addPattern(ComponentType.MEMORY, "^DS28.*");       // EEPROM
         registry.addPattern(ComponentType.MEMORY_MAXIM, "^DS28.*");
 
-        // Interface ICs
-        registry.addPattern(ComponentType.IC, "^MAX3.*");           // RS-232/RS-485
-        registry.addPattern(ComponentType.IC, "^MAX2.*");           // Level translators
+        // Interface ICs (RS-232, RS-485, Level translators)
+        registry.addPattern(ComponentType.INTERFACE_IC_MAXIM, "^MAX232.*");  // RS-232
+        registry.addPattern(ComponentType.INTERFACE_IC_MAXIM, "^MAX485.*");  // RS-485
+        registry.addPattern(ComponentType.INTERFACE_IC_MAXIM, "^MAX3[0-9]{3}.*");  // RS-232/RS-485 family
+        registry.addPattern(ComponentType.INTERFACE_IC_MAXIM, "^MAX2[0-9]{3}.*");  // Level translators
+        registry.addPattern(ComponentType.IC, "^MAX232.*");
+        registry.addPattern(ComponentType.IC, "^MAX485.*");
+        registry.addPattern(ComponentType.IC, "^MAX3[0-9]{3}.*");
+        registry.addPattern(ComponentType.IC, "^MAX2[0-9]{3}.*");
+
+        // Voltage Regulators (MAX17xx LDO, MAX8xxx switching)
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR_MAXIM, "^MAX17[0-9]{2}.*");
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR_MAXIM, "^MAX8[0-9]{3}.*");
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR, "^MAX17[0-9]{2}.*");
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR, "^MAX8[0-9]{3}.*");
+
+        // Battery Management (MAX17xxx fuel gauges, chargers)
+        registry.addPattern(ComponentType.BATTERY_MANAGEMENT_MAXIM, "^MAX17[0-9]{3}.*");
+        registry.addPattern(ComponentType.IC, "^MAX17[0-9]{3}.*");
 
         // ADCs and DACs
-        registry.addPattern(ComponentType.IC, "^MAX11.*");          // ADC
-        registry.addPattern(ComponentType.IC, "^MAX12.*");          // DAC
+        registry.addPattern(ComponentType.IC, "^MAX11[0-9]{3}.*");  // ADC
+        registry.addPattern(ComponentType.IC, "^MAX12[0-9]{3}.*");  // DAC
     }
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.INTERFACE_IC_MAXIM);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_MAXIM);
-        types.add(ComponentType.RTC_MAXIM);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        types.add(ComponentType.TEMPERATURE_SENSOR_MAXIM);
-        types.add(ComponentType.BATTERY_MANAGEMENT_MAXIM);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_MAXIM);
-        return types;
+        return Set.of(
+            ComponentType.IC,
+            ComponentType.SENSOR,
+            ComponentType.INTERFACE_IC_MAXIM,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_MAXIM,
+            ComponentType.RTC_MAXIM,
+            ComponentType.TEMPERATURE_SENSOR,
+            ComponentType.TEMPERATURE_SENSOR_MAXIM,
+            ComponentType.BATTERY_MANAGEMENT_MAXIM,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_MAXIM
+        );
     }
 
     @Override

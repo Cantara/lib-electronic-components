@@ -110,14 +110,20 @@ boolean isPower = PackageCodeRegistry.isPowerPackage("TO-220"); // Returns true
 
 ---
 
-## Test Coverage Gaps
+## Test Coverage Status (January 2026)
 
-| Area | Files | Tests | Gap |
-|------|-------|-------|-----|
-| Handlers | 50+ | 0 | No handler unit tests |
-| Similarity Calculators | 20+ | 0 | No calculator tests |
-| PatternRegistry | 1 | 0 | No registry tests |
-| ManufacturerHandlerFactory | 1 | 0 | No factory tests |
+| Area | Files | With Tests | Gap | Priority |
+|------|-------|------------|-----|----------|
+| Handlers | 56 | 40 (71.4%) | 16 handlers | HIGH |
+| Similarity Calculators | 20 | 0 (0%) | All untested | HIGH |
+| PatternRegistry | 1 | 0 | No tests | MEDIUM |
+| ManufacturerHandlerFactory | 1 | 0 | No tests | LOW |
+
+**Handlers WITHOUT Tests (16)**:
+Abracon, AKM, Cree, DiodesInc, Epson, Fairchild, IQD, LG, LogicIC, Lumileds, NDK, Nexteria, OSRAM, Qualcomm, Spansion, Unknown
+
+**Similarity Calculators (ALL untested)**:
+CapacitorSimilarityCalculator, ConnectorSimilarityCalculator, DiodeSimilarityCalculator, LEDSimilarityCalculator, MCUSimilarityCalculator, MemorySimilarityCalculator, MosfetSimilarityCalculator, OpAmpSimilarityCalculator, ResistorSimilarityCalculator, SensorSimilarityCalculator, TransistorSimilarityCalculator, VoltageRegulatorSimilarityCalculator, MicrocontrollerSimilarityCalculator, DefaultSimilarityCalculator, PassiveComponentCalculator, LevenshteinCalculator
 
 **Priority tests to add**:
 
@@ -182,6 +188,77 @@ boolean isPower = PackageCodeRegistry.isPowerPackage("TO-220"); // Returns true
 7. **Standardize Pattern Approaches**
    - Consistent regex style across handlers
    - All handlers in `manufacturers/`
+
+---
+
+## Technical Debt Inventory (January 2026)
+
+### Production Debug Statements (181 total - HIGH priority)
+
+| File | Count | Notes |
+|------|-------|-------|
+| MPNUtils.java | 35 | Heaviest concentration |
+| ManufacturerHandlerFactory.java | 17 | Also has 8 printStackTrace() |
+| ComponentTypeDetector.java | 17 | |
+| ConnectorSimilarityCalculator.java | 16 | |
+| Similarity calculators (combined) | 97 | All 13 calculators affected |
+
+**Action**: Replace with SLF4J logging framework.
+
+### printStackTrace() Calls (9 total - HIGH priority)
+
+| File | Lines |
+|------|-------|
+| ManufacturerHandlerFactory.java | 56, 66, 110, 123, 149, 155, 186, 191 |
+| MPNUtils.java | 298 |
+
+**Action**: Replace with `logger.error("message", exception)`.
+
+### Inconsistent getSupportedTypes() Pattern
+
+| Pattern | Count | Handlers |
+|---------|-------|----------|
+| **Set.of() (modern)** | 28 | AtmelHandler, STHandler, TIHandler, BoschHandler, HiroseHandler, JSTHandler, MolexHandler, EspressifHandler, LogicICHandler, MaximHandler, PanasonicHandler, VishayHandler, etc. |
+| **new HashSet() (legacy)** | 29 | CreeHandler, AbraconHandler, LGHandler, NordicHandler, etc. |
+
+**Action**: Standardize all to Set.of() for immutability and conciseness.
+**Note**: 5 handlers fixed in PR #89: EspressifHandler, LogicICHandler, MaximHandler, PanasonicHandler, VishayHandler
+
+### Type/Pattern Registration Mismatches (Critical bugs)
+
+| Handler | Issue | Status |
+|---------|-------|--------|
+| MaximHandler | Declared INTERFACE_IC_MAXIM, RTC_MAXIM, BATTERY_MANAGEMENT_MAXIM without patterns | ✅ FIXED (PR #89) |
+| EspressifHandler | Declared ESP8266_SOC, ESP32_SOC, all module types but only registered MICROCONTROLLER | ✅ FIXED (PR #89) |
+| PanasonicHandler | Declared capacitor/inductor types but no patterns registered | ✅ FIXED (PR #89) |
+
+**Impact**: `matches()` returns false for declared types because patterns aren't registered.
+
+**Fix pattern**: When adding a type to `getSupportedTypes()`, MUST also add patterns in `initializePatterns()`.
+
+### Code Quality Issues
+
+| File | Issue | Line(s) | Status |
+|------|-------|---------|--------|
+| LogicICHandler.java | Debug System.out.println in production code | 70, 75, 84, 85 | ✅ FIXED (PR #89) |
+| EspressifHandler.java | NPE risk - substring without indexOf check | 153-154 | ✅ FIXED (PR #89) |
+| InfineonHandler.java | Commented-out code blocks | 44, 49, 51 | Open |
+
+### Magic Numbers in Scoring (108+ instances)
+
+All similarity calculators use hardcoded weights:
+```java
+// Varies by calculator - no consistent values!
+HIGH_SIMILARITY = 0.9
+MEDIUM_SIMILARITY = 0.5-0.7  // Inconsistent!
+LOW_SIMILARITY = 0.3
+
+// Scoring increments vary wildly
+valueMatch = 0.3-0.5
+packageMatch = 0.2-0.4
+```
+
+**Action**: Extract to configurable SimilarityWeights constants class.
 
 ---
 

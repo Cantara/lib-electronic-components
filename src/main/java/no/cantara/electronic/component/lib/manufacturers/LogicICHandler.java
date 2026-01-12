@@ -5,7 +5,10 @@ import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,10 +52,10 @@ public class LogicICHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.IC);  // Base type first
-        types.add(ComponentType.LOGIC_IC);
-        return types;
+        return Set.of(
+            ComponentType.IC,
+            ComponentType.LOGIC_IC
+        );
     }
 
     @Override
@@ -67,12 +70,10 @@ public class LogicICHandler implements ManufacturerHandler {
         if (isLogicIC) {
             // For IC type or when checking base type, return true
             if (type == ComponentType.IC) {
-                System.out.println("Direct match for base type IC with MPN " + mpn);
                 return true;
             }
             // For LOGIC_IC, only return true if specifically asked for LOGIC_IC
             if (type == ComponentType.LOGIC_IC) {
-                System.out.println("Direct match for type LOGIC_IC with MPN " + mpn);
                 return true;
             }
         }
@@ -80,9 +81,7 @@ public class LogicICHandler implements ManufacturerHandler {
         // Fallback to registry pattern
         Pattern pattern = registry.getPattern(type);
         if (pattern != null) {
-            boolean matches = pattern.matcher(upperMpn).matches();
-            System.out.println("Registry pattern match for type " + type + " with MPN " + mpn + ": " + matches);
-            return matches;
+            return pattern.matcher(upperMpn).matches();
         }
 
         return false;
