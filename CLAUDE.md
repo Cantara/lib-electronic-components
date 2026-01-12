@@ -276,7 +276,7 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage: 31 handlers now have comprehensive tests (1821+ total tests)
+- Test coverage: 41 handlers now have comprehensive tests (2613+ total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
 *BroadcomHandler*: Fixed - uses Set.of(), includes IC type
@@ -287,6 +287,18 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 *NichiconHandler*: Fixed - uses Set.of()
 *WurthHandler*: Fixed - uses Set.of(), HEADER_PATTERN now matches both 61xxx and 62xxx
 *MicronHandler*: Fixed - uses Set.of()
+
+**Batch 6 Handlers (PR #87):**
+*MolexHandler*: Fixed - uses Set.of()
+*HiroseHandler*: Fixed - uses Set.of()
+*JSTHandler*: Fixed - uses Set.of()
+*WinbondHandler*: Fixed - uses Set.of()
+*ISSIHandler*: Fixed - uses Set.of(), includes IC for LED drivers
+*QorvoHandler*: Fixed - uses Set.of(), includes IC
+*SkyworksHandler*: Fixed - uses Set.of(), includes IC and MICROCONTROLLER
+*BoschHandler*: Fixed - uses Set.of()
+*InvSenseHandler*: Fixed - uses Set.of(), includes IC for audio/motion processors
+*MelexisHandler*: Fixed - uses Set.of()
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused

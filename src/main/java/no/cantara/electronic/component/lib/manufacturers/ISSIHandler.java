@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Collections;
 
@@ -50,12 +50,13 @@ public class ISSIHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_ISSI);
-        types.add(ComponentType.MEMORY_FLASH);
-        types.add(ComponentType.MEMORY_EEPROM);
-        return types;
+        return Set.of(
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_ISSI,
+            ComponentType.MEMORY_FLASH,
+            ComponentType.MEMORY_EEPROM,
+            ComponentType.IC  // For LED drivers
+        );
     }
 
     @Override

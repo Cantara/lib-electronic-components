@@ -5,7 +5,7 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
+
 import java.util.Set;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
@@ -37,12 +37,10 @@ public class JSTHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CONNECTOR);
-        types.add(ComponentType.CONNECTOR_JST);
-        // Could add more specific connector types if they exist in ComponentType enum
-        // like XH, PH, SM series etc.
-        return types;
+        return Set.of(
+            ComponentType.CONNECTOR,
+            ComponentType.CONNECTOR_JST
+        );
     }
 
 

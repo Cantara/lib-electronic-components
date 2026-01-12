@@ -7,7 +7,7 @@ import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.HashSet;
+
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -22,11 +22,10 @@ public class MolexHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CONNECTOR);
-        types.add(ComponentType.CONNECTOR_MOLEX);
-        // Could add more specific connector types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.CONNECTOR,
+            ComponentType.CONNECTOR_MOLEX
+        );
     }
 
         // Series to family mapping
