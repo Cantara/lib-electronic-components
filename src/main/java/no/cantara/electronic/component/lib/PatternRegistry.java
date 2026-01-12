@@ -48,11 +48,24 @@ public class PatternRegistry {
     }
 
     /**
-     * Check if any pattern matches for the given type
+     * Check if any pattern matches for the given type (across all handlers)
      */
     public boolean matches(String mpn, ComponentType type) {
         return patterns.getOrDefault(type, Collections.emptyMap()).values().stream()
                 .flatMap(Set::stream)
+                .anyMatch(pattern -> pattern.matcher(mpn).matches());
+    }
+
+    /**
+     * Check if any pattern matches for the given type using ONLY the current handler's patterns.
+     * This should be used by the default matches() implementation to avoid cross-handler matching.
+     */
+    public boolean matchesForCurrentHandler(String mpn, ComponentType type) {
+        if (currentHandlerClass == null) {
+            return false;
+        }
+        Set<Pattern> handlerPatterns = getPatternsForHandler(type, currentHandlerClass);
+        return handlerPatterns.stream()
                 .anyMatch(pattern -> pattern.matcher(mpn).matches());
     }
 

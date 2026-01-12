@@ -15,10 +15,13 @@ public interface ManufacturerHandler {
     /**
      * Check if an MPN matches a specific component type.
      * This allows handlers to implement custom matching logic beyond simple pattern matching.
+     *
+     * NOTE: The default implementation uses only patterns registered by THIS handler,
+     * not patterns from other handlers. This prevents cross-handler false matches.
      */
     default boolean matches(String mpn, ComponentType type, PatternRegistry patterns) {
         if (mpn == null || type == null) return false;
-        Pattern pattern = patterns.getPattern(type);
-        return pattern != null && pattern.matcher(mpn.toUpperCase()).matches();
+        // Use handler-specific patterns to avoid matching patterns from other handlers
+        return patterns.matchesForCurrentHandler(mpn.toUpperCase(), type);
     }
 }
