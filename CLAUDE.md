@@ -106,18 +106,58 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 
 ## Manufacturer Skills
 
-Manufacturer-specific skills for complex MPN encoding patterns:
-- `/manufacturers/ti` - **Texas Instruments** MPN decoding (LM, TL, TPS prefixes; package/temp suffixes)
-- `/manufacturers/atmel` - **Atmel/Microchip AVR** MPN decoding (ATmega, ATtiny, SAM; -PU/-AU package codes)
-- `/manufacturers/st` - **STMicroelectronics** MPN decoding (STM32, STM8, MOSFETs, regulators)
-- `/manufacturers/nxp` - **NXP Semiconductors** MPN decoding (LPC, S32K, audio codecs, sensors)
-- `/manufacturers/infineon` - **Infineon Technologies** MPN decoding (IRF, BSC, IFX MOSFETs; Cypress PSoC)
-- `/manufacturers/microchip` - **Microchip Technology** MPN decoding (PIC, dsPIC, AVR, SAM; package suffixes)
-- `/manufacturers/onsemi` - **ON Semiconductor** MPN decoding (FQP, NTD MOSFETs; 2N transistors; MC78xx regulators)
-- `/manufacturers/analogdevices` - **Analog Devices** MPN decoding (AD8xxx op-amps, ADCs, DACs, ADXL accelerometers)
-- `/manufacturers/maxim` - **Maxim Integrated** MPN decoding (MAX232, DS18B20, DS1307 RTC; temp+package suffixes)
-- `/manufacturers/renesas` - **Renesas Electronics** MPN decoding (RL78, RX, RA, RH850 MCUs; R5F/R7F prefixes)
-- `/manufacturers/toshiba` - **Toshiba Semiconductor** MPN decoding (TK MOSFETs, TLP optocouplers, TB motor drivers, 2SC transistors)
+31 manufacturer-specific skills for complex MPN encoding patterns. Use `/manufacturers/<name>` to activate.
+
+### Semiconductors - MCUs & Processors
+| Skill | Manufacturer | Products |
+|-------|--------------|----------|
+| `/manufacturers/ti` | Texas Instruments | LM/TL/TPS op-amps, regulators, MCUs |
+| `/manufacturers/atmel` | Atmel/Microchip AVR | ATmega, ATtiny, SAM MCUs |
+| `/manufacturers/st` | STMicroelectronics | STM32, STM8, MOSFETs, regulators |
+| `/manufacturers/nxp` | NXP Semiconductors | LPC, S32K MCUs, audio codecs |
+| `/manufacturers/infineon` | Infineon Technologies | IRF/BSC MOSFETs, power management |
+| `/manufacturers/microchip` | Microchip Technology | PIC, dsPIC, AVR, SAM MCUs |
+| `/manufacturers/renesas` | Renesas Electronics | RL78, RX, RA, RH850 MCUs |
+| `/manufacturers/siliconlabs` | Silicon Labs | EFM8/EFM32/EFR32 MCUs, timing ICs |
+| `/manufacturers/espressif` | Espressif Systems | ESP32, ESP8266 wireless MCUs |
+| `/manufacturers/nordic` | Nordic Semiconductor | nRF52/nRF53 BLE MCUs |
+| `/manufacturers/cypress` | Cypress/Infineon | PSoC MCUs, memory, USB controllers |
+
+### Semiconductors - Discrete & Analog
+| Skill | Manufacturer | Products |
+|-------|--------------|----------|
+| `/manufacturers/onsemi` | ON Semiconductor | MOSFETs, transistors, regulators |
+| `/manufacturers/analogdevices` | Analog Devices | Op-amps, ADCs, DACs, accelerometers |
+| `/manufacturers/maxim` | Maxim Integrated | Interface ICs, RTCs, sensors |
+| `/manufacturers/toshiba` | Toshiba | MOSFETs, optocouplers, motor drivers |
+| `/manufacturers/rohm` | ROHM Semiconductor | Transistors, diodes, LEDs, ICs |
+| `/manufacturers/broadcom` | Broadcom | Wi-Fi/BT combos, network switches |
+| `/manufacturers/micron` | Micron Technology | DRAM, NAND/NOR Flash, SSDs |
+
+### Passives - Capacitors
+| Skill | Manufacturer | Products |
+|-------|--------------|----------|
+| `/manufacturers/murata` | Murata | MLCCs, EMI filters, inductors |
+| `/manufacturers/kemet` | KEMET | Ceramic, tantalum, film capacitors |
+| `/manufacturers/samsung` | Samsung Electro | MLCCs, inductors |
+| `/manufacturers/tdk` | TDK Corporation | MLCCs, inductors, ferrites |
+| `/manufacturers/panasonic` | Panasonic | Capacitors, resistors, inductors |
+| `/manufacturers/avx` | AVX/Kyocera | Tantalum, ceramic, film capacitors |
+| `/manufacturers/nichicon` | Nichicon | Electrolytic capacitors, EDLC |
+
+### Passives - Resistors & Inductors
+| Skill | Manufacturer | Products |
+|-------|--------------|----------|
+| `/manufacturers/vishay` | Vishay | Resistors, diodes, MOSFETs |
+| `/manufacturers/yageo` | Yageo | Chip resistors, capacitors |
+| `/manufacturers/bourns` | Bourns | Resistors, inductors, circuit protection |
+
+### Connectors & Electromechanical
+| Skill | Manufacturer | Products |
+|-------|--------------|----------|
+| `/manufacturers/te` | TE Connectivity | Terminal blocks, headers, connectors |
+| `/manufacturers/amphenol` | Amphenol | Mini-PV, HD20, SFP+ connectors |
+| `/manufacturers/wurth` | Wurth Elektronik | Headers, connectors, LEDs |
 
 ## Recording Learnings
 
@@ -276,7 +316,7 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage improving: 11 handlers now have comprehensive tests (880+ total tests)
+- Test coverage greatly improved: 30 handlers now have comprehensive tests (1700+ handler tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
 ### Architecture Notes

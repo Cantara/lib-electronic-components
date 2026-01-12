@@ -15,6 +15,7 @@ A start of a library to make it a bit more meaningful to work digitally with ele
 - **Categorization**: Organize components by type and characteristics
 - **Type Detection**: Automatic component classification
 - **Manufacturer Data**: Standard component data structures
+- **31 Manufacturer Handlers**: Pattern-based MPN recognition for major component manufacturers
 
 ### Installation
 
@@ -230,6 +231,25 @@ String stdName = manufacturer.getStandardizedName();
 
 
 
-As the market changes daily, this will never be 100% - but we believe that it 
+## Supported Manufacturers
+
+The library includes handlers for 31 major component manufacturers:
+
+| Category | Manufacturers |
+|----------|---------------|
+| **MCUs & Processors** | Texas Instruments, STMicroelectronics, Microchip, Atmel, NXP, Renesas, Silicon Labs, Espressif, Nordic, Cypress, Infineon |
+| **Analog & Discrete** | Analog Devices, Maxim, ON Semiconductor, Toshiba, ROHM, Broadcom |
+| **Memory** | Micron |
+| **Passives** | Murata, KEMET, Samsung Electro, TDK, Panasonic, AVX, Nichicon, Vishay, Yageo, Bourns |
+| **Connectors** | TE Connectivity, Amphenol, Wurth Elektronik |
+
+Each handler supports:
+- MPN pattern recognition
+- Package code extraction
+- Series identification
+- Component type classification
+- Replacement compatibility checking
+
+As the market changes daily, this will never be 100% - but we believe that it
 should bring value to systems dealing with electronic components.
 
