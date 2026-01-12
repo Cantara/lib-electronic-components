@@ -5,7 +5,6 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Collections;
 
@@ -55,14 +54,7 @@ public class BroadcomHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-      //  types.add(ComponentType.OPTOCOUPLER);
-      //  types.add(ComponentType.RF_IC);
-      //  types.add(ComponentType.WIFI_IC);
-        // Include former Avago technologies products
-        // Add other Broadcom-specific types if they exist in ComponentType enum
-        // Could include networking ICs, fiber optic components, etc.
-        return types;
+        return Set.of(ComponentType.IC);
     }
 
     @Override

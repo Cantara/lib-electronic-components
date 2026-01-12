@@ -5,7 +5,6 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -59,17 +58,19 @@ public class SiliconLabsHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_SILABS);
-        types.add(ComponentType.MCU_SILABS);
-        types.add(ComponentType.MICROCONTROLLER_SILICON_LABS);
-        types.add(ComponentType.MCU_SILICON_LABS);
-        types.add(ComponentType.EFM8_MCU);
-        types.add(ComponentType.EFM32_MCU);
-        types.add(ComponentType.EFR32_MCU);
-        // Add other Silicon Labs specific types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_SILABS,
+            ComponentType.MCU_SILABS,
+            ComponentType.MICROCONTROLLER_SILICON_LABS,
+            ComponentType.MCU_SILICON_LABS,
+            ComponentType.EFM8_MCU,
+            ComponentType.EFM32_MCU,
+            ComponentType.EFR32_MCU,
+            ComponentType.IC,
+            ComponentType.CRYSTAL,
+            ComponentType.OSCILLATOR
+        );
     }
 
     @Override

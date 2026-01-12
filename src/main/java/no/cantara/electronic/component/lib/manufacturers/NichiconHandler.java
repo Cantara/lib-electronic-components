@@ -5,7 +5,6 @@ import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -62,12 +61,12 @@ public class NichiconHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_ELECTROLYTIC_NICHICON);
-        types.add(ComponentType.CAPACITOR_FILM_NICHICON);
-        types.add(ComponentType.SUPERCAP_NICHICON);
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_ELECTROLYTIC_NICHICON,
+            ComponentType.CAPACITOR_FILM_NICHICON,
+            ComponentType.SUPERCAP_NICHICON
+        );
     }
 
     @Override

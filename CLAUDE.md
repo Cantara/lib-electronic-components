@@ -276,8 +276,17 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage improving: 11 handlers now have comprehensive tests (880+ total tests)
+- Test coverage: 31 handlers now have comprehensive tests (1821+ total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
+
+*BroadcomHandler*: Fixed - uses Set.of(), includes IC type
+*SiliconLabsHandler*: Fixed - uses Set.of(), includes all MCU, IC, CRYSTAL, OSCILLATOR types
+*AVXHandler*: Fixed - uses Set.of(); Note: Ceramic package extraction reads positions 2-3 after 08/12 prefix (design choice, not bug)
+*TEHandler*: Fixed - uses Set.of()
+*AmphenolHandler*: Fixed - uses Set.of()
+*NichiconHandler*: Fixed - uses Set.of()
+*WurthHandler*: Fixed - uses Set.of(), HEADER_PATTERN now matches both 61xxx and 62xxx
+*MicronHandler*: Fixed - uses Set.of()
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused
