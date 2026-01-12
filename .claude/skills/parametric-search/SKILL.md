@@ -258,5 +258,7 @@ List<ElectronicPart> results = ParametricSearch.filter(entries, requirements);
 - **BigDecimal comparison**: Use `compareTo()`, not `equals()` - `1E+3` equals `1000` by value
 - **Micro symbol**: Both `u` and `µ` are supported for micro prefix
 - **Percentage handling**: `1%` parses to `1`, not `0.01` (matches how tolerances are typically specified)
+- **Existing typed spec infrastructure**: The library has `SpecValue`, `SpecUnit`, `BaseComponentSpecs.meetsRequirements()`, and `ComponentValueStandardizer` - a comprehensive typed spec system. `ParametricSearch` bridges the gap between `ElectronicPart.specs` (Map<String, String>) and these typed systems.
+- **Two spec systems exist**: `ElectronicPart.specs` uses strings, while `ComponentSpecification` uses typed `SpecValue<?>`. ParametricSearch works with the string-based system which is more commonly used.
 
 <!-- Add new learnings above this line -->
