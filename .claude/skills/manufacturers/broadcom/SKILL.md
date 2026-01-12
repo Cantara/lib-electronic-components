@@ -89,5 +89,5 @@ When testing BroadcomHandler:
 3. Instantiate directly: `new BroadcomHandler()`
 
 ## Known Handler Issues
-- `getSupportedTypes()` returns empty set (no types declared)
 - Uses HashSet in getSupportedTypes() - should use Set.of()
+- `getSupportedTypes()` returns empty set despite having IC patterns registered

@@ -54,3 +54,4 @@ When testing WurthHandler:
 
 ## Known Handler Issues
 - Uses HashSet in getSupportedTypes() - should use Set.of()
+- HEADER_PATTERN only matches 61xxx (pin headers), not 62xxx (socket headers) - extractSeries() returns empty for socket headers

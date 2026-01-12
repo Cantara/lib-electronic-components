@@ -276,8 +276,35 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage improving: 11 handlers now have comprehensive tests (880+ total tests)
+- Test coverage: 31 handlers now have comprehensive tests (1821+ total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
+
+*BroadcomHandler (2 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- getSupportedTypes() returns empty set despite having IC patterns
+
+*SiliconLabsHandler (1 bug)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+
+*AVXHandler (2 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- Ceramic package extraction reads positions 2-3 after 08/12 prefix (e.g., "0805" extracts "05" not "0805")
+
+*TEHandler (1 bug)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+
+*AmphenolHandler (1 bug)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+
+*NichiconHandler (1 bug)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+
+*WurthHandler (2 bugs)*:
+- HashSet in getSupportedTypes() - should use Set.of()
+- HEADER_PATTERN only matches 61xxx (pin headers), not 62xxx (socket headers) - series extraction returns empty for socket headers
+
+*MicronHandler (1 bug)*:
+- HashSet in getSupportedTypes() - should use Set.of()
 
 ### Architecture Notes
 - `PatternRegistry` supports multi-handler per ComponentType but this is largely unused

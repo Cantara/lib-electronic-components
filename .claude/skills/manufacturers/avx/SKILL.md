@@ -100,3 +100,4 @@ When testing AVXHandler:
 
 ## Known Handler Issues
 - Uses HashSet in getSupportedTypes() - should use Set.of()
+- Ceramic package extraction reads positions 2-3 after 08/12 prefix (e.g., "0805YC104KAT2A" extracts "05" which maps to "0402/1005M", not "0805")
