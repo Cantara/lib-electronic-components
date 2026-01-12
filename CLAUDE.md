@@ -465,6 +465,26 @@ if (type == ComponentType.MOSFET || type == ComponentType.MOSFET_VISHAY) {
 ```
 *Affected*: VishayHandler
 
+**6. Cross-Handler Pattern Matching (CRITICAL)**
+```java
+// BAD - default matches() used getPattern(type) which returns
+// the FIRST pattern from ANY handler. Caused false matches!
+default boolean matches(String mpn, ComponentType type, PatternRegistry patterns) {
+    Pattern pattern = patterns.getPattern(type);  // Gets ANY handler's pattern!
+    return pattern != null && pattern.matcher(mpn).matches();
+}
+
+// GOOD - use handler-specific patterns only
+default boolean matches(String mpn, ComponentType type, PatternRegistry patterns) {
+    // Only checks patterns registered by THIS handler
+    return patterns.matchesForCurrentHandler(mpn.toUpperCase(), type);
+}
+```
+*Root cause*: CypressHandler (alphabetically before STHandler) didn't override matches().
+When testing STM32F103C8T6, it used STHandler's pattern and incorrectly matched.
+*Symptom*: Tests pass locally but fail in CI (different HashMap iteration order).
+*Fix*: Added `matchesForCurrentHandler()` to PatternRegistry.
+
 ### Quick Reference: Handler Bug Checklist
 
 When reviewing/fixing a handler, check for:
@@ -478,5 +498,14 @@ When reviewing/fixing a handler, check for:
 | Base type matches, specific doesn't | Missing override | Add explicit check in matches() |
 | System.out.println | Debug leak | Remove or replace with logger |
 | HashSet in getSupportedTypes() | Mutable | Change to Set.of() |
+| Handler doesn't override matches() | Cross-handler false match | Override matches() or patterns fix |
+
+### CI vs Local Test Differences
+
+**If tests pass locally but fail in CI:**
+1. Check for HashMap/HashSet iteration order dependencies
+2. Check for cross-handler pattern matching (see #6 above)
+3. Check handler alphabetical order - first matching handler wins
+4. Verify TreeSet comparators are truly deterministic
 
 <!-- Add new learnings above this line -->

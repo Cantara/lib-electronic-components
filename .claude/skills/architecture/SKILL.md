@@ -317,13 +317,22 @@ When reviewing code, watch for:
 - Falls back to direct `ComponentManufacturer.valueOf(suffix)` for standard cases
 - Much more reliable than previous string-contains matching
 
+**Cross-Handler Pattern Matching (PR #90 - CRITICAL FIX)**:
+- Default `ManufacturerHandler.matches()` was using `PatternRegistry.getPattern(type)` which returned the first pattern from ANY handler
+- This caused false matches when handlers were tested in alphabetical order (e.g., CypressHandler before STHandler)
+- Fix: Added `matchesForCurrentHandler()` to PatternRegistry that only checks patterns for the current handler
+- Key insight: If tests pass locally but fail in CI, check for HashMap iteration order differences
+
 ### Known Gotchas
 - Handler order in `ComponentManufacturer` affects detection priority for ambiguous MPNs
 - Some MPNs legitimately match multiple manufacturers (second-source parts)
+- **Handlers without matches() override**: Will use default implementation which now correctly uses handler-specific patterns
+- **CI vs Local differences**: Usually caused by HashMap/HashSet iteration order - always use deterministic collections
 
 ### Historical Context
 - CI test failures (pre-PR #75) were caused by non-deterministic HashSet iteration
 - Test stability now achieved via TreeSet with class name comparator
+- PR #90: Fixed cross-handler pattern matching that caused STM32 MPNs to match CypressHandler
 - Some handlers have commented-out patterns (e.g., `ComponentManufacturer.java` lines 45-53) - unclear if deprecated or WIP
 
 <!-- Add new learnings above this line -->
