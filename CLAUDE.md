@@ -102,6 +102,7 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/ic` - Microcontrollers, op-amps, voltage regulators
 - `/connector` - Headers, sockets, wire-to-board
 - `/memory` - Flash, EEPROM, SRAM
+- `/lifecycle` - **Component lifecycle tracking** (obsolescence, NRFND, LTB, replacements)
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
 
 ## Similarity Calculator Skills
@@ -685,5 +686,132 @@ JsonMapper mapper = JsonMapper.builder().build();
 ### Jackson 3 Skills
 
 See `.claude/skills/jackson/SKILL.md` for detailed migration guidance.
+
+---
+
+## Component Lifecycle Tracking (January 2026)
+
+This library now supports tracking component lifecycle status for obsolescence management.
+
+### Core Classes
+
+| Class | Purpose |
+|-------|---------|
+| `ComponentLifecycleStatus` | Enum: ACTIVE, NRFND, LAST_TIME_BUY, OBSOLETE, EOL, UNKNOWN |
+| `ComponentLifecycle` | Full lifecycle data: status, dates, replacements, history |
+| `ReplacementPart` | Suggested replacement with compatibility level |
+| `StatusChange` | Audit trail for status transitions |
+
+### Lifecycle Status Flow
+
+```
+ACTIVE → NRFND → LAST_TIME_BUY → OBSOLETE → EOL
+```
+
+- **ACTIVE**: Component in production, available
+- **NRFND**: Not Recommended For New Designs (still available)
+- **LAST_TIME_BUY**: Final order window before discontinuation
+- **OBSOLETE**: No longer manufactured (may have remaining stock)
+- **EOL**: Complete end of life, no longer available
+
+### Usage Examples
+
+```java
+// Create part with active lifecycle
+ElectronicPart part = new ElectronicPart()
+    .setMpn("STM32F407VGT6")
+    .setManufacturer("STMicroelectronics")
+    .setLifecycle(ComponentLifecycle.active());
+
+// Create obsolete part with replacement
+ElectronicPart obsolete = new ElectronicPart()
+    .setMpn("LM7805CT")
+    .setLifecycle(ComponentLifecycle.obsoleteWithReplacement(
+        "LM7805CT/NOPB", "Texas Instruments"));
+
+// Create Last Time Buy with deadline
+ComponentLifecycle ltb = ComponentLifecycle.lastTimeBuy(LocalDate.of(2024, 9, 30));
+ltb.setSource("Manufacturer PCN");
+ltb.addReplacementPart("NEW-PART-001", "Same Corp",
+    ReplacementPart.CompatibilityLevel.FORM_FIT_FUNCTION);
+
+// Check lifecycle risk
+if (part.isLifecycleAtRisk()) {
+    // Alert: component needs replacement planning
+    ComponentLifecycle lifecycle = part.getLifecycle();
+    if (lifecycle.isLtbApproaching(90)) {
+        // LTB deadline within 90 days
+    }
+}
+```
+
+### Replacement Compatibility Levels
+
+| Level | Description |
+|-------|-------------|
+| `FORM_FIT_FUNCTION` | Drop-in replacement, same footprint and pinout |
+| `FUNCTIONAL_EQUIVALENT` | Same function, may have different form factor |
+| `SIMILAR` | Similar specs, may require design changes |
+| `CROSS_REFERENCE` | Equivalent from different manufacturer |
+| `UPGRADE` | Better specifications than original |
+
+### Convenience Methods on ElectronicPart
+
+| Method | Returns | Purpose |
+|--------|---------|---------|
+| `getLifecycle()` | `ComponentLifecycle` | Full lifecycle data |
+| `getLifecycleStatus()` | `ComponentLifecycleStatus` | Current status (or UNKNOWN) |
+| `hasLifecycleInfo()` | `boolean` | True if lifecycle data exists and is not UNKNOWN |
+| `isLifecycleAtRisk()` | `boolean` | True if LTB, OBSOLETE, or EOL |
+
+### JSON Serialization
+
+Lifecycle data serializes cleanly with Jackson 3:
+
+```json
+{
+  "mpn": "MC34063ADR",
+  "manufacturer": "Texas Instruments",
+  "lifecycle": {
+    "status": "LAST_TIME_BUY",
+    "statusDate": "2026-01-12",
+    "lastTimeBuyDate": "2024-09-30",
+    "replacementParts": [
+      {
+        "mpn": "MC34063ADR-NEW",
+        "manufacturer": "Texas Instruments",
+        "compatibility": "FORM_FIT_FUNCTION"
+      }
+    ],
+    "source": "Manufacturer PCN"
+  }
+}
+```
+
+### Status History Tracking
+
+Status changes are automatically recorded:
+
+```java
+ComponentLifecycle lifecycle = ComponentLifecycle.active();
+lifecycle.setStatus(ComponentLifecycleStatus.NRFND);
+lifecycle.setStatus(ComponentLifecycleStatus.LAST_TIME_BUY);
+
+// History now contains 2 StatusChange entries
+List<StatusChange> history = lifecycle.getStatusHistory();
+// [ACTIVE→NRFND, NRFND→LAST_TIME_BUY]
+```
+
+### Gotchas and Best Practices
+
+1. **Always check for null lifecycle**: Use `hasLifecycleInfo()` or `getLifecycleStatus()` which safely returns UNKNOWN
+2. **LTB deadline checks**: Use `isLtbApproaching(days)` with appropriate threshold (e.g., 90 days)
+3. **Multiple replacements**: Add replacements in priority order - `getPrimaryReplacement()` returns first
+4. **Source attribution**: Always set `setSource()` to track where lifecycle info came from
+5. **Status changes**: Use `setStatus()` to trigger automatic history recording
+
+### Lifecycle Skills
+
+See `.claude/skills/lifecycle/SKILL.md` for detailed guidance.
 
 <!-- Add new learnings above this line -->

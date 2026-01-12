@@ -95,4 +95,10 @@ public class BOMEntry extends ElectronicPart implements Serializable {
         super.setManufacturer(manufacturer);
         return this;
     }
+
+    @Override
+    public BOMEntry setLifecycle(ComponentLifecycle lifecycle) {
+        super.setLifecycle(lifecycle);
+        return this;
+    }
 }

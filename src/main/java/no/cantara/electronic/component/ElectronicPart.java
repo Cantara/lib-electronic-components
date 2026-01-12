@@ -8,12 +8,13 @@ import com.fasterxml.jackson.annotation.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-        "specs",
-        "package",
-        "description",
         "mpn",
+        "manufacturer",
+        "description",
         "value",
-        "manufacturer"
+        "package",
+        "specs",
+        "lifecycle"
 })
 public class ElectronicPart implements Serializable {
 
@@ -22,6 +23,9 @@ public class ElectronicPart implements Serializable {
 
     @JsonProperty("manufacturer")
     public String manufacturer;
+
+    @JsonProperty("lifecycle")
+    private ComponentLifecycle lifecycle;
 
 
 
@@ -65,6 +69,35 @@ public class ElectronicPart implements Serializable {
         return this;
     }
 
+    public ComponentLifecycle getLifecycle() {
+        return lifecycle;
+    }
+
+    public ElectronicPart setLifecycle(ComponentLifecycle lifecycle) {
+        this.lifecycle = lifecycle;
+        return this;
+    }
+
+    /**
+     * Checks if this part has lifecycle information available.
+     */
+    public boolean hasLifecycleInfo() {
+        return lifecycle != null && lifecycle.getStatus() != ComponentLifecycleStatus.UNKNOWN;
+    }
+
+    /**
+     * Checks if this part is obsolete or approaching end of life.
+     */
+    public boolean isLifecycleAtRisk() {
+        return lifecycle != null && lifecycle.requiresAttention();
+    }
+
+    /**
+     * Gets the lifecycle status, or UNKNOWN if no lifecycle info is set.
+     */
+    public ComponentLifecycleStatus getLifecycleStatus() {
+        return lifecycle != null ? lifecycle.getStatus() : ComponentLifecycleStatus.UNKNOWN;
+    }
 
     public void setSpecs(Map<String, String> specs) {
         this.specs = specs;
