@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>no.cantara.electronics</groupId>
     <artifactId>lib-electronics-components</artifactId>
-    <version>10.3,1-SNAPSHOT</version>
+    <version>10.3,1</version>
     <url>https://github.com/Cantara/lib-electronic-components</url>
      <packaging>jar</packaging>
     <inceptionYear>2025</inceptionYear>
@@ -34,7 +34,7 @@
         <developerConnection>scm:git:git@github.com:Cantara/lib-electronic-components.git
         </developerConnection>
         <url>https://github.com/Cantara/lib-electronic-components/tree/master</url>
-        <tag>HEAD</tag>
+        <tag>lib-electronics-components-10.3,1</tag>
     </scm>
 
 
