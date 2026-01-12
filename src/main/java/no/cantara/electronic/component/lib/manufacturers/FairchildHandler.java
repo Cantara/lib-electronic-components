@@ -6,7 +6,6 @@ import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Handler for Fairchild Semiconductor (now part of ON Semiconductor) components
@@ -102,9 +101,8 @@ public class FairchildHandler implements ManufacturerHandler {
             }
         }
 
-        // Use pattern registry for other matches
-        Pattern pattern = patterns.getPattern(type);
-        return pattern != null && pattern.matcher(upperMpn).matches();
+        // Use handler-specific patterns for other matches (avoid cross-handler false matches)
+        return patterns.matchesForCurrentHandler(upperMpn, type);
     }
 
     @Override

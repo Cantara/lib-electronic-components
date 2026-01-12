@@ -428,9 +428,8 @@ public class TIHandler implements ManufacturerHandler {
             return true;
         }
 
-        // Finally, try pattern registry
-        Pattern pattern = patterns.getPattern(type);
-        return pattern != null && pattern.matcher(upperMpn).matches();
+        // Finally, use handler-specific patterns (avoid cross-handler false matches)
+        return patterns.matchesForCurrentHandler(upperMpn, type);
     }
 
     @Override

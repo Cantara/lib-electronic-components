@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.regex.Pattern;
 
 public class OnSemiHandler implements ManufacturerHandler {
     private static final Map<String, String> PACKAGE_CODES = new HashMap<>();
@@ -147,9 +146,8 @@ public class OnSemiHandler implements ManufacturerHandler {
             }
         }
 
-        // Use pattern registry for other matches
-        Pattern pattern = patterns.getPattern(type);
-        return pattern != null && pattern.matcher(upperMpn).matches();
+        // Use handler-specific patterns for other matches (avoid cross-handler false matches)
+        return patterns.matchesForCurrentHandler(upperMpn, type);
     }
 
     @Override

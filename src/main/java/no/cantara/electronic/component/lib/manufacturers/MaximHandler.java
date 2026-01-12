@@ -7,7 +7,6 @@ import no.cantara.electronic.component.lib.PatternRegistry;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class MaximHandler implements ManufacturerHandler {
     @Override
@@ -92,9 +91,8 @@ public class MaximHandler implements ManufacturerHandler {
             }
         }
 
-        // Use pattern registry for other matches
-        Pattern pattern = patterns.getPattern(type);
-        return pattern != null && pattern.matcher(upperMpn).matches();
+        // Use handler-specific patterns for other matches (avoid cross-handler false matches)
+        return patterns.matchesForCurrentHandler(upperMpn, type);
     }
 
     @Override
