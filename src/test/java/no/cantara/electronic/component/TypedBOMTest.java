@@ -1,7 +1,6 @@
 package no.cantara.electronic.component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
@@ -50,8 +49,7 @@ class TypedBOMTest {
 
     @Test
     void shouldSerializeAndDeserializePCBABOM() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        JsonMapper mapper = JsonMapper.builder().build();
 
         PCBABOM originalBom = new PCBABOM();
         originalBom.setProductionNo("TSM-2024-001");

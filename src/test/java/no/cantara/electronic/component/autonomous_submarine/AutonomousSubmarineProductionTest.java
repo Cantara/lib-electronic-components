@@ -1,8 +1,7 @@
 package no.cantara.electronic.component.autonomous_submarine;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.SerializationFeature;
 import no.cantara.electronic.component.BOMEntry;
 import no.cantara.electronic.component.MechanicalBOM;
 import no.cantara.electronic.component.PCBABOM;
@@ -1857,9 +1856,10 @@ class AutonomousSubmarineProductionTest {
     }
 
     private String serializeToJson(PlannedProductionBatch batch) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        // Jackson 3.x has built-in Java 8 date/time support
+        JsonMapper mapper = JsonMapper.builder()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .build();
 
         String json = mapper.writeValueAsString(batch);
 
@@ -1871,8 +1871,7 @@ class AutonomousSubmarineProductionTest {
     }
 
     private PlannedProductionBatch deserializeFromJson(String json) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        JsonMapper mapper = JsonMapper.builder().build();
         return mapper.readValue(json, PlannedProductionBatch.class);
     }
 
