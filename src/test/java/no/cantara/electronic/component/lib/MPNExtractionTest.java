@@ -2,6 +2,7 @@ package no.cantara.electronic.component.lib;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import no.cantara.electronic.component.lib.ManufacturerHandler;
 
 /**
  * Tests for extracting MPNs from various text formats.
@@ -51,6 +52,16 @@ public class MPNExtractionTest {
 
     @Test
     public void shouldExtractMPNWithPackageInfo() {
+        // Debug: Print handler info before assertions
+        String[] mpns = {"LM358N", "ATMEGA328P-PU", "STM32F103C8T6", "LM7805CT"};
+        for (String mpn : mpns) {
+            ManufacturerHandler handler = MPNUtils.getManufacturerHandler(mpn);
+            String pkg = MPNUtils.getPackageCode(mpn);
+            System.out.println("DEBUG: " + mpn + " -> Handler: " +
+                (handler != null ? handler.getClass().getSimpleName() : "null") +
+                ", Package: '" + pkg + "'");
+        }
+
         // Descriptions with package information
         assertMPNAndPackage("LM358N DIP-8", "LM358N", "DIP");
         assertMPNAndPackage("ATMEGA328P-PU DIP-28", "ATMEGA328P-PU", "PDIP");

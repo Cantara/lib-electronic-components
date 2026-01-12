@@ -208,16 +208,19 @@ public class MPNUtilsTest {
 
     @Test
     public void shouldExtractPackageCodes() {
-        // Now we can properly test package code extraction
+        // Debug: Print handler information BEFORE assertions
+        String[] testMpns = {"LM358D", "ATMEGA328P-PU", "STM32F103C8T6"};
+        for (String mpn : testMpns) {
+            ManufacturerHandler handler = MPNUtils.getManufacturerHandler(mpn);
+            String packageCode = MPNUtils.getPackageCode(mpn);
+            System.out.println("MPN: " + mpn + " -> Handler: " +
+                (handler != null ? handler.getClass().getSimpleName() : "null") +
+                ", Package: " + packageCode);
+        }
+
+        // Now test package code extraction
         assertEquals("SOIC", MPNUtils.getPackageCode("LM358D"));
         assertEquals("PDIP", MPNUtils.getPackageCode("ATMEGA328P-PU"));
         assertEquals("LQFP", MPNUtils.getPackageCode("STM32F103C8T6"));
-
-        // Print handler information for debugging
-        String mpn = "LM358D";
-        ManufacturerHandler handler = MPNUtils.getManufacturerHandler(mpn);
-        System.out.println("\nHandler for " + mpn + ":");
-        System.out.println("- Class: " + (handler != null ? handler.getClass().getSimpleName() : "null"));
-        System.out.println("- Package code: " + MPNUtils.getPackageCode(mpn));
     }
 }
