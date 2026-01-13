@@ -292,7 +292,7 @@ The library supports **135+ manufacturers** with dedicated handlers for MPN pars
 | **Memory** | Micron, Winbond, ISSI, Macronix, GigaDevice, Alliance Memory, Puya, XMC, ESMT |
 | **Passives** | Murata, KEMET, Samsung, TDK, Panasonic, AVX, Nichicon, Vishay, Yageo, Bourns, Lelon, Rubycon, Elna, Nippon Chemi-Con, Viking Tech |
 | **Inductors** | Coilcraft, Sumida, Pulse Electronics, Sunlord, Chilisin, Cyntec |
-| **Connectors** | TE, Amphenol, Wurth, Molex, Hirose, JST, Phoenix Contact, Harting, Samtec, Mill-Max, Sullins |
+| **Connectors** | TE, Amphenol, Wurth, Molex, Hirose, JST, Jinling, Phoenix Contact, Harting, Samtec, Mill-Max, Sullins |
 | **RF & Wireless** | Qorvo, Skyworks, Nordic, Qualcomm, Semtech, Airoha, Beken, Telink |
 | **Sensors** | Bosch, InvenSense, Melexis, Sensirion, Honeywell, ams-OSRAM |
 | **Audio** | Cirrus Logic, Realtek, ESS Technology, C-Media |

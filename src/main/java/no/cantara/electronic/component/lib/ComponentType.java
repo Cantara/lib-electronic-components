@@ -61,6 +61,7 @@ public enum ComponentType {
     CONNECTOR_HARWIN(false, false),
     CONNECTOR_WURTH(false, false),  // Add this if not present
     CONNECTOR_JAE(false, false),
+    CONNECTOR_JINLING(false, false),
 
     // Microchip/Atmel
     MICROCONTROLLER_MICROCHIP(false, true),
@@ -554,6 +555,11 @@ public enum ComponentType {
             case SENSOR_FLOW_OMRON -> SENSOR_FLOW;
             case SENSOR_PROXIMITY_OMRON -> SENSOR_PROXIMITY;
             case SENSOR_OMRON -> SENSOR;
+
+            // Connector manufacturer types
+            case CONNECTOR_MOLEX, CONNECTOR_TE, CONNECTOR_JST,
+                 CONNECTOR_HIROSE, CONNECTOR_AMPHENOL, CONNECTOR_HARWIN,
+                 CONNECTOR_WURTH, CONNECTOR_JAE, CONNECTOR_JINLING -> CONNECTOR;
 
             // Default case for base types
             default -> this;
