@@ -21,6 +21,10 @@ public enum ComponentManufacturer {
     CYPRESS("(?:CY|PSoC|FM[0-9]|CYW)", "Cypress Semiconductor", new CypressHandler()),
     SILICON_LABS("(?:SI|EFM|EFR|BGM|EM35|CP21)", "Silicon Labs", new SiliconLabsHandler()),
     ESPRESSIF("(?:ESP[0-9]|ESP-|ESP32)", "Espressif Systems", new EspressifHandler()),
+    NUVOTON("(?:M[0-9]{3}|N76[E,S]|NUC[0-9]|NUA[0-9]|ML5[0-9])", "Nuvoton", new NuvotonHandler()),
+    HOLTEK("(?:HT[0-9]{4}|HT66|HT68|BS8)", "Holtek", new HoltekHandler()),
+    WCH("(?:CH[0-9]{3}|CH32[V,F])", "WCH", new WCHHandler()),
+    ARTERY("(?:AT32F[0-9]|AT32WB)", "Artery Technology", new ArteryHandler()),
 
     // Semiconductor Manufacturers
     ALPHA_OMEGA("(?:AO[0-9]{4}|AOD|AON|AOI|AOT|AOB|AOC|AOP|AOTL|AOGT|AOGL|AONS|AONR|AONK)", "Alpha and Omega Semiconductor", new AlphaOmegaHandler()),
@@ -30,6 +34,9 @@ public enum ComponentManufacturer {
     ANALOG_DEVICES("(?:AD|ADP|ADM|ADG|ADA|ADUM|LT|LTC|LTM)", "Analog Devices", new AnalogDevicesHandler()),
     MAXIM("(?:MAX|DS|ICL|DG|UP|LT|LTC|LTM)", "Maxim Integrated", new MaximHandler()),
     DIODES_INC("(?:DI|AP|AZ|DMG|DMN|DMP|ZXGD|1N|BAV|BAS|BAT)", "Diodes Incorporated", new DiodesIncHandler()),
+    GOOD_ARK("(?:1N4|1N5|ES[0-9]|US[0-9]|SS[0-9]{2}|SK[0-9]{2}|MMBT|BAV|BAT)", "Good-Ark Semiconductor", new GoodArkHandler()),
+    YANGJIE("(?:YJ|MBR[0-9]{4}|SMBJ|SMAJ|SS[0-9]{2}|SK[0-9]{2}|YJB|YJDB)", "Yangjie Technology", new YangjieHandler()),
+    PANJIT("(?:1N4|1N5|ES[0-9]|RS[0-9]|SS[0-9]{2}|SK[0-9]{2}|MMBT|BAV|BAS|BAT|PJ[0-9]{4})", "Panjit International", new PanjitHandler()),
     ROHM("(?:BD|BA|BR|BSS|BU|2S[A-D]|RGT|PMR)", "ROHM Semiconductor", new RohmHandler()),
     TOSHIBA("(?:TC|TLP|TPH|TPC|2S[A-D]|TPN|TPR|TPS)", "Toshiba", new ToshibaHandler()),
     NEXPERIA("(?:NEX|PMBT|PBSS|BZX|BAT|BSS|2N|BAS|BAV|BZV|PHB)", "Nexperia", new NexteriaHandler()),
@@ -42,6 +49,7 @@ public enum ComponentManufacturer {
     //YAGEO("(?:RC[0-9]|RT[0-9]|RL[0-9]|CC[0-9]|AC[0-9]|PE[0-9])", "Yageo", new YageoHandler()),
     YAGEO("(?:RC[0-9]|RT[0-9]|RL(?!20[1-7])[0-9]|CC[0-9]|AC[0-9]|PE[0-9])", "Yageo", new YageoHandler()),    PANASONIC("(?:ERJ|ERJP|ERJG|ECQ|EEF|ECA|EVJ|EVM)", "Panasonic", new PanasonicHandler()),
     BOURNS("(?:CR[^C]|CRM|CRH|3386|3296|91|TC|TH|3310)", "Bourns", new BournsHandler()),
+    VIKING_TECH("(?:CR[0-9]{4}|AR[0-9]{4}|CS[0-9]{4}|PWR[0-9])", "Viking Tech", new VikingTechHandler()),
     KEMET("(?:C[0-9]{4}|T[0-9]{3}|A[0-9]{3}|ESD|PHE|F[0-9])", "KEMET Electronics", new KemetHandler()),
     //MURATA("(?:GRM|GRT|LQG|LQH|LQW|DLW|NFM|BLM|NCP)", "Murata Manufacturing", new MurataHandler()),
     //MURATA("(?:GRM|GCM|KCA|KC[ABMZ]|LLL|NFM|DLW|BLM|NCP)", "Murata Manufacturing", new MurataHandler()),
@@ -58,6 +66,10 @@ public enum ComponentManufacturer {
     //SAMSUNG("(?:CL[0-9]+B|CM[0-9]|SPH|RC_|CL21|CL31)", "Samsung Electro-Mechanics", new SamsungHandler()),
     SAMSUNG("(?:CL(?:10|21|31)B|CM[0-9]|SPH|RC_)", "Samsung Electro-Mechanics", new SamsungHandler()),
     AVX("(?:TAJ|TPS|TCJ|F[0-9]|CR[0-9]|AR|LD|SD)", "AVX Corporation", new AVXHandler()),
+    LELON("(?:RGA|RGC|RWE|REA|RZC|VYS)[0-9]", "Lelon Electronics", new LelonHandler()),
+    RUBYCON("(?:YXF|YXG|ZLH|ZLJ|50YXF|63YXF)[0-9]", "Rubycon", new RubyconHandler()),
+    ELNA("(?:RJJ|RJG|RJK|RSH|RAA|RA2|RFS|CE-BP)[0-9]", "Elna", new ElnaHandler()),
+    NIPPON_CHEMICON("(?:KMG|KMH|KMQ|KY|KZH|KZN|KXJ|KZE)[0-9]", "Nippon Chemi-Con", new NipponChemiConHandler()),
     WIMA("(?:MKS|MKP|FKS|FKP|FKC)[0-9]", "WIMA", new WIMAHandler()),
     FAIRCHILD("(?:FQ[PNS]|FDS|FDC|FDD)[0-9]", "Fairchild/ON Semi", new FairchildHandler()),
     // Connector Manufacturers
@@ -91,6 +103,10 @@ public enum ComponentManufacturer {
     // Relay/Switch/Sensor Manufacturers
     OMRON("(?:G[0-9]|G3[A-Z]|B3[A-Z]|D2F|EE-S|D6F|E2E)", "Omron", new OmronHandler()),
 
+    // Optocoupler Manufacturers
+    ISOCOM("(?:ISP|ISQ|ISD)[0-9]{3}|(?:4N|6N)[0-9]{2}|(?:MOC|TLP)[0-9]{3}", "Isocom Components", new IsocomHandler()),
+    COSMO("(?:KP[CSH]?[0-9]{3,4}|KPTR[0-9]{4})", "Cosmo Electronics", new CosmoHandler()),
+
     // Memory Manufacturers
     MICRON("(?:MT)[0-9]|(?:N25Q|M25P)", "Micron Technology", new MicronHandler()),
     WINBOND("(?:W)[0-9]{2}[A-Z]|(?:W25Q|W25X)", "Winbond", new WinbondHandler()),
@@ -101,25 +117,43 @@ public enum ComponentManufacturer {
     QUALCOMM("(?:QCA|IPQ|MDM|WCN)[0-9]", "Qualcomm", new QualcommHandler()),
     SKYWORKS("(?:SKY|SE|SI)[0-9]", "Skyworks Solutions", new SkyworksHandler()),
     QORVO("(?:RF|RFX|TQP)[0-9]", "Qorvo", new QorvoHandler()),
+    AIROHA("(?:AB[0-9]{4}|AU[0-9]{4}|AG[0-9]{4})", "Airoha Technology", new AirohaHandler()),
+    BEKEN("(?:BK[0-9]{4}|BL[0-9]{4})", "Beken", new BekenHandler()),
+    TELINK("(?:TLSR[0-9]{4}|TC[0-9]{2})", "Telink Semiconductor", new TelinkHandler()),
+    SEMTECH("(?:SX[0-9]{4}|LR[0-9]{4}|SY[0-9]{4})", "Semtech", new SemtechHandler()),
 
     // Crystal/Oscillator Manufacturers
     EPSON("(?:SG|FA|TSX|TC|MA)[0-9]", "Epson", new EpsonHandler()),
     NDK("(?:NX|NT|NZ|NH)[0-9]", "NDK", new NDKHandler()),
     ABRACON("(?:ABM|ABLS|ABLM|AB26|ASDM)", "Abracon", new AbraconHandler()),
     IQD("(?:LFXTAL|CFPS|LFTCXO|LFOCA)", "IQD Frequency Products", new IQDHandler()),
+    TXC("(?:7[MVX]|8Y|9C|AX)-", "TXC Corporation", new TXCHandler()),
+    KYOCERA("(?:CX|KC|CT|CXO|PBRC)[0-9]|(?:5600|5800)-", "Kyocera", new KyoceraHandler()),
+    KDS("(?:DSX|DST|DSO|DSB|1N-)[0-9]", "KDS Daishinku", new KDSHandler()),
+
+    // Motor Driver Manufacturers
+    TRINAMIC("(?:TMC[0-9]{4})", "Trinamic Motion Control", new TrinamicHandler()),
 
     // Circuit Protection Manufacturers
     LITTELFUSE("(?:SMAJ|SMBJ|SMCJ|SMDJ|P[46]KE|P4SMA|P6SMB|1\\.?5KE|045[1-4]|0448|V[0-9]{2}[EPDM])", "Littelfuse", new LittelfuseHandler()),
+    PROTEK_DEVICES("(?:TVS[0-9]{5}|GBLC|PSM[0-9]{3}|ULC[0-9]{4}|SMD[0-9]{4})", "ProTek Devices", new ProTekDevicesHandler()),
 
     // Power Supply Manufacturers
     MEAN_WELL("(?:RS|LRS|SE|NES|SP|PS|PT|SD|DDR|LPV|HLG|ELG|PLN|PWM|LCM|HDR|EDR|MDR|NDR|DR)-[0-9]", "Mean Well", new MeanWellHandler()),
 
     // Interface IC Manufacturers
     FTDI("(?:FT)[0-9]{3}", "FTDI", new FTDIHandler()),
+    GENESYS_LOGIC("(?:GL[0-9]{3}|GL3[0-9]{3})", "Genesys Logic", new GenesysLogicHandler()),
+    ASMEDIA("(?:ASM[0-9]{4}|ASM1[0-9]{3})", "ASMedia Technology", new ASMediaHandler()),
+    PROLIFIC("(?:PL[0-9]{4}|PL23[0-9]{2})", "Prolific Technology", new ProlificHandler()),
+    JMICRON("(?:JM[0-9]{3}|JMS[0-9]{3})", "JMicron Technology", new JMicronHandler()),
+    VIALABS("(?:VL[0-9]{3}|VL8[0-9]{2})", "VIA Labs", new ViaLabsHandler()),
 
     // Audio IC Manufacturers
     CIRRUS_LOGIC("(?:CS4|CS5|CS8|WM8)[0-9]", "Cirrus Logic", new CirrusLogicHandler()),
     REALTEK("(?:ALC|RTL|RTD)[0-9]", "Realtek", new RealtekHandler()),
+    ESS("(?:ES[0-9]{4}|SABRE)", "ESS Technology", new ESSHandler()),
+    CMEDIA("(?:CM[0-9]{3}|CMI[0-9]{4})", "C-Media", new CMediaHandler()),
 
     // Sensor Manufacturers (additional)
     SENSIRION("(?:SHT|SGP|SCD|SFA|SPS|STS|SLF|SDP)[0-9]", "Sensirion", new SensirionHandler()),
@@ -130,16 +164,28 @@ public enum ComponentManufacturer {
     COILCRAFT("(?:XAL|XEL|XFL|SER|LPS|MSS|DO[0-9]|MSD|SLC|SLR|0[46]0[23]HP)", "Coilcraft", new CoilcraftHandler()),
     SUMIDA("(?:CDRH|CDR|CDEP|CDEF|CR[0-9]|RCH|CEP|CDC|CLF)[0-9]", "Sumida", new SumidaHandler()),
     PULSE_ELECTRONICS("(?:H[0-9]{4}|T[0-9]{4}|P[0-9]{4}|PE-|PA-|JD|JK|JXD)", "Pulse Electronics", new PulseElectronicsHandler()),
+    SUNLORD("(?:SDCL|SWPA|SDFL|MWSA|SMDRR)", "Sunlord Electronics", new SunlordHandler()),
+    CHILISIN("(?:SQC[0-9]{4}|SCDS[0-9]|SCD[0-9]{4})", "Chilisin Electronics", new ChilisinHandler()),
+    CYNTEC("(?:PMC|PBSS|PCMN)[0-9]", "Cyntec", new CyntecHandler()),
 
     // Power Management Manufacturers
     VICOR("(?:DCM|BCM|PRM|VTM|NBM|PI3[35])[0-9]", "Vicor", new VicorHandler()),
     POWER_INTEGRATIONS("(?:TOP|TNY|LNK|INN|PFS|LCS|CAP|SEN)[0-9]", "Power Integrations", new PowerIntegrationsHandler()),
     MPS("(?:MP[0-9]|MPQ|MPM)[0-9]", "Monolithic Power Systems", new MPSHandler()),
+    RICHTEK("(?:RT[0-9]{4}|RTQ[0-9])", "Richtek", new RichtekHandler()),
+    SILERGY("(?:SY[0-9]{4}|SY8[0-9])", "Silergy", new SilergyHandler()),
+    TOREX("(?:XC[0-9]{4}|XCL[0-9])", "Torex Semiconductor", new TorexHandler()),
+    ABLIC("(?:S-[0-9]{5}|S8[0-9]{3})", "ABLIC", new ABLICHandler()),
+    SGMICRO("(?:SGM[0-9]{4}|SG[0-9]{3})", "SG Micro", new SGMicroHandler()),
+    THREE_PEAK("(?:TP[0-9]{4}|TPF[0-9])", "3PEAK", new ThreePeakHandler()),
 
     // Memory Manufacturers (additional)
     MACRONIX("(?:MX25|MX29|MX30|MX66)[A-Z]", "Macronix", new MacronixHandler()),
     GIGADEVICE("(?:GD25|GD32|GD5F)[A-Z0-9]", "GigaDevice", new GigaDeviceHandler()),
     ALLIANCE_MEMORY("(?:AS6C|AS7C|AS4C|AS29)[0-9]", "Alliance Memory", new AllianceMemoryHandler()),
+    PUYA("(?:P25[A-Z]|PY25[A-Z])", "Puya Semiconductor", new PuyaHandler()),
+    XMC("(?:XM25Q|XM25E)", "XMC", new XMCHandler()),
+    ESMT("(?:M[0-9]{2}S|F[0-9]{2}L)", "Elite Semiconductor Memory Technology", new ESMTHandler()),
 
     // Timing/Oscillator Manufacturers (additional)
     SITIME("(?:SiT)[0-9]", "SiTime", new SiTimeHandler()),
@@ -148,9 +194,19 @@ public enum ComponentManufacturer {
     SEOUL_SEMI("(?:Z5|STW|STN|SFH|CUD|MJT|WICOP|SunLike|Acrich)", "Seoul Semiconductor", new SeoulSemiHandler()),
     EVERLIGHT("(?:17-|19-|26-|333|EL8|EL3|IR[0-9]|PT[0-9]|ALS)", "Everlight Electronics", new EverlightHandler()),
 
+    // LED Driver / Display Driver Manufacturers
+    MACROBLOCK("(?:MBI[0-9]{4}|MBI5[0-9])", "Macroblock", new MacroblockHandler()),
+    CHIPONE("(?:ICN[0-9]{4}|ICND[0-9])", "Chipone Technology", new ChiponeHandler()),
+    SITRONIX("(?:ST[0-9]{4}|SSD[0-9]{4})", "Sitronix Technology", new SitronixHandler()),
+    RAYDIUM("(?:RM[0-9]{5}|RM6[0-9]{4})", "Raydium Semiconductor", new RaydiumHandler()),
+    NOVATEK("(?:NT[0-9]{5}|NVT[0-9])", "Novatek Microelectronics", new NovatekHandler()),
+
     // Connector Manufacturers (additional)
     PHOENIX_CONTACT("(?:MC |MCV |MSTB|PT |UK |UT |PTSM|SPT |FK-)", "Phoenix Contact", new PhoenixContactHandler()),
     HARTING("(?:09 |21 0|02 0|14 |15 )", "Harting", new HartingHandler()),
+    SAMTEC("(?:ESQ|SSQ|TSM|TSW|TLE|SMH|CLT|HSEC|QSH|QTH)", "Samtec", new SamtecHandler()),
+    MILL_MAX("(?:[0-9]{3}-[0-9]{2}-[0-9]{3}|[0-9]{4}-[0-9]-[0-9]{2})", "Mill-Max", new MillMaxHandler()),
+    SULLINS("(?:PRPC|PPTC|NRPN|SWH|GRPB|NPPC|LPPB)", "Sullins Connector Solutions", new SullinsHandler()),
 
     // Unknown (must be last)
     UNKNOWN("", "Unknown Manufacturer", new UnknownHandler());
