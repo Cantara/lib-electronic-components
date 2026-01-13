@@ -161,7 +161,7 @@ This ensures institutional knowledge is preserved for future sessions.
 ### Testing
 - `MPNUtilsTest` and `MPNExtractionTest` are the primary tests for MPN parsing logic
 - Many test MPNs are real-world part numbers from datasheets
-- **Test coverage**: 41+ handlers have tests (2613+ tests), 17 similarity calculators have tests (302 tests)
+- **Test coverage**: 61 handlers have tests (4497 tests), 17 similarity calculators have tests (302 tests)
 - **Flaky tests**: If tests pass individually but fail in suite, check for non-deterministic iteration (HashSet → TreeSet)
 
 ### Handler Test Gotchas (IMPORTANT)
@@ -296,7 +296,7 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - `MPNUtils.getManufacturerHandler` relies on alphabetical handler order - could be fragile
 
 **Low**:
-- Test coverage: 41 handlers now have comprehensive tests (2613+ total tests)
+- Test coverage: 61 handlers now have comprehensive tests (4497 total tests)
 - Use existing handler tests as templates: TIHandlerTest, STHandlerTest, NXPHandlerTest, etc.
 
 *BroadcomHandler*: Fixed - uses Set.of(), includes IC type
@@ -363,10 +363,10 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 | Category | Total | With Tests | Without Tests | Coverage |
 |----------|-------|------------|---------------|----------|
-| Handlers | 56 | 41 | 15 | 73.2% |
+| Handlers | 67 | 61 | 6 | 91.0% |
 | Similarity Calculators | 17 | 17 | 0 | 100% |
 
-**Handlers Without Tests (15)**: Abracon, AKM, Cree, DiodesInc, Epson, Fairchild, IQD, LG, Lumileds, NDK, Nexteria, OSRAM, Qualcomm, Spansion, Unknown
+**Handlers Without Tests (6)**: AbstractManufacturerHandler (base class), FairchildHandler, LogicICHandler, QualcommHandler, SpansionHandler, UnknownHandler (special case)
 
 **Similarity Calculators (ALL tested)**: ResistorSimilarityCalculator, CapacitorSimilarityCalculator, TransistorSimilarityCalculator, DiodeSimilarityCalculator, MosfetSimilarityCalculator, OpAmpSimilarityCalculator, MCUSimilarityCalculator, MicrocontrollerSimilarityCalculator, MemorySimilarityCalculator, SensorSimilarityCalculator, ConnectorSimilarityCalculator, LEDSimilarityCalculator, VoltageRegulatorSimilarityCalculator, LogicICSimilarityCalculator, PassiveComponentCalculator, LevenshteinCalculator, DefaultSimilarityCalculator (302 tests total)
 
