@@ -1,0 +1,938 @@
+# Manufacturer Database for Electronic Components Library
+# ======================================================
+#
+# This file defines manufacturers and their MPN patterns for automated
+# handler generation and maintenance.
+#
+# SCHEMA DOCUMENTATION
+# ====================
+#
+# Each manufacturer entry contains:
+#
+# manufacturers:
+#   - id: MANUFACTURER_ID          # Enum name in ComponentManufacturer (required)
+#     name: "Full Company Name"    # Display name (required)
+#     aliases:                     # Alternative names (optional)
+#       - "Short Name"
+#       - "Former Name"
+#     website: "example.com"       # Primary website (optional)
+#
+#     # Tier determines level of support (required)
+#     # tier_1: Full support (patterns, extraction, tests, skill doc)
+#     # tier_2: Basic support (prefix patterns, type detection)
+#     # tier_3: Minimal (name recognition only)
+#     tier: tier_1
+#
+#     # Current implementation status
+#     status:
+#       handler_exists: true       # Handler class exists
+#       has_tests: true            # Test file exists
+#       has_skill: true            # Skill documentation exists
+#       uses_set_of: true          # getSupportedTypes() uses Set.of()
+#       quality: high              # high/medium/low/stub
+#
+#     # MPN detection patterns (for ComponentManufacturer enum)
+#     detection:
+#       # Primary regex for enum pattern (required)
+#       primary_pattern: "(?:ABC|XYZ)[0-9]"
+#       # Specific prefix patterns for fromMPN() special cases (optional)
+#       prefixes:
+#         - prefix: "ABC"
+#           priority: high          # high = check first, medium = standard, low = fallback
+#         - prefix: "XYZ"
+#           priority: medium
+#
+#     # Component types this manufacturer produces
+#     component_types:
+#       - type: RESISTOR           # Base ComponentType
+#         manufacturer_type: RESISTOR_CHIP_EXAMPLE  # Manufacturer-specific type (optional)
+#         patterns:                 # Regex patterns for this type
+#           - "^ABC[0-9]{4}.*"
+#           - "^XYZ[0-9]{4}.*"
+#         examples:                 # Real MPN examples (for tests)
+#           - "ABC0603-100K-1%"
+#           - "XYZ0805-4K7-5%"
+#
+#     # Package code mappings
+#     package_codes:
+#       # Suffix-based (most common)
+#       suffixes:
+#         "N": "DIP"
+#         "D": "SOIC"
+#         "PW": "TSSOP"
+#       # Position-based (for structured MPNs like Yageo RC0603...)
+#       positional:
+#         positions: "2-4"          # Character positions (0-indexed)
+#         mappings:
+#           "0603": "0603"
+#           "0805": "0805"
+#
+#     # Series extraction rules
+#     series_extraction:
+#       # Method: prefix, regex, or position
+#       method: prefix
+#       rules:
+#         - pattern: "^ABC"
+#           series: "ABC Series"
+#         - pattern: "^XYZ"
+#           series: "XYZ Series"
+#
+#     # Temperature grade suffixes
+#     temperature_grades:
+#       "": "Commercial (0 to 70C)"
+#       "I": "Industrial (-40 to 85C)"
+#       "A": "Automotive (-40 to 125C)"
+#       "M": "Military (-55 to 125C)"
+#
+#     # Notes and learnings
+#     notes: |
+#       Any quirks, gotchas, or important information about this manufacturer's
+#       MPN encoding scheme.
+
+# =============================================================================
+# EXISTING MANUFACTURERS (already have handlers)
+# =============================================================================
+
+manufacturers:
+  # ---------------------------------------------------------------------------
+  # TIER 1: Full Implementation
+  # ---------------------------------------------------------------------------
+
+  - id: TI
+    name: "Texas Instruments"
+    aliases: ["TI", "Texas"]
+    website: "ti.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: true
+      quality: high
+    detection:
+      primary_pattern: "(?:TI|TPS|TMS|TLV|LM|SN|MSP430|CC[0-9]{4})"
+      prefixes:
+        - prefix: "LM"
+          priority: high
+        - prefix: "TL"
+          priority: high
+        - prefix: "TPS"
+          priority: high
+        - prefix: "MSP430"
+          priority: high
+        - prefix: "SN74"
+          priority: medium
+    component_types:
+      - type: OPAMP
+        manufacturer_type: OPAMP_TI
+        patterns:
+          - "^LM358.*"
+          - "^LM324.*"
+          - "^TL07[124].*"
+          - "^TL08[124].*"
+          - "^NE553[12].*"
+        examples:
+          - "LM358DR"
+          - "TL072CDR"
+          - "NE5532P"
+      - type: VOLTAGE_REGULATOR_LINEAR
+        manufacturer_type: VOLTAGE_REGULATOR_LINEAR_TI
+        patterns:
+          - "^LM78[0-9]{2}.*"
+          - "^LM79[0-9]{2}.*"
+          - "^LM317.*"
+          - "^LM337.*"
+        examples:
+          - "LM7805CT"
+          - "LM317T"
+      - type: TEMPERATURE_SENSOR
+        manufacturer_type: TEMPERATURE_SENSOR_TI
+        patterns:
+          - "^LM35[A-D].*"
+          - "^TMP36.*"
+        examples:
+          - "LM35DZ"
+          - "TMP36GT9Z"
+      - type: MICROCONTROLLER
+        patterns:
+          - "^MSP430.*"
+          - "^CC[0-9]{4}.*"
+        examples:
+          - "MSP430G2553"
+          - "CC2541F256"
+    package_codes:
+      suffixes:
+        "N": "PDIP"
+        "P": "PDIP"
+        "D": "SOIC"
+        "DW": "SOIC-Wide"
+        "PW": "TSSOP"
+        "DGK": "MSOP"
+        "DBV": "SOT-23"
+        "T": "TO-220"
+        "CT": "TO-220"
+        "DT": "SOT-223"
+        "KC": "TO-252"
+    temperature_grades:
+      "": "Commercial"
+      "I": "Industrial"
+      "Q": "Automotive"
+      "M": "Military"
+    notes: |
+      - LM35 (temp sensor) vs LM358 (op-amp): Check digit vs letter after "35"
+      - LM prefix shared with ON Semi, ST - check for manufacturer indicators
+      - Suffix ordering: Check longer suffixes (DT) before shorter (T)
+
+  - id: ST
+    name: "STMicroelectronics"
+    aliases: ["ST", "STMicro"]
+    website: "st.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: true
+      quality: high
+    detection:
+      primary_pattern: "(?:STM32|STM8|ST[A-Z][0-9]|STD|STF|STP)"
+      prefixes:
+        - prefix: "STM32"
+          priority: high
+        - prefix: "STM8"
+          priority: high
+        - prefix: "L78"
+          priority: medium
+    component_types:
+      - type: MICROCONTROLLER
+        manufacturer_type: MICROCONTROLLER_ST
+        patterns:
+          - "^STM32[A-Z][0-9].*"
+          - "^STM8[SL].*"
+        examples:
+          - "STM32F103C8T6"
+          - "STM32F407VGT6"
+          - "STM8S003F3P6"
+      - type: MOSFET
+        manufacturer_type: MOSFET_ST
+        patterns:
+          - "^ST[FPDW][0-9].*"
+        examples:
+          - "STF5N52U"
+          - "STP55NF06"
+      - type: VOLTAGE_REGULATOR_LINEAR
+        patterns:
+          - "^L78[0-9]{2}.*"
+          - "^L79[0-9]{2}.*"
+        examples:
+          - "L7805CV"
+          - "L7812CV"
+    package_codes:
+      suffixes:
+        "T6": "LQFP"
+        "Y6": "WLCSP"
+        "CV": "TO-220"
+        "CDT": "DPAK"
+    notes: |
+      - STM32 package in second-to-last char: T=LQFP, Y=WLCSP
+      - MOSFET package in prefix: STF=TO-220FP, STP=TO-220
+      - Regulator package after voltage: CV=TO-220
+
+  - id: MICROCHIP
+    name: "Microchip Technology"
+    aliases: ["Microchip"]
+    website: "microchip.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: false
+      quality: medium
+    detection:
+      primary_pattern: "(?:PIC|dsPIC|DSPIC|ATmega|ATtiny|AT[0-9]|AT[A-Z]{2})"
+      prefixes:
+        - prefix: "PIC"
+          priority: high
+        - prefix: "dsPIC"
+          priority: high
+        - prefix: "ATmega"
+          priority: high
+        - prefix: "ATtiny"
+          priority: high
+    component_types:
+      - type: MICROCONTROLLER
+        manufacturer_type: MICROCONTROLLER_MICROCHIP
+        patterns:
+          - "^PIC[0-9]+.*"
+          - "^dsPIC[0-9]+.*"
+        examples:
+          - "PIC16F877A"
+          - "PIC18F4550"
+          - "dsPIC33FJ128MC802"
+    package_codes:
+      suffixes:
+        "P": "PDIP"
+        "SO": "SOIC"
+        "SS": "SSOP"
+        "PT": "TQFP"
+        "ML": "QFN"
+    notes: |
+      - Acquired Atmel - shares ATmega/ATtiny prefixes
+      - Package suffix comes after base part and variant
+
+  - id: MURATA
+    name: "Murata Manufacturing"
+    aliases: ["Murata"]
+    website: "murata.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: false
+      quality: medium
+    detection:
+      primary_pattern: "(?:GRM|GCM|KCA|KC[ABMZ]|LLL|NFM|DLW|BLM|NCP|LQM|LQW|LQG)"
+      prefixes:
+        - prefix: "GRM"
+          priority: high
+        - prefix: "LQG"
+          priority: high
+    component_types:
+      - type: CAPACITOR_CERAMIC
+        manufacturer_type: CAPACITOR_CERAMIC_MURATA
+        patterns:
+          - "^GRM[0-9].*"
+          - "^GCM[0-9].*"
+        examples:
+          - "GRM188R71H104KA93D"
+          - "GRM21BR71C105KA01L"
+      - type: INDUCTOR
+        manufacturer_type: INDUCTOR_MURATA
+        patterns:
+          - "^LQG[0-9].*"
+          - "^LQW[0-9].*"
+          - "^LQM[0-9].*"
+        examples:
+          - "LQG15HS10NJ02D"
+          - "LQW18AN10NJ00D"
+      - type: EMI_FILTER
+        patterns:
+          - "^NFM[0-9].*"
+          - "^BLM[0-9].*"
+          - "^DLW[0-9].*"
+        examples:
+          - "NFM21PC104R1C3D"
+          - "BLM18AG102SN1D"
+    package_codes:
+      positional:
+        positions: "3-5"
+        mappings:
+          "03": "0201"
+          "15": "0402"
+          "18": "0603"
+          "21": "0805"
+          "31": "1206"
+          "32": "1210"
+    notes: |
+      - Size code in positions 3-4 (0-indexed) after prefix
+      - GRM = standard MLCC, GCM = high-cap, GRT = high-temp
+
+  - id: YAGEO
+    name: "Yageo Corporation"
+    aliases: ["Yageo"]
+    website: "yageo.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: false
+      quality: medium
+    detection:
+      primary_pattern: "(?:RC[0-9]|RT[0-9]|RL(?!20[1-7])[0-9]|CC[0-9]|AC[0-9]|PE[0-9])"
+      prefixes:
+        - prefix: "RC"
+          priority: high
+    component_types:
+      - type: RESISTOR_CHIP
+        manufacturer_type: RESISTOR_CHIP_YAGEO
+        patterns:
+          - "^RC[0-9]{4}.*"
+        examples:
+          - "RC0603FR-0710KL"
+          - "RC0805JR-071KL"
+      - type: CAPACITOR_CERAMIC
+        patterns:
+          - "^CC[0-9]{4}.*"
+        examples:
+          - "CC0603KRX7R9BB104"
+    package_codes:
+      positional:
+        positions: "2-6"
+        mappings:
+          "0402": "0402"
+          "0603": "0603"
+          "0805": "0805"
+          "1206": "1206"
+    notes: |
+      - Resistor format: RC[size][tolerance][TCR]-[value]
+      - Size code follows RC prefix directly
+
+  # ---------------------------------------------------------------------------
+  # TIER 1: Need Improvements
+  # ---------------------------------------------------------------------------
+
+  - id: VISHAY
+    name: "Vishay Intertechnology"
+    aliases: ["Vishay"]
+    website: "vishay.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: false
+      quality: medium
+    detection:
+      primary_pattern: "(?:VS|SI|CRCW|IRF|SiR|1N[0-9]|BAV|BAS|BAT|TNR|VOW|VOX|2N)"
+      prefixes:
+        - prefix: "CRCW"
+          priority: high
+        - prefix: "1N4148"
+          priority: high
+        - prefix: "1N400"
+          priority: high
+    component_types:
+      - type: RESISTOR_CHIP
+        manufacturer_type: RESISTOR_CHIP_VISHAY
+        patterns:
+          - "^CRCW[0-9]{4}.*"
+        examples:
+          - "CRCW060310K0FKEA"
+          - "CRCW08051K00FKEA"
+      - type: DIODE
+        patterns:
+          - "^1N[0-9]{4}.*"
+          - "^BA[VTS][0-9]+.*"
+        examples:
+          - "1N4148"
+          - "1N4007"
+          - "BAV99"
+      - type: MOSFET
+        manufacturer_type: MOSFET_VISHAY
+        patterns:
+          - "^SI[0-9]+.*"
+          - "^SIR[0-9]+.*"
+        examples:
+          - "SI2302CDS"
+          - "SIRA10DP"
+    notes: |
+      - CRCW format: CRCW[size][value][tolerance][packaging]
+      - Diodes: 1N400x rectifier, 1N4148 signal, 1N47xx zener
+      - Series extraction: Check specific patterns before generic (1N4148 before 1N4xxx)
+
+  # ---------------------------------------------------------------------------
+  # PILOT MANUFACTURERS (to be added)
+  # ---------------------------------------------------------------------------
+
+  - id: ALLEGRO
+    name: "Allegro MicroSystems"
+    aliases: ["Allegro"]
+    website: "allegromicro.com"
+    tier: tier_1
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:ACS|A[0-9]{3,4}|AH|AL)"
+      prefixes:
+        - prefix: "ACS"
+          priority: high
+        - prefix: "A39"
+          priority: medium
+        - prefix: "A4"
+          priority: medium
+    component_types:
+      - type: SENSOR_CURRENT
+        patterns:
+          - "^ACS7[0-9]{2}.*"
+        examples:
+          - "ACS712ELCTR-05B-T"
+          - "ACS723LLCTR-05AB-T"
+      - type: MOTOR_DRIVER
+        patterns:
+          - "^A39[0-9]{2}.*"
+          - "^A49[0-9]{2}.*"
+        examples:
+          - "A3967SLBT"
+          - "A4988SETTR"
+      - type: LED_DRIVER
+        patterns:
+          - "^A80[0-9]{2}.*"
+          - "^AL[0-9]{4}.*"
+        examples:
+          - "A8061KLJTR-T"
+          - "AL8860MP-13"
+      - type: HALL_SENSOR
+        patterns:
+          - "^AH[0-9]{3}.*"
+          - "^A132[0-9].*"
+        examples:
+          - "AH3362Q"
+          - "A1324LLHLT-T"
+    package_codes:
+      suffixes:
+        "T": "Tape and Reel"
+        "TR": "Tape and Reel"
+        "LH": "SOIC-8 Leadless"
+        "SE": "SOIC"
+        "SL": "SOIC (20-pin)"
+        "KL": "TO-92"
+        "ELC": "SOIC-8"
+    notes: |
+      - Known for current sensors (ACS7xx series) - very common in power monitoring
+      - Motor drivers (A4988, A3967) popular in 3D printers, CNC
+      - Hall effect sensors for position/speed sensing
+      - Suffix "-T" typically indicates tape and reel packaging
+
+  - id: LITTELFUSE
+    name: "Littelfuse"
+    aliases: ["LF"]
+    website: "littelfuse.com"
+    tier: tier_1
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:SP[0-9]|TVS|SMAJ|SMBJ|SMCJ|P[0-9]KE|1.5KE|0603|0805)"
+      prefixes:
+        - prefix: "SMAJ"
+          priority: high
+        - prefix: "SMBJ"
+          priority: high
+        - prefix: "SP"
+          priority: medium
+    component_types:
+      - type: TVS_DIODE
+        patterns:
+          - "^SMAJ[0-9]+.*"
+          - "^SMBJ[0-9]+.*"
+          - "^SMCJ[0-9]+.*"
+          - "^P[0-9]KE[0-9]+.*"
+          - "^1\\.5KE[0-9]+.*"
+        examples:
+          - "SMAJ5.0A"
+          - "SMBJ33CA"
+          - "P6KE6.8A"
+          - "1.5KE18A"
+      - type: FUSE
+        patterns:
+          - "^0[0-9]{3}[0-9]{3}.*"
+          - "^04[0-9]{5}.*"
+        examples:
+          - "0452005.MRL"
+          - "0448005.MR"
+      - type: VARISTOR
+        patterns:
+          - "^V[0-9]{2,3}.*"
+          - "^ERZ-V[0-9]+.*"
+        examples:
+          - "V14E250P"
+          - "ERZ-V07D201"
+      - type: THYRISTOR
+        patterns:
+          - "^Q[0-9]{4}.*"
+        examples:
+          - "Q4006LH4"
+    package_codes:
+      suffixes:
+        "A": "Unidirectional"
+        "CA": "Bidirectional"
+        "MRL": "Mini Blade Fuse"
+        "MR": "Blade Fuse"
+    notes: |
+      - Major protection component manufacturer
+      - TVS diode naming: [Family][Voltage][Direction] e.g. SMAJ5.0A = 5V unidirectional
+      - Fuse format varies by series
+
+  - id: ALPHA_OMEGA
+    name: "Alpha and Omega Semiconductor"
+    aliases: ["AOS", "AO"]
+    website: "aosmd.com"
+    tier: tier_1
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:AO[0-9]|AON|AOD|AOP|AOT|AOS)"
+      prefixes:
+        - prefix: "AO"
+          priority: high
+    component_types:
+      - type: MOSFET
+        patterns:
+          - "^AO[0-9]{4}.*"
+          - "^AON[0-9]{4}.*"
+          - "^AOD[0-9]{4}.*"
+        examples:
+          - "AO3401A"
+          - "AOD4184"
+          - "AON6758"
+      - type: TRANSISTOR
+        patterns:
+          - "^AOT[0-9]{3,4}.*"
+        examples:
+          - "AOT460"
+    package_codes:
+      positional:
+        positions: "2-3"
+        mappings:
+          "N": "DFN"
+          "D": "TO-252"
+          "P": "TO-220"
+          "T": "TO-220"
+          "S": "SOP-8"
+          "34": "SOT-23"
+    notes: |
+      - Format: AO[Package][Number][Variant]
+      - Second character often indicates package family
+      - Popular for consumer electronics MOSFETs
+
+  - id: NEXPERIA
+    name: "Nexperia"
+    aliases: []
+    website: "nexperia.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: low
+    detection:
+      primary_pattern: "(?:NEX|PMBT|PBSS|BZX|BAT|BSS|2N|BAS|BAV|BZV|PHB)"
+      prefixes:
+        - prefix: "PMBT"
+          priority: high
+        - prefix: "PBSS"
+          priority: high
+        - prefix: "BZX"
+          priority: medium
+    component_types:
+      - type: TRANSISTOR
+        patterns:
+          - "^PMBT[0-9]+.*"
+          - "^PBSS[0-9]+.*"
+          - "^2N[0-9]{4}.*"
+        examples:
+          - "PMBT2222A"
+          - "PBSS4041PT"
+          - "2N7002"
+      - type: DIODE
+        patterns:
+          - "^BZX[0-9]+.*"
+          - "^BA[VTS][0-9]+.*"
+        examples:
+          - "BZX84C5V1"
+          - "BAT54S"
+          - "BAV99"
+      - type: ESD_PROTECTION
+        patterns:
+          - "^PESD[0-9]+.*"
+          - "^PRTR[0-9]+.*"
+        examples:
+          - "PESD5V0S1BL"
+          - "PRTR5V0U2X"
+    package_codes:
+      suffixes:
+        "T": "SOT-23"
+        "S": "SOT-323"
+        "W": "SOT-323"
+        "L": "SOD-882"
+    notes: |
+      - Spun off from NXP (discrete components division)
+      - Strong in standard logic, discretes, ESD protection
+      - Many parts compatible with legacy 2N/PN/MMBT transistors
+
+  - id: KINGBRIGHT
+    name: "Kingbright"
+    aliases: []
+    website: "kingbrightusa.com"
+    tier: tier_2
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:WP|AP|AA|KP|KA)[0-9]"
+      prefixes:
+        - prefix: "WP"
+          priority: high
+        - prefix: "AP"
+          priority: high
+    component_types:
+      - type: LED
+        patterns:
+          - "^WP[0-9]+.*"
+          - "^AP[0-9]+.*"
+          - "^AA[0-9]+.*"
+          - "^KP[0-9]+.*"
+        examples:
+          - "WP7113ID"
+          - "APTD3216SRCPRV"
+          - "AA3528SURSK"
+    package_codes:
+      positional:
+        positions: "varies"
+        mappings:
+          "3216": "1206"
+          "3528": "1411"
+          "5060": "2024"
+    notes: |
+      - Major LED manufacturer
+      - Format varies by series: WP=through-hole, AP=SMD, AA=high brightness
+
+  - id: OMRON
+    name: "Omron Electronic Components"
+    aliases: ["Omron"]
+    website: "omron.com"
+    tier: tier_2
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:G[0-9]|B[0-9]|D[0-9]|EE-)[A-Z0-9]"
+      prefixes:
+        - prefix: "G3"
+          priority: high
+        - prefix: "G5"
+          priority: high
+        - prefix: "B3"
+          priority: medium
+    component_types:
+      - type: RELAY
+        patterns:
+          - "^G[0-9][A-Z].*"
+          - "^G5[A-Z].*"
+        examples:
+          - "G5V-1-DC5"
+          - "G3MC-201P-DC5"
+          - "G6K-2F-DC5"
+      - type: SWITCH
+        patterns:
+          - "^B3[A-Z].*"
+          - "^D2F.*"
+        examples:
+          - "B3F-1000"
+          - "D2FC-F-7N"
+      - type: SENSOR
+        patterns:
+          - "^EE-S[A-Z].*"
+          - "^D6F.*"
+        examples:
+          - "EE-SX1041"
+          - "D6F-P0010A1"
+    notes: |
+      - Major relay and switch manufacturer
+      - G-series = relays, B-series = switches, D-series = microswitches
+      - EE-series = optical sensors
+
+  - id: CUI
+    name: "CUI Devices"
+    aliases: ["CUI Inc"]
+    website: "cuidevices.com"
+    tier: tier_2
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:SJ|PJ|CMI|CMS|CES|CP[0-9])"
+      prefixes:
+        - prefix: "SJ"
+          priority: high
+        - prefix: "PJ"
+          priority: high
+    component_types:
+      - type: CONNECTOR
+        patterns:
+          - "^SJ[0-9].*"
+          - "^PJ[0-9].*"
+        examples:
+          - "SJ1-3523N"
+          - "PJ-002A"
+      - type: SPEAKER
+        patterns:
+          - "^CMS[0-9].*"
+          - "^CMI[0-9].*"
+        examples:
+          - "CMS-15118-78P"
+          - "CMI-1295-85T"
+      - type: ENCODER
+        patterns:
+          - "^ACZ[0-9].*"
+          - "^AMT[0-9].*"
+        examples:
+          - "ACZ11BR1E-15FA1"
+          - "AMT102-V"
+    notes: |
+      - Audio connectors (jacks), buzzers, speakers, encoders
+      - SJ = audio jacks, PJ = power jacks
+
+  - id: JAE
+    name: "JAE Electronics"
+    aliases: ["JAE"]
+    website: "jae.com"
+    tier: tier_2
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:FI|DX|MX|IL)"
+      prefixes:
+        - prefix: "FI"
+          priority: high
+        - prefix: "DX"
+          priority: high
+    component_types:
+      - type: CONNECTOR
+        patterns:
+          - "^FI[0-9].*"
+          - "^DX[0-9].*"
+          - "^MX[0-9].*"
+        examples:
+          - "FI-RE51S-HF-R1500"
+          - "DX07S024JA1R1500"
+          - "MX34036NF1"
+    notes: |
+      - High-quality connectors (automotive, industrial)
+      - FI = FPC/FFC connectors, DX = board-to-board
+
+  - id: WIMA
+    name: "WIMA"
+    aliases: []
+    website: "wima.de"
+    tier: tier_2
+    status:
+      handler_exists: false
+      has_tests: false
+      has_skill: false
+      uses_set_of: false
+      quality: stub
+    detection:
+      primary_pattern: "(?:MKS|MKP|FKS|FKP|FKC)"
+      prefixes:
+        - prefix: "MKS"
+          priority: high
+        - prefix: "MKP"
+          priority: high
+    component_types:
+      - type: CAPACITOR_FILM
+        patterns:
+          - "^MKS[0-9].*"
+          - "^MKP[0-9].*"
+          - "^FKS[0-9].*"
+          - "^FKP[0-9].*"
+        examples:
+          - "MKS4-100/63/10"
+          - "MKP10-100/1000/10"
+          - "FKP2-330/100/5"
+    notes: |
+      - Premium film capacitor manufacturer
+      - MKS = polyester (PET), MKP = polypropylene (PP)
+      - FKS/FKP = foil versions
+
+  - id: WURTH_ELEKTRONIK
+    name: "Wurth Elektronik"
+    aliases: ["Wurth", "WE"]
+    website: "we-online.com"
+    tier: tier_1
+    status:
+      handler_exists: true
+      has_tests: true
+      has_skill: true
+      uses_set_of: true
+      quality: medium
+    detection:
+      primary_pattern: "(?:61|62|63|64|65)[0-9]{8}"
+      prefixes:
+        - prefix: "61"
+          priority: high
+        - prefix: "62"
+          priority: high
+    component_types:
+      - type: CONNECTOR
+        patterns:
+          - "^61[0-9]{8}$"
+          - "^62[0-9]{8}$"
+        examples:
+          - "6100xx1121"
+          - "6200xx1121"
+      - type: INDUCTOR
+        patterns:
+          - "^74[0-9]{6}.*"
+        examples:
+          - "74437346100"
+      - type: EMI_FILTER
+        patterns:
+          - "^742[0-9]{6}.*"
+        examples:
+          - "742792093"
+    notes: |
+      - 61xxxxx = headers (male), 62xxxxx = receptacles (female)
+      - Strong in magnetics (inductors, transformers, EMI)
+      - Note: Handler already exists but listed here for reference
+
+# =============================================================================
+# PILOT BATCH SELECTION
+# =============================================================================
+
+# The following manufacturers are selected for the pilot batch based on:
+# 1. High usage frequency in typical BOMs
+# 2. Variety of component types
+# 3. Varying complexity levels
+#
+# PILOT BATCH (10 manufacturers):
+# 1. ALLEGRO - Current sensors, motor drivers (tier 1)
+# 2. LITTELFUSE - TVS diodes, fuses (tier 1)
+# 3. ALPHA_OMEGA - MOSFETs (tier 1)
+# 4. NEXPERIA - Discretes, ESD (tier 1) - exists but needs improvements
+# 5. KINGBRIGHT - LEDs (tier 2)
+# 6. OMRON - Relays, switches (tier 2)
+# 7. CUI - Audio connectors (tier 2)
+# 8. JAE - Connectors (tier 2)
+# 9. WIMA - Film capacitors (tier 2)
+# 10. MEAN_WELL - Power supplies (tier 2)
+
+# Additional manufacturers to add later:
+# - SANYO (acquired by Panasonic, legacy parts)
+# - RUBYCON (electrolytic capacitors)
+# - UNITED_CHEMI-CON (UCC, electrolytics)
+# - CORNELL_DUBILIER (CDE, capacitors)
+# - TYCO (now TE, legacy parts)
+# - HARTING (industrial connectors)
+# - PHOENIX_CONTACT (terminal blocks)
+# - WAGO (terminal blocks)
+# - BELDEN (cables, connectors)
+# - CINCH (connectors)

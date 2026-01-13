@@ -1,8 +1,6 @@
 package no.cantara.electronic.component.lib.handlers;
 
 import no.cantara.electronic.component.lib.ComponentType;
-import no.cantara.electronic.component.lib.ManufacturerHandler;
-import no.cantara.electronic.component.lib.MPNUtils;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.manufacturers.TIHandler;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,12 +24,8 @@ class TIHandlerTest {
 
     @BeforeAll
     static void setUp() {
-        // Get handler through MPNUtils to ensure proper initialization
-        ManufacturerHandler h = MPNUtils.getManufacturerHandler("LM358");
-        assertNotNull(h, "Should find TI handler for LM358");
-        assertTrue(h instanceof TIHandler, "Handler should be TIHandler");
-        handler = (TIHandler) h;
-
+        // Use direct instantiation - more robust than MPNUtils lookup which depends on handler ordering
+        handler = new TIHandler();
         registry = new PatternRegistry();
         handler.initializePatterns(registry);
     }

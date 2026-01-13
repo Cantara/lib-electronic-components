@@ -35,6 +35,23 @@ public enum ComponentType {
     ANALOG_IC( false, true),  // Add this if not present
     DIGITAL_IC( false, true),  // Add this for completeness
 
+    // Power supply base types
+    POWER_SUPPLY(false, true),
+    POWER_SUPPLY_AC_DC(false, true),
+    POWER_SUPPLY_DC_DC(false, true),
+
+    // Mean Well power supplies
+    POWER_SUPPLY_MEANWELL(false, true),
+    POWER_SUPPLY_AC_DC_MEANWELL(false, true),
+    POWER_SUPPLY_DC_DC_MEANWELL(false, true),
+    LED_DRIVER_MEANWELL(false, true),
+
+    // Sensor and driver base types
+    SENSOR_CURRENT(false, true),
+    MOTOR_DRIVER(false, true),
+    HALL_SENSOR(false, true),
+    LED_DRIVER(false, true),
+
     // Specific connector manufacturers/types
     CONNECTOR_MOLEX(false, false),
     CONNECTOR_TE(false, false),
@@ -43,6 +60,7 @@ public enum ComponentType {
     CONNECTOR_AMPHENOL(false, false),
     CONNECTOR_HARWIN(false, false),
     CONNECTOR_WURTH(false, false),  // Add this if not present
+    CONNECTOR_JAE(false, false),
 
     // Microchip/Atmel
     MICROCONTROLLER_MICROCHIP(false, true),
@@ -195,6 +213,9 @@ public enum ComponentType {
     CAPACITOR_FILM_NICHICON(true, false),
     SUPERCAP_NICHICON(true, false),
 
+    // WIMA
+    CAPACITOR_FILM_WIMA(true, false),
+
     // Bourns
     RESISTOR_CHIP_BOURNS(true, false),
     INDUCTOR_CHIP_BOURNS(true, false),
@@ -343,6 +364,7 @@ public enum ComponentType {
     // Circuit Protection
     FUSE_LITTELFUSE(true, false),
     VARISTOR_LITTELFUSE(false, true),
+    TVS_DIODE_LITTELFUSE(false, true),
     FUSE_BUSSMANN(true, false),
     FUSE_SCHURTER(true, false),
     TVS_DIODE_BOURNS(false, true),
@@ -362,6 +384,12 @@ public enum ComponentType {
     ACCELEROMETER(false, true),
     GYROSCOPE(false, true),
     MAGNETOMETER(false, true),
+
+    // Audio and Electromechanical
+    SPEAKER(false, false),
+    BUZZER(false, false),
+    ENCODER(false, false),
+    AUDIO_JACK(false, false),
 
     // Add this with the other sensor types
     ACCELEROMETER_BOSCH(false, true),  // Note: corrected from BONE to BOSCH
@@ -391,6 +419,30 @@ public enum ComponentType {
     LED_STANDARD_OSRAM(false, true),
     LED_RGB_OSRAM(false, true),
     LED_SMD_OSRAM(false, true),
+
+    // Relay types
+    RELAY(false, false),                    // Base relay type
+    RELAY_OMRON(false, false),              // Omron relays
+    RELAY_SIGNAL(false, false),             // Signal relays (small)
+    RELAY_POWER(false, false),              // Power relays
+    RELAY_SSR(false, false),                // Solid State Relays
+
+    // Switch types
+    SWITCH(false, false),                   // Base switch type
+    SWITCH_OMRON(false, false),             // Omron switches
+    SWITCH_TACT(false, false),              // Tactile switches
+    SWITCH_MICRO(false, false),             // Microswitches
+    SWITCH_SLIDE(false, false),             // Slide switches
+
+    // Omron-specific sensor types
+    SENSOR_OPTICAL(false, true),            // Optical/photoelectric sensors
+    SENSOR_OPTICAL_OMRON(false, true),      // Omron optical sensors
+    SENSOR_FLOW(false, true),               // Flow sensors
+    SENSOR_FLOW_OMRON(false, true),         // Omron flow sensors
+    SENSOR_PROXIMITY(false, true),          // Proximity sensors
+    SENSOR_PROXIMITY_OMRON(false, true),    // Omron proximity sensors
+    SENSOR_OMRON(false, true),              // Generic Omron sensor
+
     // Generic catch-all type
     GENERIC(false, false);
 
@@ -453,7 +505,9 @@ public enum ComponentType {
             case CAPACITOR_CERAMIC_KEMET, CAPACITOR_CERAMIC_MURATA,
                  CAPACITOR_CERAMIC_TDK, CAPACITOR_CERAMIC_SAMSUNG,
                  CAPACITOR_ELECTROLYTIC_PANASONIC, CAPACITOR_ELECTROLYTIC_NICHICON,
-                 CAPACITOR_TANTALUM_KEMET, CAPACITOR_TANTALUM_AVX -> CAPACITOR;
+                 CAPACITOR_TANTALUM_KEMET, CAPACITOR_TANTALUM_AVX,
+                 CAPACITOR_FILM_WIMA, CAPACITOR_FILM_KEMET, CAPACITOR_FILM_AVX,
+                 CAPACITOR_FILM_PANASONIC, CAPACITOR_FILM_NICHICON -> CAPACITOR;
 
             // Inductor types
             case INDUCTOR_CHIP_TDK, INDUCTOR_CHIP_MURATA,
@@ -481,6 +535,25 @@ public enum ComponentType {
                  CRYSTAL_ABRACON, CRYSTAL_IQD -> CRYSTAL;
             case OSCILLATOR_EPSON, OSCILLATOR_NDK,
                  OSCILLATOR_ABRACON, OSCILLATOR_IQD -> OSCILLATOR;
+
+            // Power supply types
+            case POWER_SUPPLY_MEANWELL, POWER_SUPPLY_AC_DC_MEANWELL,
+                 POWER_SUPPLY_DC_DC_MEANWELL -> POWER_SUPPLY;
+
+            // LED driver types
+            case LED_DRIVER_MEANWELL -> LED_DRIVER;
+
+            // Relay types
+            case RELAY_OMRON, RELAY_SIGNAL, RELAY_POWER, RELAY_SSR -> RELAY;
+
+            // Switch types
+            case SWITCH_OMRON, SWITCH_TACT, SWITCH_MICRO, SWITCH_SLIDE -> SWITCH;
+
+            // Omron sensor types
+            case SENSOR_OPTICAL_OMRON -> SENSOR_OPTICAL;
+            case SENSOR_FLOW_OMRON -> SENSOR_FLOW;
+            case SENSOR_PROXIMITY_OMRON -> SENSOR_PROXIMITY;
+            case SENSOR_OMRON -> SENSOR;
 
             // Default case for base types
             default -> this;
