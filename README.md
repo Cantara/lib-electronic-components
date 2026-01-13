@@ -282,17 +282,27 @@ String stdName = manufacturer.getStandardizedName();
 
 ## Manufacturer Coverage
 
-The library supports 55+ manufacturers with dedicated handlers for MPN parsing, type detection, and component matching:
+The library supports **135+ manufacturers** with dedicated handlers for MPN parsing, type detection, and component matching:
 
 | Category | Manufacturers |
 |----------|---------------|
-| **MCUs & Processors** | TI, ST, Microchip, Atmel, NXP, Renesas, Silicon Labs, Espressif, Nordic, Cypress, Infineon |
-| **Analog & Discrete** | Analog Devices, Maxim, ON Semi, Toshiba, ROHM, Broadcom |
-| **Memory** | Micron, Winbond, ISSI |
-| **Passives** | Murata, KEMET, Samsung, TDK, Panasonic, AVX, Nichicon, Vishay, Yageo, Bourns |
-| **Connectors** | TE Connectivity, Amphenol, Wurth, Molex, Hirose, JST |
-| **RF** | Qorvo, Skyworks |
-| **Sensors** | Bosch, InvenSense, Melexis |
+| **MCUs & Processors** | TI, ST, Microchip, Atmel, NXP, Renesas, Silicon Labs, Espressif, Nordic, Cypress, Infineon, Nuvoton, Holtek, WCH, Artery |
+| **Analog & Power** | Analog Devices, Maxim, ON Semi, Toshiba, ROHM, Richtek, Silergy, Torex, ABLIC, SGMicro, 3PEAK, MPS, Vicor, Power Integrations |
+| **Discrete Semiconductors** | Vishay, Nexperia, Alpha & Omega, Fairchild, Good-Ark, Yangjie, Panjit |
+| **Memory** | Micron, Winbond, ISSI, Macronix, GigaDevice, Alliance Memory, Puya, XMC, ESMT |
+| **Passives** | Murata, KEMET, Samsung, TDK, Panasonic, AVX, Nichicon, Vishay, Yageo, Bourns, Lelon, Rubycon, Elna, Nippon Chemi-Con, Viking Tech |
+| **Inductors** | Coilcraft, Sumida, Pulse Electronics, Sunlord, Chilisin, Cyntec |
+| **Connectors** | TE, Amphenol, Wurth, Molex, Hirose, JST, Phoenix Contact, Harting, Samtec, Mill-Max, Sullins |
+| **RF & Wireless** | Qorvo, Skyworks, Nordic, Qualcomm, Semtech, Airoha, Beken, Telink |
+| **Sensors** | Bosch, InvenSense, Melexis, Sensirion, Honeywell, ams-OSRAM |
+| **Audio** | Cirrus Logic, Realtek, ESS Technology, C-Media |
+| **Interface ICs** | FTDI, Genesys Logic, ASMedia, Prolific, JMicron, VIA Labs |
+| **Display/LED Drivers** | Macroblock, Chipone, Sitronix, Raydium, Novatek |
+| **Crystals & Timing** | Epson, NDK, Abracon, IQD, SiTime, TXC, Kyocera, KDS |
+| **LEDs** | Cree, OSRAM, Lumileds, Kingbright, Seoul Semi, Everlight |
+| **Motor Control** | Trinamic |
+| **Optocouplers** | Isocom, Cosmo Electronics |
+| **Circuit Protection** | Littelfuse, ProTek Devices |
 
 Each handler provides:
 - MPN pattern matching and validation
