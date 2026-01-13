@@ -81,10 +81,7 @@ public class ElnaHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        return Set.of(
-            ComponentType.CAPACITOR,
-            ComponentType.IC  // For potential driver ICs, though Elna primarily makes capacitors
-        );
+        return Set.of(ComponentType.CAPACITOR);
     }
 
     @Override
@@ -301,7 +298,8 @@ public class ElnaHandler implements ManufacturerHandler {
             if (upperMpn.matches("^RO[AB]-[0-9]+V[0-9A-Z]+.*")) return true;
 
             // Standard R-series (RE3, RJ3, RJH, RBD, RBI, RSE, RVD, RVE, etc.)
-            if (upperMpn.matches("^R[A-Z]{2}-[0-9]+V.*")) return true;
+            // Pattern: R + letter + letter/digit (e.g., RE3, RJ3, RJH, RBD)
+            if (upperMpn.matches("^R[A-Z][A-Z0-9]-[0-9]+V.*")) return true;
 
             // Dynacap series
             if (upperMpn.matches("^D[BXZ]-[0-9]+R[0-9]+[A-Z][0-9]+.*")) return true;
@@ -314,7 +312,7 @@ public class ElnaHandler implements ManufacturerHandler {
             if (upperMpn.startsWith("CE-BP")) return true;
         }
 
-        // Fall back to pattern registry for other types
-        return patterns.matches(upperMpn, type);
+        // Only match CAPACITOR type - Elna only makes capacitors
+        return false;
     }
 }

@@ -115,10 +115,8 @@ public class GoodArkHandler implements ManufacturerHandler {
         // BAT series: Schottky barrier diodes
         registry.addPattern(ComponentType.DIODE, "^BAT[0-9]+.*");         // BAT54, BAT85, BAT46, etc.
 
-        // TVS diodes
-        registry.addPattern(ComponentType.DIODE, "^SMBJ[0-9]+.*");        // SMB TVS diodes
-        registry.addPattern(ComponentType.DIODE, "^SMAJ[0-9]+.*");        // SMA TVS diodes
-        registry.addPattern(ComponentType.DIODE, "^P[46]KE[0-9]+.*");     // P4KE/P6KE TVS diodes
+        // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) are handled by LittelfuseHandler
+        // Good-Ark makes compatible parts but these patterns should match Littelfuse first
 
         // Bridge rectifiers
         registry.addPattern(ComponentType.DIODE, "^MB[1-6]S.*");          // Mini bridge rectifiers
@@ -215,12 +213,8 @@ public class GoodArkHandler implements ManufacturerHandler {
                 return true;
             }
 
-            // TVS diodes
-            if (upperMpn.matches("^SMBJ[0-9]+.*") ||              // SMBJ TVS
-                    upperMpn.matches("^SMAJ[0-9]+.*") ||          // SMAJ TVS
-                    upperMpn.matches("^P[46]KE[0-9]+.*")) {       // P4KE/P6KE TVS
-                return true;
-            }
+            // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) are handled by LittelfuseHandler
+            // These are originally Littelfuse products
 
             // Bridge rectifiers
             if (upperMpn.matches("^MB[1-6]S.*") ||                // MB bridges
@@ -371,10 +365,7 @@ public class GoodArkHandler implements ManufacturerHandler {
             return "SOT-23";  // Most common for BAT54
         }
 
-        // TVS diodes
-        if (upperMpn.startsWith("SMBJ")) return "SMB";
-        if (upperMpn.startsWith("SMAJ")) return "SMA";
-        if (upperMpn.matches("^P[46]KE.*")) return "DO-41";
+        // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) handled by LittelfuseHandler
 
         // Check suffix-based package codes
         for (Map.Entry<String, String> entry : PACKAGE_CODES.entrySet()) {
@@ -436,11 +427,7 @@ public class GoodArkHandler implements ManufacturerHandler {
             return upperMpn.substring(0, endIdx);
         }
 
-        // TVS diodes
-        if (upperMpn.startsWith("SMBJ")) return "SMBJ";
-        if (upperMpn.startsWith("SMAJ")) return "SMAJ";
-        if (upperMpn.matches("^P4KE.*")) return "P4KE";
-        if (upperMpn.matches("^P6KE.*")) return "P6KE";
+        // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) handled by LittelfuseHandler
 
         // Bridge rectifiers
         if (upperMpn.matches("^MB[1-6]S.*")) return "MBS";

@@ -49,8 +49,10 @@ class RubyconHandlerTest {
             Set<ComponentType> types = handler.getSupportedTypes();
             assertTrue(types.contains(ComponentType.CAPACITOR),
                 "Should support CAPACITOR type");
-            assertTrue(types.contains(ComponentType.IC),
-                "Should support IC type");
+            // Rubycon only makes capacitors - no IC support
+            assertEquals(1, types.size(), "Should only support CAPACITOR");
+            assertFalse(types.contains(ComponentType.IC),
+                "Should NOT support IC type - Rubycon only makes capacitors");
         }
 
         @Test

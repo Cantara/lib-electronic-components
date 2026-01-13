@@ -41,8 +41,10 @@ class ElnaHandlerTest {
         }
 
         @Test
-        void shouldSupportICType() {
-            assertTrue(handler.getSupportedTypes().contains(ComponentType.IC));
+        void shouldOnlySupportCapacitors() {
+            // Elna only makes capacitors - no IC support
+            assertEquals(1, handler.getSupportedTypes().size());
+            assertFalse(handler.getSupportedTypes().contains(ComponentType.IC));
         }
 
         @Test
