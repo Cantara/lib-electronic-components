@@ -38,14 +38,10 @@ public class AKMHandler implements ManufacturerHandler {
     }
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.SENSOR);
-        types.add(ComponentType.MAGNETOMETER);
-    //    types.add(ComponentType.HALL_SENSOR);
-    //    types.add(ComponentType.ADC);
-    //    types.add(ComponentType.DAC);
-        // Add AKM specific types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.SENSOR,
+            ComponentType.MAGNETOMETER
+        );
     }
 
     @Override

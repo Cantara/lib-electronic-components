@@ -5,11 +5,14 @@ import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.connectors.ConnectorHandler;
 import no.cantara.electronic.component.lib.connectors.ConnectorHandlerRegistry;
 import no.cantara.electronic.component.lib.connectors.TEConnectorHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConnectorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(ConnectorSimilarityCalculator.class);
 
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.5;
@@ -44,13 +47,13 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
             return 0.0;
         }
 
-        System.out.println("Comparing connectors: " + mpn1 + " and " + mpn2);
-        System.out.println("Handlers: " + handler1.getClass().getSimpleName() +
-                " and " + handler2.getClass().getSimpleName());
+        logger.debug("Comparing connectors: {} and {}", mpn1, mpn2);
+        logger.trace("Handlers: {} and {}", handler1.getClass().getSimpleName(),
+                handler2.getClass().getSimpleName());
 
         // Different families are not compatible
         if (!handler1.getFamily().equals(handler2.getFamily())) {
-            System.out.println("Different families - incompatible");
+            logger.debug("Different families - incompatible");
             return 0.0;
         }
 
@@ -67,7 +70,7 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
                 String series2 = m2.group(2);
 
                 if (series1 != null && series2 != null && series1.equals(series2)) {
-                    System.out.println("Same TE series - high similarity");
+                    logger.debug("Same TE series - high similarity");
                     return HIGH_SIMILARITY;
                 }
             }
@@ -79,12 +82,12 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
             int pinCount2 = handler2.getPinCount(mpn2);
 
             if (pinCount1 != pinCount2) {
-                System.out.println("Different pin counts for header - low similarity");
+                logger.debug("Different pin counts for header - low similarity");
                 return LOW_SIMILARITY;
             }
 
             if (handler1.areCompatible(mpn1, mpn2)) {
-                System.out.println("Compatible header variants");
+                logger.debug("Compatible header variants");
                 return HIGH_SIMILARITY;
             }
         }
@@ -92,11 +95,11 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
         // Check pin counts
         int pinCount1 = handler1.getPinCount(mpn1);
         int pinCount2 = handler2.getPinCount(mpn2);
-        System.out.println("Pin counts: " + pinCount1 + " and " + pinCount2);
+        logger.trace("Pin counts: {} and {}", pinCount1, pinCount2);
 
         // Different pin counts should have low similarity
         if (pinCount1 != pinCount2) {
-            System.out.println("Different pin counts - low similarity");
+            logger.debug("Different pin counts - low similarity");
             return LOW_SIMILARITY;
         }
 
@@ -107,24 +110,24 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
 
             // Same exact part
             if (variant1.equals(variant2)) {
-                System.out.println("Exactly same part (1.0)");
+                logger.debug("Exactly same part (1.0)");
                 return 1.0;
             }
 
             // Different variants of same base part
             if (handler1.getFamily().equals("WR-PHD")) {
-                System.out.println("Compatible header variants (0.9)");
+                logger.debug("Compatible header variants (0.9)");
                 return HIGH_SIMILARITY;  // High similarity for header variants
             }
 
             // Terminal blocks from same series
             if (handler1.getFamily().equals("Terminal Block")) {
-                System.out.println("Same terminal block series (0.8)");
+                logger.debug("Same terminal block series (0.8)");
                 return 0.8;  // High similarity for terminal blocks in same series
             }
 
             // Default high similarity for compatible variants
-            System.out.println("Compatible variants (0.8)");
+            logger.debug("Compatible variants (0.8)");
             return 0.8;
         }
 
@@ -134,7 +137,7 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
         // Same pin count
         if (handler1.getPinCount(mpn1) == handler2.getPinCount(mpn2)) {
             similarity += 0.2;
-            System.out.println("Same pin count (+0.2)");
+            logger.trace("Same pin count (+0.2)");
         }
 
         // Same pitch
@@ -142,7 +145,7 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
         String pitch2 = handler2.getPitch(mpn2);
         if (!pitch1.isEmpty() && pitch1.equals(pitch2)) {
             similarity += 0.2;
-            System.out.println("Same pitch (+0.2)");
+            logger.trace("Same pitch (+0.2)");
         }
 
         // Compatible mounting types
@@ -150,10 +153,10 @@ public class ConnectorSimilarityCalculator implements ComponentSimilarityCalcula
         String mount2 = handler2.getMountingType(mpn2);
         if (!mount1.isEmpty() && mount1.equals(mount2)) {
             similarity += 0.1;
-            System.out.println("Compatible mounting types (+0.1)");
+            logger.trace("Compatible mounting types (+0.1)");
         }
 
-        System.out.println("Final similarity: " + similarity);
+        logger.debug("Final similarity: {}", similarity);
         return similarity;
     }
 }

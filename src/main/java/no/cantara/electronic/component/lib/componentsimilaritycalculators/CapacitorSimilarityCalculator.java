@@ -2,10 +2,14 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CapacitorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(CapacitorSimilarityCalculator.class);
     @Override
     public boolean isApplicable(ComponentType type) {
         if (type == null) {
@@ -23,7 +27,7 @@ public class CapacitorSimilarityCalculator implements ComponentSimilarityCalcula
             return 0.0;
         }
 
-        System.out.println("Comparing capacitors: " + mpn1 + " and " + mpn2);
+        logger.debug("Comparing capacitors: {} and {}", mpn1, mpn2);
 
         // Extract and compare key characteristics
         String size1 = extractPackageSize(mpn1);
@@ -33,26 +37,26 @@ public class CapacitorSimilarityCalculator implements ComponentSimilarityCalcula
         String voltage1 = extractVoltage(mpn1);
         String voltage2 = extractVoltage(mpn2);
 
-        System.out.println("Size1: " + size1 + ", Size2: " + size2);
-        System.out.println("Value1: " + value1 + ", Value2: " + value2);
-        System.out.println("Voltage1: " + voltage1 + ", Voltage2: " + voltage2);
+        logger.trace("Size1: {}, Size2: {}", size1, size2);
+        logger.trace("Value1: {}, Value2: {}", value1, value2);
+        logger.trace("Voltage1: {}, Voltage2: {}", voltage1, voltage2);
 
         double similarity = 0.0;
 
         // Same package size
         if (size1 != null && size2 != null && size1.equals(size2)) {
             similarity += 0.3;
-            System.out.println("Package size match (+0.3)");
+            logger.trace("Package size match (+0.3)");
         }
 
         // Same capacitance value
         if (value1 != null && value2 != null) {
             String norm1 = normalizeValue(value1);
             String norm2 = normalizeValue(value2);
-            System.out.println("Normalized values: " + norm1 + " and " + norm2);
+            logger.trace("Normalized values: {} and {}", norm1, norm2);
             if (norm1.equals(norm2)) {
                 similarity += 0.4;
-                System.out.println("Value match (+0.4)");
+                logger.trace("Value match (+0.4)");
             }
         }
 
@@ -62,11 +66,11 @@ public class CapacitorSimilarityCalculator implements ComponentSimilarityCalcula
             double v2 = parseVoltage(voltage2);
             if (v1 >= v2) {  // Higher voltage rating is acceptable
                 similarity += 0.2;
-                System.out.println("Voltage compatible (+0.2)");
+                logger.trace("Voltage compatible (+0.2)");
             }
         }
 
-        System.out.println("Final similarity: " + similarity);
+        logger.debug("Final similarity: {}", similarity);
         return similarity;
     }
 

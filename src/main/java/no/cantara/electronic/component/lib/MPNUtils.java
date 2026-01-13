@@ -3,6 +3,8 @@ package no.cantara.electronic.component.lib;
 import no.cantara.electronic.component.ElectronicPart;
 import no.cantara.electronic.component.lib.componentsimilaritycalculators.*;
 import no.cantara.electronic.component.lib.manufacturers.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -11,6 +13,7 @@ import java.util.regex.Pattern;
  * Utility class for MPN (Manufacturer Part Number) operations
  */
 public class MPNUtils {
+    private static final Logger logger = LoggerFactory.getLogger(MPNUtils.class);
     private static final Pattern SPECIAL_CHARS = Pattern.compile("[^a-zA-Z0-9]");
     private static final PatternRegistry registry;
 
@@ -65,15 +68,15 @@ public class MPNUtils {
             return false;
         }
 
-        System.out.println("\nChecking MPN: " + mpn + " against type: " + type);
+        logger.trace("Checking MPN: {} against type: {}", mpn, type);
 
         ComponentManufacturer manufacturer = ComponentManufacturer.fromMPN(mpn);
-        System.out.println("Found manufacturer: " + manufacturer.getName());
+        logger.trace("Found manufacturer: {}", manufacturer.getName());
 
         // If it's a manufacturer-specific type
         if (type.name().contains("_")) {
             boolean matches = manufacturer.matchesPattern(mpn, type);
-            System.out.println("Pattern match result: " + matches);
+            logger.trace("Pattern match result: {}", matches);
             return matches;
         }
 
@@ -98,7 +101,7 @@ public class MPNUtils {
             return 0.0;
         }
 
-        System.out.println("Calculating similarity between " + mpn1 + " and " + mpn2);
+        logger.debug("Calculating similarity between {} and {}", mpn1, mpn2);
 
         // Exactly the same MPN
         if (mpn1.equals(mpn2)) {
@@ -108,7 +111,7 @@ public class MPNUtils {
         ComponentType type1 = ComponentTypeDetector.determineComponentType(mpn1);
         ComponentType type2 = ComponentTypeDetector.determineComponentType(mpn2);
 
-        System.out.println("Types: " + type1 + " and " + type2);
+        logger.debug("Types: {} and {}", type1, type2);
 
         // If either type is null, return 0 similarity
         if (type1 == null || type2 == null) {
@@ -120,22 +123,22 @@ public class MPNUtils {
 
         // Try specialized calculators
         for (ComponentSimilarityCalculator calculator : calculators) {
-            System.out.println("Trying calculator: " + calculator.getClass().getSimpleName());
+            logger.trace("Trying calculator: {}", calculator.getClass().getSimpleName());
             boolean applicable1 = calculator.isApplicable(type1);
             boolean applicable2 = calculator.isApplicable(type2);
-            System.out.println("  isApplicable for type1: " + applicable1);
-            System.out.println("  isApplicable for type2: " + applicable2);
+            logger.trace("  isApplicable for type1: {}", applicable1);
+            logger.trace("  isApplicable for type2: {}", applicable2);
 
             if (applicable1 || applicable2) {
                 double similarity = calculator.calculateSimilarity(mpn1, mpn2, patternRegistry);
-                System.out.println("Similarity: " + similarity);
+                logger.trace("Similarity: {}", similarity);
                 if (similarity > 0) {
-                    System.out.println("  Returning similarity: " + similarity);
+                    logger.debug("  Returning similarity: {}", similarity);
                     return similarity;
                 }
             }
         }
-        System.out.println("  Returning calculateDefaultSimilarity: ");
+        logger.trace("  Returning calculateDefaultSimilarity");
 
         // Default similarity calculation
         return calculateDefaultSimilarity(mpn1, mpn2, type1, type2);
@@ -245,21 +248,21 @@ public class MPNUtils {
             return null;
         }
 
-        System.out.println("\nLooking for handler for MPN: " + mpn);
+        logger.debug("Looking for handler for MPN: {}", mpn);
 
         // Try each component type
         for (ComponentType type : ComponentType.values()) {
             if (registry.matches(mpn, type)) {
-                System.out.println("Found match for type: " + type);
+                logger.trace("Found match for type: {}", type);
                 // Get all handlers for this type
                 Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
                 for (ManufacturerHandler handler : handlers) {
                     if (handler.getSupportedTypes().contains(type)) {
-                        System.out.println("Testing handler: " + handler.getClass().getSimpleName());
+                        logger.trace("Testing handler: {}", handler.getClass().getSimpleName());
                         // Initialize patterns for this handler
                         registry.setCurrentHandlerClass(handler.getClass());
                         if (handler.matches(mpn, type, registry)) {
-                            System.out.println("Found matching handler: " + handler.getClass().getSimpleName());
+                            logger.debug("Found matching handler: {}", handler.getClass().getSimpleName());
                             return handler;
                         }
                     }
@@ -267,7 +270,7 @@ public class MPNUtils {
             }
         }
 
-        System.out.println("No handler found for MPN: " + mpn);
+        logger.debug("No handler found for MPN: {}", mpn);
         return null;
     }
 
@@ -284,18 +287,17 @@ public class MPNUtils {
             return "";
         }
 
-        System.out.println("\nExtracting package code for MPN: " + mpn);
+        logger.debug("Extracting package code for MPN: {}", mpn);
         ManufacturerHandler handler = getManufacturerHandler(mpn);
 
         if (handler != null) {
-            System.out.println("Using handler: " + handler.getClass().getSimpleName());
+            logger.debug("Using handler: {}", handler.getClass().getSimpleName());
             try {
                 String packageCode = handler.extractPackageCode(mpn);
-                System.out.println("Extracted package code: '" + packageCode + "'");
+                logger.debug("Extracted package code: '{}'", packageCode);
                 return packageCode;
             } catch (Exception e) {
-                System.err.println("Error extracting package code: " + e.getMessage());
-                e.printStackTrace();
+                logger.error("Error extracting package code from MPN: {}", mpn, e);
             }
         }
 
@@ -334,46 +336,45 @@ public class MPNUtils {
             return null;
         }
 
-        System.out.println("\nSearching for MPN in text: " + text);
+        logger.debug("Searching for MPN in text: {}", text);
         String[] words = text.trim().split("\\s+|[;,|]");
 
         // Remove common prefixes and suffixes
         words = cleanWords(words);
 
-        // Debug: Print cleaned words
-        System.out.println("Cleaned words: " + Arrays.toString(words));
+        logger.trace("Cleaned words: {}", Arrays.toString(words));
 
         // Try each word with each handler
         Set<ManufacturerHandler> handlers = ManufacturerHandlerFactory.getHandlers();
-        System.out.println("Number of handlers: " + handlers.size());
+        logger.trace("Number of handlers: {}", handlers.size());
 
         for (String word : words) {
-            System.out.println("\nTrying word: " + word);
+            logger.trace("Trying word: {}", word);
 
             // First try manufacturer-specific types
             for (ManufacturerHandler handler : handlers) {
-                System.out.println("Checking handler: " + handler.getClass().getSimpleName());
+                logger.trace("Checking handler: {}", handler.getClass().getSimpleName());
                 for (ComponentType type : handler.getSupportedTypes()) {
-                    System.out.println("  Checking type: " + type);
+                    logger.trace("  Checking type: {}", type);
                     if (handler.matches(word, type, registry)) {
-                        System.out.println("Found match using " + handler.getClass().getSimpleName() +
-                                " for type " + type + ": " + word);
+                        logger.debug("Found match using {} for type {}: {}",
+                                handler.getClass().getSimpleName(), type, word);
                         return word;
                     }
                 }
             }
 
             // Then try generic component types
-            System.out.println("Trying generic types for word: " + word);
+            logger.trace("Trying generic types for word: {}", word);
             for (ComponentType type : ComponentType.values()) {
                 if (!type.name().contains("_") && registry.matches(word, type)) {
-                    System.out.println("Found match for generic type " + type + ": " + word);
+                    logger.debug("Found match for generic type {}: {}", type, word);
                     return word;
                 }
             }
         }
 
-        System.out.println("No MPN found in text");
+        logger.debug("No MPN found in text");
         return null;
     }
 
@@ -435,7 +436,7 @@ public class MPNUtils {
             return null;
         }
 
-        System.out.println("\nDetermining component type for MPN: " + mpn);
+        logger.debug("Determining component type for MPN: {}", mpn);
 
         // Collect all matching types, then return the most specific one
         ComponentType mostSpecificType = null;
@@ -446,8 +447,8 @@ public class MPNUtils {
             for (ComponentType type : handler.getSupportedTypes()) {
                 if (handler.matches(mpn, type, registry)) {
                     int score = getTypeSpecificityScore(type);
-                    System.out.println("Found match using " + handler.getClass().getSimpleName() +
-                            " for type: " + type + " (score: " + score + ")");
+                    logger.trace("Found match using {} for type: {} (score: {})",
+                            handler.getClass().getSimpleName(), type, score);
                     if (score > mostSpecificScore) {
                         mostSpecificScore = score;
                         mostSpecificType = type;
@@ -457,19 +458,19 @@ public class MPNUtils {
         }
 
         if (mostSpecificType != null) {
-            System.out.println("Returning most specific type: " + mostSpecificType);
+            logger.debug("Returning most specific type: {}", mostSpecificType);
             return mostSpecificType;
         }
 
         // Then try generic component types
         for (ComponentType type : ComponentType.values()) {
             if (!type.name().contains("_") && registry.matches(mpn, type)) {
-                System.out.println("Found match for generic type: " + type);
+                logger.debug("Found match for generic type: {}", type);
                 return type;
             }
         }
 
-        System.out.println("No component type found for MPN: " + mpn);
+        logger.debug("No component type found for MPN: {}", mpn);
         return null;
     }
 

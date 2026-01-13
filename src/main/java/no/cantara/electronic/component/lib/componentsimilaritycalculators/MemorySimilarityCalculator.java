@@ -2,6 +2,8 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MemorySimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(MemorySimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -115,11 +118,11 @@ public class MemorySimilarityCalculator implements ComponentSimilarityCalculator
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry patternRegistry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing memory devices: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing memory devices: {} vs {}", mpn1, mpn2);
 
         // First check if these are memory devices
         if (!isMemoryDevice(mpn1) || !isMemoryDevice(mpn2)) {
-            System.out.println("One or both parts are not memory devices");
+            logger.debug("One or both parts are not memory devices");
             return 0.0;
         }
 
@@ -127,7 +130,7 @@ public class MemorySimilarityCalculator implements ComponentSimilarityCalculator
         String base1 = extractBasePart(mpn1);
         String base2 = extractBasePart(mpn2);
 
-        System.out.println("Base parts: " + base1 + " and " + base2);
+        logger.trace("Base parts: {} and {}", base1, base2);
 
         // Same exact base part
         if (base1.equals(base2)) {

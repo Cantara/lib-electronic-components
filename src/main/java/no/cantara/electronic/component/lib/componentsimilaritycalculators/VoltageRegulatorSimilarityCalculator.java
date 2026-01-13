@@ -2,12 +2,15 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(VoltageRegulatorSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -35,7 +38,7 @@ public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarity
             return 0.0;
         }
 
-        System.out.println("Comparing voltage regulators: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing voltage regulators: {} vs {}", mpn1, mpn2);
 
         // Handle adjustable voltage regulators first
         if (isAdjustableRegulator(mpn1) && isAdjustableRegulator(mpn2)) {
@@ -44,13 +47,13 @@ public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarity
             String base2 = extractBasePart(mpn2);
 
             if (base1.equals(base2)) {
-                System.out.println("Same adjustable regulator with different packages");
+                logger.debug("Same adjustable regulator with different packages");
                 return HIGH_SIMILARITY;
             }
 
             // Check compatible families (LM317/LM350/LM338)
             if (areCompatibleAdjustableRegulators(base1, base2)) {
-                System.out.println("Compatible adjustable regulators");
+                logger.debug("Compatible adjustable regulators");
                 return HIGH_SIMILARITY;
             }
             return LOW_SIMILARITY;
@@ -68,10 +71,10 @@ public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarity
                 String base1 = extractBasePart(mpn1);
                 String base2 = extractBasePart(mpn2);
                 if (base1.equals(base2)) {
-                    System.out.println("Same fixed regulator with different package codes");
+                    logger.debug("Same fixed regulator with different package codes");
                     return HIGH_SIMILARITY;
                 }
-                System.out.println("Compatible fixed regulators. Voltages: " + voltage1 + " vs " + voltage2);
+                logger.debug("Compatible fixed regulators. Voltages: {} vs {}", voltage1, voltage2);
                 return HIGH_SIMILARITY;
             }
             return LOW_SIMILARITY;

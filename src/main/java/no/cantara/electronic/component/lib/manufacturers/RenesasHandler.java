@@ -47,14 +47,13 @@ public class RenesasHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_RENESAS);
-        types.add(ComponentType.MCU_RENESAS);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_RENESAS);
-        // Add RX, RA, RE, RH, RZ series if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_RENESAS,
+            ComponentType.MCU_RENESAS,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_RENESAS
+        );
     }
 
     @Override

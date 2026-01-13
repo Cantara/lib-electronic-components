@@ -2,12 +2,15 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(LEDSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -61,17 +64,17 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing LEDs: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing LEDs: {} vs {}", mpn1, mpn2);
 
         // Get base parts without bin codes
         String base1 = getBasePart(mpn1);
         String base2 = getBasePart(mpn2);
 
-        System.out.println("Base parts: " + base1 + " and " + base2);
+        logger.trace("Base parts: {} and {}", base1, base2);
 
         // Same exact part
         if (mpn1.equals(mpn2)) {
-            System.out.println("Exact match");
+            logger.debug("Exact match");
             return HIGH_SIMILARITY;
         }
 
@@ -80,7 +83,7 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
             // For Cree LEDs, check color temperature compatibility
             if (isCreeColorBin(mpn1) && isCreeColorBin(mpn2)) {
                 if (!haveSameColorTemperature(mpn1, mpn2)) {
-                    System.out.println("Different color temperatures");
+                    logger.debug("Different color temperatures");
                     return LOW_SIMILARITY;
                 }
             }
@@ -90,14 +93,14 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
             String bin2 = getBinCode(mpn2);
             if (!bin1.isEmpty() && !bin2.isEmpty()) {
                 if (areSimilarBins(bin1, bin2)) {
-                    System.out.println("Same LED different bins: " + bin1 + " vs " + bin2);
+                    logger.debug("Same LED different bins: {} vs {}", bin1, bin2);
                     return HIGH_SIMILARITY;
                 }
-                System.out.println("Different color/characteristic bins");
+                logger.debug("Different color/characteristic bins");
                 return LOW_SIMILARITY;
             }
 
-            System.out.println("Same LED base with different suffixes");
+            logger.debug("Same LED base with different suffixes");
             return HIGH_SIMILARITY;
         }
 
@@ -106,10 +109,10 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
             // Still check color temperature for same family
             if (isCreeColorBin(mpn1) && isCreeColorBin(mpn2) &&
                     !haveSameColorTemperature(mpn1, mpn2)) {
-                System.out.println("Same family but different color temperatures");
+                logger.debug("Same family but different color temperatures");
                 return LOW_SIMILARITY;
             }
-            System.out.println("Same LED family with different base numbers");
+            logger.debug("Same LED family with different base numbers");
             return HIGH_SIMILARITY;
         }
 

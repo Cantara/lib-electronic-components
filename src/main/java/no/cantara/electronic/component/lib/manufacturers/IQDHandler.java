@@ -62,17 +62,17 @@ public class IQDHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CRYSTAL);
-        types.add(ComponentType.CRYSTAL_IQD);
-        types.add(ComponentType.OSCILLATOR);
-        types.add(ComponentType.OSCILLATOR_IQD);
-        types.add(ComponentType.OSCILLATOR_TCXO_IQD);
-        types.add(ComponentType.OSCILLATOR_VCXO_IQD);
-        types.add(ComponentType.OSCILLATOR_OCXO_IQD);
-        types.add(ComponentType.CRYSTAL_FILTER_IQD);
-        types.add(ComponentType.RTC_MODULE_IQD);
-        return types;
+        return Set.of(
+            ComponentType.CRYSTAL,
+            ComponentType.CRYSTAL_IQD,
+            ComponentType.OSCILLATOR,
+            ComponentType.OSCILLATOR_IQD,
+            ComponentType.OSCILLATOR_TCXO_IQD,
+            ComponentType.OSCILLATOR_VCXO_IQD,
+            ComponentType.OSCILLATOR_OCXO_IQD,
+            ComponentType.CRYSTAL_FILTER_IQD,
+            ComponentType.RTC_MODULE_IQD
+        );
     }
 
     @Override

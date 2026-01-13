@@ -35,23 +35,20 @@ public class OnSemiHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_ONSEMI);
-      //  types.add(ComponentType.IGBT);
-        types.add(ComponentType.IGBT_ONSEMI);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_LINEAR_ON);
-        types.add(ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON);
-      //  types.add(ComponentType.LED_DRIVER);
-        types.add(ComponentType.LED_DRIVER_ONSEMI);
-      //  types.add(ComponentType.MOTOR_DRIVER);
-        types.add(ComponentType.MOTOR_DRIVER_ONSEMI);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_ON);
-        types.add(ComponentType.DIODE);
-        types.add(ComponentType.DIODE_ON);
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_ONSEMI,
+            ComponentType.IGBT_ONSEMI,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_LINEAR_ON,
+            ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON,
+            ComponentType.LED_DRIVER_ONSEMI,
+            ComponentType.MOTOR_DRIVER_ONSEMI,
+            ComponentType.OPAMP,
+            ComponentType.OPAMP_ON,
+            ComponentType.DIODE,
+            ComponentType.DIODE_ON
+        );
     }
 
     @Override

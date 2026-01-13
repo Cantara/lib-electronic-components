@@ -44,11 +44,9 @@ public class NordicHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.BLUETOOTH_IC_NORDIC);
-        // Add other Nordic Semiconductor wireless/RF types if they exist in ComponentType enum
-        // Could include nRF series microcontrollers and other wireless ICs
-        return types;
+        return Set.of(
+            ComponentType.BLUETOOTH_IC_NORDIC
+        );
     }
 
     @Override

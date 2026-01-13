@@ -61,20 +61,20 @@ public class AnalogDevicesHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_AD);
-        types.add(ComponentType.ADC_AD);
-        types.add(ComponentType.DAC_AD);
-        types.add(ComponentType.AMPLIFIER_AD);
-        types.add(ComponentType.VOLTAGE_REFERENCE_AD);
-        types.add(ComponentType.TEMPERATURE_SENSOR);
-        types.add(ComponentType.TEMPERATURE_SENSOR_AD);
-        types.add(ComponentType.ACCELEROMETER);
-        types.add(ComponentType.ACCELEROMETER_AD);
-        types.add(ComponentType.GYROSCOPE);
-        types.add(ComponentType.GYROSCOPE_AD);
-        return types;
+        return Set.of(
+            ComponentType.OPAMP,
+            ComponentType.OPAMP_AD,
+            ComponentType.ADC_AD,
+            ComponentType.DAC_AD,
+            ComponentType.AMPLIFIER_AD,
+            ComponentType.VOLTAGE_REFERENCE_AD,
+            ComponentType.TEMPERATURE_SENSOR,
+            ComponentType.TEMPERATURE_SENSOR_AD,
+            ComponentType.ACCELEROMETER,
+            ComponentType.ACCELEROMETER_AD,
+            ComponentType.GYROSCOPE,
+            ComponentType.GYROSCOPE_AD
+        );
     }
 
     @Override

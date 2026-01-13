@@ -61,18 +61,15 @@ public class DiodesIncHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_DIODES);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_DIODES);
-    //    types.add(ComponentType.LED_DRIVER);
-        types.add(ComponentType.LED_DRIVER_DIODES);
-    //    types.add(ComponentType.LOGIC_IC);
-        types.add(ComponentType.LOGIC_IC_DIODES);
-    //    types.add(ComponentType.HALL_SENSOR);
-        types.add(ComponentType.HALL_SENSOR_DIODES);
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_DIODES,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_DIODES,
+            ComponentType.LED_DRIVER_DIODES,
+            ComponentType.LOGIC_IC_DIODES,
+            ComponentType.HALL_SENSOR_DIODES
+        );
     }
 
 

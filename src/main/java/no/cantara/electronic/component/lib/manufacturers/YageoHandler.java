@@ -36,16 +36,16 @@ public class YageoHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.RESISTOR);
-        types.add(ComponentType.RESISTOR_CHIP_YAGEO);
-        types.add(ComponentType.RESISTOR_THT_YAGEO);
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_CERAMIC_YAGEO);
-        types.add(ComponentType.INDUCTOR);
-        types.add(ComponentType.INDUCTOR_CHIP_YAGEO);
-        types.add(ComponentType.FERRITE_BEAD_YAGEO);
-        return types;
+        return Set.of(
+            ComponentType.RESISTOR,
+            ComponentType.RESISTOR_CHIP_YAGEO,
+            ComponentType.RESISTOR_THT_YAGEO,
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_CERAMIC_YAGEO,
+            ComponentType.INDUCTOR,
+            ComponentType.INDUCTOR_CHIP_YAGEO,
+            ComponentType.FERRITE_BEAD_YAGEO
+        );
     }
 
 

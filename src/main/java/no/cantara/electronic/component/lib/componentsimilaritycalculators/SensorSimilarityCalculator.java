@@ -2,11 +2,14 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class SensorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(SensorSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -41,11 +44,11 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing sensors: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing sensors: {} vs {}", mpn1, mpn2);
 
         // First check if they're even sensors
         if (!isSensor(mpn1) || !isSensor(mpn2)) {
-            System.out.println("One or both parts are not sensors");
+            logger.debug("One or both parts are not sensors");
             return 0.0;
         }
 
@@ -53,7 +56,7 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
         String base1 = getBasePart(mpn1);
         String base2 = getBasePart(mpn2);
 
-        System.out.println("Base parts: " + base1 + " vs " + base2);
+        logger.debug("Base parts: {} vs {}", base1, base2);
 
         // Determine sensor families
         SensorFamily family1 = determineSensorFamily(mpn1);
@@ -61,7 +64,7 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
 
         // Different sensor families should have low similarity
         if (family1 != family2) {
-            System.out.println("Different sensor families");
+            logger.debug("Different sensor families");
             return LOW_SIMILARITY;
         }
 
@@ -80,10 +83,10 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
 
             // Check package compatibility
             if (arePackagesCompatible(pkg1, pkg2)) {
-                System.out.println("Same sensor with compatible packages");
+                logger.debug("Same sensor with compatible packages");
                 return HIGH_SIMILARITY;
             }
-            System.out.println("Same sensor with incompatible packages");
+            logger.debug("Same sensor with incompatible packages");
             return MEDIUM_SIMILARITY;
         }
 
@@ -583,7 +586,7 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
         String pkg1 = getPackageCode(mpn1);
         String pkg2 = getPackageCode(mpn2);
 
-        System.out.println("Same sensor, comparing packages: " + pkg1 + " vs " + pkg2);
+        logger.debug("Same sensor, comparing packages: {} vs {}", pkg1, pkg2);
 
         // Same package or compatible packages
         if (areCompatiblePackages(pkg1, pkg2)) {

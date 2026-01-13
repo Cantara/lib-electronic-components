@@ -50,16 +50,16 @@ public class CypressHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_CYPRESS);
-        types.add(ComponentType.MCU_CYPRESS);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_CYPRESS);
-        types.add(ComponentType.PSOC_MCU);
-        types.add(ComponentType.FM_SERIES_MCU);
-        types.add(ComponentType.TRAVEO_MCU);
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_CYPRESS,
+            ComponentType.MCU_CYPRESS,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_CYPRESS,
+            ComponentType.PSOC_MCU,
+            ComponentType.FM_SERIES_MCU,
+            ComponentType.TRAVEO_MCU
+        );
     }
 
     @Override

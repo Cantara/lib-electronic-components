@@ -117,15 +117,15 @@ public class MurataHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_CERAMIC_MURATA);
-        types.add(ComponentType.INDUCTOR);
-        types.add(ComponentType.INDUCTOR_CHIP_MURATA);
-        types.add(ComponentType.INDUCTOR_POWER_MURATA);
-        types.add(ComponentType.EMI_FILTER_MURATA);
-        types.add(ComponentType.COMMON_MODE_CHOKE_MURATA);
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_CERAMIC_MURATA,
+            ComponentType.INDUCTOR,
+            ComponentType.INDUCTOR_CHIP_MURATA,
+            ComponentType.INDUCTOR_POWER_MURATA,
+            ComponentType.EMI_FILTER_MURATA,
+            ComponentType.COMMON_MODE_CHOKE_MURATA
+        );
     }
 
     @Override

@@ -57,11 +57,10 @@ public class LumiledsHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_HIGHPOWER_LUMILEDS);
-        // Include LUXEON series and other Lumileds specific LEDs
-        return types;
+        return Set.of(
+            ComponentType.LED,
+            ComponentType.LED_HIGHPOWER_LUMILEDS
+        );
     }
 
     @Override

@@ -21,13 +21,13 @@ public class CreeHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_HIGHPOWER_CREE);
-        types.add(ComponentType.LED_STANDARD_KINGBRIGHT);  // if applicable
-        types.add(ComponentType.LED_RGB_KINGBRIGHT);       // if applicable
-        types.add(ComponentType.LED_SMD_KINGBRIGHT);       // if applicable
-        return types;
+        return Set.of(
+            ComponentType.LED,
+            ComponentType.LED_HIGHPOWER_CREE,
+            ComponentType.LED_STANDARD_KINGBRIGHT,
+            ComponentType.LED_RGB_KINGBRIGHT,
+            ComponentType.LED_SMD_KINGBRIGHT
+        );
     }
 
     @Override

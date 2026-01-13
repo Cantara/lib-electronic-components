@@ -2,6 +2,9 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -9,6 +12,7 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(MosfetSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -62,11 +66,11 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
             return 0.0;
         }
 
-        System.out.println("Comparing MOSFETs: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing MOSFETs: {} vs {}", mpn1, mpn2);
 
         // First check if these are MOSFETs
         if (!isMosfet(mpn1) || !isMosfet(mpn2)) {
-            System.out.println("One or both parts are not MOSFETs");
+            logger.debug("One or both parts are not MOSFETs");
             return 0.0;
         }
 
@@ -74,11 +78,11 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
         boolean isN1 = isNChannel(mpn1);
         boolean isN2 = isNChannel(mpn2);
 
-        System.out.println("N-Channel: " + isN1 + " and " + isN2);
+        logger.trace("N-Channel: {} and {}", isN1, isN2);
 
         // Different polarities are not compatible
         if (isN1 != isN2) {
-            System.out.println("Different polarities - incompatible");
+            logger.debug("Different polarities - incompatible");
             return LOW_SIMILARITY;
         }
 
@@ -86,11 +90,11 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
         String base1 = extractBasePart(mpn1);
         String base2 = extractBasePart(mpn2);
 
-        System.out.println("Base parts: " + base1 + " and " + base2);
+        logger.trace("Base parts: {} and {}", base1, base2);
 
         // Check known equivalent groups
         if (areKnownEquivalents(base1, base2)) {
-            System.out.println("Known equivalents - high similarity");
+            logger.debug("Known equivalents - high similarity");
             return 0.9;
         }
 

@@ -766,11 +766,11 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG #1: getSupportedTypes uses mutable HashSet")
+        @DisplayName("FIXED: getSupportedTypes now uses immutable Set.of()")
         void bug1_mutableHashSet() {
             var types = handler.getSupportedTypes();
-            assertTrue(types.getClass().getName().contains("HashSet"),
-                    "BUG: Uses mutable HashSet instead of immutable Set.of()");
+            assertFalse(types.getClass().getName().contains("HashSet"),
+                    "FIXED: Now uses immutable Set.of() instead of mutable HashSet");
         }
 
         @Test

@@ -28,14 +28,12 @@ public class FairchildHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        // Note: Fairchild was acquired by ON Semiconductor, so types might overlap
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.TRANSISTOR);
-        types.add(ComponentType.DIODE);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        // Could add specific Fairchild types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.TRANSISTOR,
+            ComponentType.DIODE,
+            ComponentType.VOLTAGE_REGULATOR
+        );
     }
 
     @Override

@@ -1,11 +1,15 @@
 package no.cantara.electronic.component.lib.connectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
 public class TEConnectorHandler implements ConnectorHandler {
+    private static final Logger logger = LoggerFactory.getLogger(TEConnectorHandler.class);
     // Updated pattern to handle all formats:
     // - XXXXXX-Y (e.g., 282836-2)
     // - X-XXXXXX-Y (e.g., 1-284392-0)
@@ -48,10 +52,10 @@ public class TEConnectorHandler implements ConnectorHandler {
             String prefix = m.group(1) != null ? m.group(1) : "";
             String series = m.group(2);
             String variant = m.group(3);
-            System.out.println("Parsed MPN " + mpn + " into: prefix='" + prefix + "', series='" + series + "', variant='" + variant + "'");
+            logger.trace("Parsed MPN {} into: prefix='{}', series='{}', variant='{}'", mpn, prefix, series, variant);
             return new ParsedMPN(prefix, series, variant);
         }
-        System.out.println("Failed to parse MPN: " + mpn);
+        logger.debug("Failed to parse MPN: {}", mpn);
         return null;
     }
 
@@ -113,7 +117,7 @@ public class TEConnectorHandler implements ConnectorHandler {
     @Override
     public double calculateSimilarity(String mpn1, String mpn2) {
         if (mpn1 == null || mpn2 == null) {
-            System.out.println("Null MPN provided");
+            logger.debug("Null MPN provided");
             return 0.0;
         }
 
@@ -121,11 +125,11 @@ public class TEConnectorHandler implements ConnectorHandler {
         ParsedMPN parsed2 = parseMPN(mpn2);
 
         if (parsed1 == null || parsed2 == null) {
-            System.out.println("Failed to parse one or both MPNs");
+            logger.debug("Failed to parse one or both MPNs");
             return 0.0;
         }
 
-        System.out.println("Comparing: " + parsed1 + " with " + parsed2);
+        logger.debug("Comparing: {} with {}", parsed1, parsed2);
 
         double similarity = 0.0;
 
@@ -133,22 +137,22 @@ public class TEConnectorHandler implements ConnectorHandler {
         boolean sameSeries = parsed1.series().equals(parsed2.series());
         boolean samePrefix = parsed1.prefix().equals(parsed2.prefix());
 
-        System.out.println("Same series: " + sameSeries + " ('" + parsed1.series() + "' vs '" + parsed2.series() + "')");
-        System.out.println("Same prefix: " + samePrefix + " ('" + parsed1.prefix() + "' vs '" + parsed2.prefix() + "')");
+        logger.trace("Same series: {} ('{}' vs '{}')", sameSeries, parsed1.series(), parsed2.series());
+        logger.trace("Same prefix: {} ('{}' vs '{}')", samePrefix, parsed1.prefix(), parsed2.prefix());
 
         if (sameSeries && samePrefix) {
             // Base similarity for same series and prefix
             similarity = SAME_SERIES_SCORE;
-            System.out.println("Adding base series score: " + SAME_SERIES_SCORE);
+            logger.trace("Adding base series score: {}", SAME_SERIES_SCORE);
 
             // Additional score if variants match
             if (parsed1.variant().equals(parsed2.variant())) {
                 similarity += SAME_VARIANT_SCORE;
-                System.out.println("Adding variant match score: " + SAME_VARIANT_SCORE);
+                logger.trace("Adding variant match score: {}", SAME_VARIANT_SCORE);
             }
         }
 
-        System.out.println("Final similarity: " + similarity);
+        logger.debug("Final similarity: {}", similarity);
         return similarity;
     }
 
