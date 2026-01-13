@@ -87,6 +87,7 @@ public enum ComponentManufacturer {
     AMPHENOL("(?:10|20|54)[0-9]{4}|(?:G5|UE)", "Amphenol", new AmphenolHandler()),
     CUI("(?:SJ[0-9]|PJ-|CMI|CMS|CPE|CPT|ACZ|AMT)", "CUI Devices", new CUIHandler()),
     JAE("(?:FI-|DX[0-9]|MX[0-9]|IL-)", "JAE Electronics", new JAEHandler()),
+    JINLING("(?:1[2367]|2[267]|3[25])[0-9]{4,}", "Shenzhen Jinling Electronics", new JinlingHandler()),
 
     // LED Manufacturers
     CREE("(?:XL|XH|XP|XQ|XB|CL)[A-Z][0-9]", "Cree", new CreeHandler()),

@@ -357,6 +357,117 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 ---
 
+## Jinling Handler Implementation (PR #102 - January 2026)
+
+### Position-Based MPN Encoding Learnings
+
+**Critical Discovery**: Jinling uses a strict 15-character position-based elprint format where EVERY position has meaning:
+
+```
+27 31 0 2 02 A N G3 S U T
+│  │  │ │ │  │ │ │  │ │ └─ [14] Packing (1 char)
+│  │  │ │ │  │ │ │  │ └─── [13] ContactType (1 char)
+│  │  │ │ │  │ │ │  └───── [12] ConnectorType (1 char)
+│  │  │ │ │  │ │ └─────── [10-11] ContactPlating (2 chars)
+│  │  │ │ │  │ └────────── [9] Post (1 char)
+│  │  │ │ │  └─────────── [8] InsulatorMaterial (1 char)
+│  │  │ │ └──────────── [6-7] PinsPerRow (2 digits)
+│  │  │ └────────────── [5] Rows (1 digit)
+│  │  └──────────────── [4] HouseCount (1 digit)
+│  └─────────────────── [2-3] PlasticsHeight (2 digits)
+└────────────────────── [0-1] Family (2 digits)
+```
+
+**Key Gotchas**:
+1. **Exact Length Required**: Handler pattern MUST validate exactly 15 characters, not 13-17 variable length
+2. **Numeric Positions**: Positions 2-7 (6 characters) MUST be numeric digits - letters will fail validation
+3. **No Placeholders**: Test MPNs cannot use "X" or other placeholder characters in numeric positions
+4. **Position Alignment Matters**: Moving a character one position left/right completely changes the meaning
+   - Example: Connector type at position 8 instead of 12 breaks everything
+
+### Test MPN Format Pitfalls
+
+**Problem Pattern**: Initial tests had 13-17 character MPNs with encoding in wrong positions:
+- `273102NSNSUXT` (13 chars) - Missing positions
+- `27310202ASNSUTT` (17 chars) - Extra characters
+- `27310202MNSNSUT` - "M" at position 8 (material) instead of position 12 (connector type)
+- `17310110AG3SUT` (14 chars) - Missing "N" for post at position 9
+
+**Solution**: Systematically corrected all test MPNs to proper 15-character format with correct position encoding
+
+**Pattern Matching Fix**:
+```java
+// WRONG (14 chars total)
+"^(?:13|16|17|26|27)[0-9]{4}[0-9]{2}[A-Z][A-Z]{2}[A-Z]{3}"
+
+// CORRECT (15 chars: 2+6+1+1+2+3)
+"^(?:13|16|17|26|27)[0-9]{6}[A-Z][A-Z][A-Z0-9]{2}[A-Z]{3}$"
+```
+
+### Distributor Format Complexity
+
+Jinling uses TWO completely different MPN systems:
+
+1. **Elprint Format** (15 chars): `27310202ANG3SUT` - Position-based internal encoding
+2. **Distributor Format** (15-18 chars): `22850102ANG1SYA02` - LCSC/JLCPCB public MPNs
+
+**Handler Challenge**: Must support BOTH formats with different extraction logic:
+- Elprint: Extract from fixed positions
+- Distributor: Pattern-based extraction varies by family (12xxx, 22xxx, 32xxx)
+
+**Pin Count Extraction Example**:
+```java
+// Elprint: positions 5-7 (rows × pins/row)
+"27310202" → charAt(5)='2' × substring(6,8)='02' = 4 pins
+
+// Distributor IDC (32xxx): positions 4-5
+"321010MG0CBK00A02" → substring(4,6)='10' = 10 pins
+
+// Distributor Headers (12xxx, 22xxx): positions 6-7
+"12251140CNG0S115001" → substring(6,8)='40' = 40 pins
+```
+
+### Test Suite Journey
+
+| Stage | Tests Passing | Failures | Issue |
+|-------|--------------|----------|-------|
+| Initial | 91/131 (69%) | 40 | MPN format violations |
+| After pattern fix | 106/131 (81%) | 25 | Test MPNs still wrong |
+| After MPN corrections | 122/131 (93%) | 9 | Orientation, distributor patterns |
+| After distributor fix | 127/131 (97%) | 4 | Pin count, replacement logic |
+| Final | 131/131 (100%) | 0 | All tests passing ✓ |
+
+### Validation Strategy
+
+**isElprintFormat() Design**:
+```java
+// CRITICAL: Check exact length AND numeric positions
+if (mpn == null || mpn.length() != 15) return false;  // Exact 15
+
+// Positions 2-7 must be ALL numeric (not just positions 2-5)
+boolean hasNumericPrefix = mpn.substring(2, 8).matches("[0-9]{6}");
+```
+
+**Why This Matters**: Position-based extraction uses `substring(6,8)` for pins per row - if this contains letters, `Integer.parseInt()` throws NumberFormatException and pin count returns 0.
+
+### Best Practices from This Implementation
+
+1. **Pattern Design**: For position-based MPNs, validate EXACT length upfront, not ranges
+2. **Test Data**: Use REAL distributor MPNs from LCSC/JLCPCB, not invented examples
+3. **Incremental Testing**: Fix patterns first, then test MPNs, then extraction logic
+4. **Documentation**: ASCII diagrams showing position meanings are invaluable
+5. **Dual Format Support**: When manufacturer uses multiple formats, document both clearly
+
+### Files Created/Modified
+
+- **JinlingHandler.java** (~560 lines): Dual-format support, 15+ helper methods
+- **JinlingHandlerTest.java** (~550 lines, 131 tests): Comprehensive test coverage
+- **SKILL.md** (~400 lines): Position-by-position encoding reference
+- **ComponentManufacturer.java**: Added JINLING enum entry
+- **ComponentType.java**: Added CONNECTOR_JINLING type
+
+---
+
 ## Codebase Analysis Findings (January 2026)
 
 ### Test Coverage Status
