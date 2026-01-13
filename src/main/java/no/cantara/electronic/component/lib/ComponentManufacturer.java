@@ -114,6 +114,44 @@ public enum ComponentManufacturer {
     // Power Supply Manufacturers
     MEAN_WELL("(?:RS|LRS|SE|NES|SP|PS|PT|SD|DDR|LPV|HLG|ELG|PLN|PWM|LCM|HDR|EDR|MDR|NDR|DR)-[0-9]", "Mean Well", new MeanWellHandler()),
 
+    // Interface IC Manufacturers
+    FTDI("(?:FT)[0-9]{3}", "FTDI", new FTDIHandler()),
+
+    // Audio IC Manufacturers
+    CIRRUS_LOGIC("(?:CS4|CS5|CS8|WM8)[0-9]", "Cirrus Logic", new CirrusLogicHandler()),
+    REALTEK("(?:ALC|RTL|RTD)[0-9]", "Realtek", new RealtekHandler()),
+
+    // Sensor Manufacturers (additional)
+    SENSIRION("(?:SHT|SGP|SCD|SFA|SPS|STS|SLF|SDP)[0-9]", "Sensirion", new SensirionHandler()),
+    HONEYWELL("(?:HIH|HSC|SSC|ABP|MPR|SS4|SS5|HMC|HOA|HLC)[0-9]", "Honeywell Sensing", new HoneywellHandler()),
+    AMS("(?:AS[3-7]|TSL|TMD|TCS|APDS|ENS)[0-9]", "ams-OSRAM", new AMSHandler()),
+
+    // Inductor/Magnetics Manufacturers
+    COILCRAFT("(?:XAL|XEL|XFL|SER|LPS|MSS|DO[0-9]|MSD|SLC|SLR|0[46]0[23]HP)", "Coilcraft", new CoilcraftHandler()),
+    SUMIDA("(?:CDRH|CDR|CDEP|CDEF|CR[0-9]|RCH|CEP|CDC|CLF)[0-9]", "Sumida", new SumidaHandler()),
+    PULSE_ELECTRONICS("(?:H[0-9]{4}|T[0-9]{4}|P[0-9]{4}|PE-|PA-|JD|JK|JXD)", "Pulse Electronics", new PulseElectronicsHandler()),
+
+    // Power Management Manufacturers
+    VICOR("(?:DCM|BCM|PRM|VTM|NBM|PI3[35])[0-9]", "Vicor", new VicorHandler()),
+    POWER_INTEGRATIONS("(?:TOP|TNY|LNK|INN|PFS|LCS|CAP|SEN)[0-9]", "Power Integrations", new PowerIntegrationsHandler()),
+    MPS("(?:MP[0-9]|MPQ|MPM)[0-9]", "Monolithic Power Systems", new MPSHandler()),
+
+    // Memory Manufacturers (additional)
+    MACRONIX("(?:MX25|MX29|MX30|MX66)[A-Z]", "Macronix", new MacronixHandler()),
+    GIGADEVICE("(?:GD25|GD32|GD5F)[A-Z0-9]", "GigaDevice", new GigaDeviceHandler()),
+    ALLIANCE_MEMORY("(?:AS6C|AS7C|AS4C|AS29)[0-9]", "Alliance Memory", new AllianceMemoryHandler()),
+
+    // Timing/Oscillator Manufacturers (additional)
+    SITIME("(?:SiT)[0-9]", "SiTime", new SiTimeHandler()),
+
+    // LED Manufacturers (additional)
+    SEOUL_SEMI("(?:Z5|STW|STN|SFH|CUD|MJT|WICOP|SunLike|Acrich)", "Seoul Semiconductor", new SeoulSemiHandler()),
+    EVERLIGHT("(?:17-|19-|26-|333|EL8|EL3|IR[0-9]|PT[0-9]|ALS)", "Everlight Electronics", new EverlightHandler()),
+
+    // Connector Manufacturers (additional)
+    PHOENIX_CONTACT("(?:MC |MCV |MSTB|PT |UK |UT |PTSM|SPT |FK-)", "Phoenix Contact", new PhoenixContactHandler()),
+    HARTING("(?:09 |21 0|02 0|14 |15 )", "Harting", new HartingHandler()),
+
     // Unknown (must be last)
     UNKNOWN("", "Unknown Manufacturer", new UnknownHandler());
 
