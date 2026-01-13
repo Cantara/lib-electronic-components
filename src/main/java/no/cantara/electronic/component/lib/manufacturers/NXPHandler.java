@@ -114,13 +114,11 @@ public class NXPHandler implements ManufacturerHandler {
             }
         }
 
-        // Direct matching for common op-amps
+        // NXP op-amps (e.g., PCA9xxx I2C interface ICs sometimes used for level shifting)
+        // Note: LM358/LM324/LM741 are TI parts, not NXP - removed incorrect claims
         if (type == ComponentType.OPAMP || type == ComponentType.OPAMP_NXP) {
-            if (upperMpn.startsWith("LM358") ||
-                    upperMpn.startsWith("LM324") ||
-                    upperMpn.startsWith("LM741")) {
-                return true;
-            }
+            // NXP doesn't have major op-amp product lines - they focus on MCUs, interfaces, and mixed-signal
+            return false;
         }
 
         // Direct matching for microcontrollers

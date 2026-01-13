@@ -539,21 +539,19 @@ class NXPHandlerTest {
     class KnownIssuesTests {
 
         @Test
-        @DisplayName("BUG: Op-amp types incorrectly match NXP handler")
+        @DisplayName("FIXED: Op-amp types correctly do NOT match NXP handler")
         void opAmpsShouldNotBeNXP() {
             // LM358, LM324, LM741 are TI parts, NOT NXP
-            // But NXPHandler.matches() incorrectly claims them
+            // Fixed: NXPHandler no longer incorrectly claims these parts
 
             boolean lm358MatchesOpamp = handler.matches("LM358", ComponentType.OPAMP_NXP, registry);
             boolean lm324MatchesOpamp = handler.matches("LM324", ComponentType.OPAMP_NXP, registry);
             boolean lm741MatchesOpamp = handler.matches("LM741", ComponentType.OPAMP_NXP, registry);
 
-            // These SHOULD all be false but are true - document the bug
-            assertTrue(lm358MatchesOpamp, "BUG: LM358 incorrectly matches OPAMP_NXP - this is a TI part");
-            assertTrue(lm324MatchesOpamp, "BUG: LM324 incorrectly matches OPAMP_NXP - this is a TI part");
-            assertTrue(lm741MatchesOpamp, "BUG: LM741 incorrectly matches OPAMP_NXP - this is a TI part");
-
-            System.out.println("CRITICAL BUG: LM358/LM324/LM741 are Texas Instruments parts, not NXP!");
+            // These should all be false - LM parts are TI, not NXP
+            assertFalse(lm358MatchesOpamp, "LM358 should NOT match OPAMP_NXP - this is a TI part");
+            assertFalse(lm324MatchesOpamp, "LM324 should NOT match OPAMP_NXP - this is a TI part");
+            assertFalse(lm741MatchesOpamp, "LM741 should NOT match OPAMP_NXP - this is a TI part");
         }
 
         @Test

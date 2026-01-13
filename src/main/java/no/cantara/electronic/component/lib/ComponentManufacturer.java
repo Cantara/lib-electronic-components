@@ -23,6 +23,7 @@ public enum ComponentManufacturer {
     ESPRESSIF("(?:ESP[0-9]|ESP-|ESP32)", "Espressif Systems", new EspressifHandler()),
 
     // Semiconductor Manufacturers
+    ALPHA_OMEGA("(?:AO[0-9]{4}|AOD|AON|AOI|AOT|AOB|AOC|AOP|AOTL|AOGT|AOGL|AONS|AONR|AONK)", "Alpha and Omega Semiconductor", new AlphaOmegaHandler()),
     INFINEON("(?:INF|IR|IFX|TLE|XMC|ICE|IPD|IRS|BSC|BSD|BSS|BTS|BTT)", "Infineon Technologies", new InfineonHandler()),
     VISHAY("(?:VS|SI|CRCW|IRF|SiR|1N[0-9]|BAV|BAS|BAT|TNR|VOW|VOX|2N)", "Vishay", new VishayHandler()),
     ON_SEMI("(?:ON|MC|NCP|FAN|CAT|NCV|MUR|1N|LM|NTD|NTA|NTB)", "ON Semiconductor", new OnSemiHandler()),
@@ -57,6 +58,7 @@ public enum ComponentManufacturer {
     //SAMSUNG("(?:CL[0-9]+B|CM[0-9]|SPH|RC_|CL21|CL31)", "Samsung Electro-Mechanics", new SamsungHandler()),
     SAMSUNG("(?:CL(?:10|21|31)B|CM[0-9]|SPH|RC_)", "Samsung Electro-Mechanics", new SamsungHandler()),
     AVX("(?:TAJ|TPS|TCJ|F[0-9]|CR[0-9]|AR|LD|SD)", "AVX Corporation", new AVXHandler()),
+    WIMA("(?:MKS|MKP|FKS|FKP|FKC)[0-9]", "WIMA", new WIMAHandler()),
     FAIRCHILD("(?:FQ[PNS]|FDS|FDC|FDD)[0-9]", "Fairchild/ON Semi", new FairchildHandler()),
     // Connector Manufacturers
     //WURTH("(?:61|62|63|64|65)[0-9]{8}", "Wurth Electronics", new WurthHandler()),
@@ -71,16 +73,23 @@ public enum ComponentManufacturer {
     JST("(?:B|S|P|X)[H,M][0-9]|(?:PA|PH|SM|EH)", "JST", new JSTHandler()),
     HIROSE("(?:DF|FH|BM|ZX|GT)[0-9]", "Hirose Electric", new HiroseHandler()),
     AMPHENOL("(?:10|20|54)[0-9]{4}|(?:G5|UE)", "Amphenol", new AmphenolHandler()),
+    CUI("(?:SJ[0-9]|PJ-|CMI|CMS|CPE|CPT|ACZ|AMT)", "CUI Devices", new CUIHandler()),
+    JAE("(?:FI-|DX[0-9]|MX[0-9]|IL-)", "JAE Electronics", new JAEHandler()),
 
     // LED Manufacturers
     CREE("(?:XL|XH|XP|XQ|XB|CL)[A-Z][0-9]", "Cree", new CreeHandler()),
     OSRAM("(?:LS|LA|LW|LY|LO|LB)[A-Z][0-9]", "OSRAM", new OSRAMHandler()),
     LUMILEDS("(?:L|P)[X,T][H,L][0-9]|LUXEON", "Lumileds", new LumiledsHandler()),
+    KINGBRIGHT("(?:WP|KP|AP|AA)[0-9]", "Kingbright", new KingbrightHandler()),
 
     // Sensor Manufacturers
+    ALLEGRO("(?:ACS[0-9]|A[0-9]{4}|AH[0-9]{3}|AAS[0-9])", "Allegro MicroSystems", new AllegroHandler()),
     BOSCH("(?:BM[A-Z][0-9]|BSH|BMP|BME|BNO)", "Bosch Sensortec", new BoschHandler()),
     MELEXIS("(?:MLX|TMF)[0-9]", "Melexis", new MelexisHandler()),
     INVSENSE("(?:MPU|ICM|IAM|IIM)[0-9]", "InvenSense", new InvSenseHandler()),
+
+    // Relay/Switch/Sensor Manufacturers
+    OMRON("(?:G[0-9]|G3[A-Z]|B3[A-Z]|D2F|EE-S|D6F|E2E)", "Omron", new OmronHandler()),
 
     // Memory Manufacturers
     MICRON("(?:MT)[0-9]|(?:N25Q|M25P)", "Micron Technology", new MicronHandler()),
@@ -98,6 +107,12 @@ public enum ComponentManufacturer {
     NDK("(?:NX|NT|NZ|NH)[0-9]", "NDK", new NDKHandler()),
     ABRACON("(?:ABM|ABLS|ABLM|AB26|ASDM)", "Abracon", new AbraconHandler()),
     IQD("(?:LFXTAL|CFPS|LFTCXO|LFOCA)", "IQD Frequency Products", new IQDHandler()),
+
+    // Circuit Protection Manufacturers
+    LITTELFUSE("(?:SMAJ|SMBJ|SMCJ|SMDJ|P[46]KE|P4SMA|P6SMB|1\\.?5KE|045[1-4]|0448|V[0-9]{2}[EPDM])", "Littelfuse", new LittelfuseHandler()),
+
+    // Power Supply Manufacturers
+    MEAN_WELL("(?:RS|LRS|SE|NES|SP|PS|PT|SD|DDR|LPV|HLG|ELG|PLN|PWM|LCM|HDR|EDR|MDR|NDR|DR)-[0-9]", "Mean Well", new MeanWellHandler()),
 
     // Unknown (must be last)
     UNKNOWN("", "Unknown Manufacturer", new UnknownHandler());
