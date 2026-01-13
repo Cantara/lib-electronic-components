@@ -239,34 +239,8 @@ class GoodArkHandlerTest {
         }
     }
 
-    @Nested
-    @DisplayName("TVS Diode Detection")
-    class TVSDiodeTests {
-
-        @ParameterizedTest
-        @DisplayName("Should detect SMBJ TVS diodes")
-        @ValueSource(strings = {"SMBJ5.0", "SMBJ6.5", "SMBJ12", "SMBJ24"})
-        void shouldDetectSMBJ(String mpn) {
-            assertTrue(handler.matches(mpn, ComponentType.DIODE, registry),
-                    mpn + " should match DIODE");
-        }
-
-        @ParameterizedTest
-        @DisplayName("Should detect SMAJ TVS diodes")
-        @ValueSource(strings = {"SMAJ5.0", "SMAJ12", "SMAJ24", "SMAJ33"})
-        void shouldDetectSMAJ(String mpn) {
-            assertTrue(handler.matches(mpn, ComponentType.DIODE, registry),
-                    mpn + " should match DIODE");
-        }
-
-        @ParameterizedTest
-        @DisplayName("Should detect P4KE/P6KE TVS diodes")
-        @ValueSource(strings = {"P4KE6.8", "P4KE15", "P6KE6.8", "P6KE15"})
-        void shouldDetectPxKE(String mpn) {
-            assertTrue(handler.matches(mpn, ComponentType.DIODE, registry),
-                    mpn + " should match DIODE");
-        }
-    }
+    // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) are handled by LittelfuseHandler
+    // Good-Ark makes second-source TVS diodes but these MPNs are Littelfuse original designs
 
     @Nested
     @DisplayName("Bridge Rectifier Detection")
@@ -553,18 +527,7 @@ class GoodArkHandlerTest {
                     "Package for " + mpn);
         }
 
-        @ParameterizedTest
-        @DisplayName("Should extract TVS diode packages")
-        @CsvSource({
-                "SMBJ5.0, SMB",
-                "SMAJ12, SMA",
-                "P4KE15, DO-41",
-                "P6KE6.8, DO-41"
-        })
-        void shouldExtractTVSPackage(String mpn, String expectedPackage) {
-            assertEquals(expectedPackage, handler.extractPackageCode(mpn),
-                    "Package for " + mpn);
-        }
+        // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) handled by LittelfuseHandler
     }
 
     @Nested
@@ -734,18 +697,7 @@ class GoodArkHandlerTest {
                     "Series for " + mpn);
         }
 
-        @ParameterizedTest
-        @DisplayName("Should extract TVS series")
-        @CsvSource({
-                "SMBJ5.0, SMBJ",
-                "SMAJ12, SMAJ",
-                "P4KE15, P4KE",
-                "P6KE6.8, P6KE"
-        })
-        void shouldExtractTVSSeries(String mpn, String expectedSeries) {
-            assertEquals(expectedSeries, handler.extractSeries(mpn),
-                    "Series for " + mpn);
-        }
+        // Note: TVS diodes (SMAJ, SMBJ, P4KE, P6KE) handled by LittelfuseHandler
     }
 
     @Nested

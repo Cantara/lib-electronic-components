@@ -86,10 +86,7 @@ public class RubyconHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        return Set.of(
-            ComponentType.CAPACITOR,
-            ComponentType.IC
-        );
+        return Set.of(ComponentType.CAPACITOR);
     }
 
     @Override
@@ -119,8 +116,8 @@ public class RubyconHandler implements ManufacturerHandler {
             if (upperMpn.matches("^US[RTP][0-9]+.*")) return true;
         }
 
-        // Fallback to registry
-        return registry.matches(upperMpn, type);
+        // Only match CAPACITOR type - Rubycon only makes capacitors
+        return false;
     }
 
     @Override
