@@ -43,12 +43,27 @@ public class NXPHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.MEMORY_NXP, "^SE[0-9]+.*");
         registry.addPattern(ComponentType.MEMORY, "^SPI[0-9]+.*");    // SPI Flash
         registry.addPattern(ComponentType.MEMORY_NXP, "^SPI[0-9]+.*");
+        registry.addPattern(ComponentType.MEMORY, "^MX25.*");         // MX25 SPI Flash
+        registry.addPattern(ComponentType.MEMORY_NXP, "^MX25.*");
+        registry.addPattern(ComponentType.MEMORY, "^S25FL.*");        // S25FL Flash (Spansion acquired by NXP)
+        registry.addPattern(ComponentType.MEMORY_NXP, "^S25FL.*");
+
+        // Pressure sensors
+        registry.addPattern(ComponentType.SENSOR, "^MPX.*");          // MPX pressure sensors
+        registry.addPattern(ComponentType.SENSOR, "^MPXV.*");         // MPXV voltage output sensors
+        registry.addPattern(ComponentType.SENSOR, "^MPXA.*");         // MPXA analog sensors
 
         // Power MOSFETs
         registry.addPattern(ComponentType.MOSFET, "^PSMN[0-9]+.*");
         registry.addPattern(ComponentType.MOSFET_NXP, "^PSMN[0-9]+.*");
         registry.addPattern(ComponentType.MOSFET, "^BUK[0-9]+.*");
         registry.addPattern(ComponentType.MOSFET_NXP, "^BUK[0-9]+.*");
+
+        // Small signal MOSFETs
+        registry.addPattern(ComponentType.MOSFET, "^PMV.*");
+        registry.addPattern(ComponentType.MOSFET_NXP, "^PMV.*");
+        registry.addPattern(ComponentType.MOSFET, "^BSS.*");
+        registry.addPattern(ComponentType.MOSFET_NXP, "^BSS.*");
 
         // Transistors
         // NPN transistors
@@ -77,20 +92,21 @@ public class NXPHandler implements ManufacturerHandler {
     @Override
     public Set<ComponentType> getSupportedTypes() {
         return Set.of(
-            ComponentType.MICROCONTROLLER,
-            ComponentType.MICROCONTROLLER_NXP,
-            ComponentType.MCU_NXP,
-            ComponentType.MEMORY,
-            ComponentType.MEMORY_NXP,
-            ComponentType.MOSFET,
-            ComponentType.MOSFET_NXP,
-            ComponentType.TRANSISTOR,
-            ComponentType.TRANSISTOR_NXP,
-            ComponentType.OPAMP,
-            ComponentType.OPAMP_NXP,
-            ComponentType.KINETIS_MCU,
-            ComponentType.LPC_MCU,
-            ComponentType.IMX_PROCESSOR
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_NXP,
+                ComponentType.MCU_NXP,
+                ComponentType.MEMORY,
+                ComponentType.MEMORY_NXP,
+                ComponentType.MOSFET,
+                ComponentType.MOSFET_NXP,
+                ComponentType.TRANSISTOR,
+                ComponentType.TRANSISTOR_NXP,
+                ComponentType.SENSOR,
+                ComponentType.OPAMP,
+                ComponentType.OPAMP_NXP,
+                ComponentType.KINETIS_MCU,
+                ComponentType.LPC_MCU,
+                ComponentType.IMX_PROCESSOR
         );
     }
 
@@ -144,7 +160,18 @@ public class NXPHandler implements ManufacturerHandler {
         // Direct matching for memory
         if (type == ComponentType.MEMORY || type == ComponentType.MEMORY_NXP) {
             if (upperMpn.startsWith("SE") ||     // EEPROM
-                    upperMpn.startsWith("SPI")) {    // SPI Flash
+                    upperMpn.startsWith("SPI") ||    // SPI Flash
+                    upperMpn.startsWith("MX25") ||   // MX25 Flash
+                    upperMpn.startsWith("S25FL")) {  // S25FL Flash
+                return true;
+            }
+        }
+
+        // Direct matching for sensors
+        if (type == ComponentType.SENSOR) {
+            if (upperMpn.startsWith("MPX") ||    // Pressure sensors
+                    upperMpn.startsWith("MPXV") ||   // Voltage output sensors
+                    upperMpn.startsWith("MPXA")) {   // Analog sensors
                 return true;
             }
         }
@@ -158,24 +185,110 @@ public class NXPHandler implements ManufacturerHandler {
         if (mpn == null || mpn.isEmpty()) return "";
         String upperMpn = mpn.toUpperCase();
 
-        // LPC Series package codes
+        // LPC Series package codes: LPC[SERIES][VARIANT][PACKAGE][PINS]
+        // Example: LPC1768FBD100 -> FBD (LQFP), LPC55S69JBD100 -> JBD (LQFP)
         if (upperMpn.startsWith("LPC")) {
-            // Example: LPC1768FBD100 -> FBD100 (LQFP100)
-            int numStart = findFirstDigit(upperMpn, 3);
-            if (numStart >= 0) {
-                int numEnd = findLastDigit(upperMpn, numStart) + 1;
-                if (numEnd < upperMpn.length()) {
-                    return upperMpn.substring(numEnd);
+            // Find the first letter sequence after the series digits
+            // LPC1768FBD100: Skip LPC (3), find digits (1768), find letters (FBD)
+            int pos = 3;  // Skip "LPC"
+
+            // Skip series digits
+            while (pos < upperMpn.length() && Character.isDigit(upperMpn.charAt(pos))) {
+                pos++;
+            }
+
+            // Skip optional variant letter (like 'S' in LPC55S69)
+            if (pos < upperMpn.length() && Character.isLetter(upperMpn.charAt(pos)) &&
+                    pos + 1 < upperMpn.length() && Character.isDigit(upperMpn.charAt(pos + 1))) {
+                pos++;
+                // Skip more digits after variant letter
+                while (pos < upperMpn.length() && Character.isDigit(upperMpn.charAt(pos))) {
+                    pos++;
+                }
+            }
+
+            // Extract package code letters (FBD, JBD, FET, FHN, UK)
+            int pkgStart = pos;
+            while (pos < upperMpn.length() && Character.isLetter(upperMpn.charAt(pos))) {
+                pos++;
+            }
+
+            if (pos > pkgStart) {
+                return upperMpn.substring(pkgStart, pos);
+            }
+        }
+
+        // Kinetis Series: MK[SERIES][FLASH]V[PACKAGE][SPEED]
+        // Example: MK64FN1M0VLL12 -> VLL (LQFP100)
+        if (upperMpn.startsWith("MK")) {
+            int vPos = upperMpn.indexOf('V');
+            if (vPos > 0 && vPos + 3 < upperMpn.length()) {
+                // Extract V + 2-3 letter package code
+                int pkgEnd = vPos + 1;
+                while (pkgEnd < upperMpn.length() && Character.isLetter(upperMpn.charAt(pkgEnd))) {
+                    pkgEnd++;
+                }
+                if (pkgEnd > vPos + 1) {
+                    return upperMpn.substring(vPos, pkgEnd);
                 }
             }
         }
 
-        // i.MX Series package codes
+        // i.MX Series: MCIMX[SERIES][VARIANT][PACKAGE][TEMP][REV]
+        // Example: MCIMX6Q5EYM10AC -> M (BGA)
         if (upperMpn.startsWith("MCIMX")) {
-            // Last characters typically represent package
-            int lastNum = findLastDigit(upperMpn);
-            if (lastNum >= 0 && lastNum < upperMpn.length() - 1) {
-                return upperMpn.substring(lastNum + 1);
+            // Package is typically a single letter before temperature/speed digits
+            // Look for pattern: letter + digits + letter(s) at end
+            for (int i = upperMpn.length() - 3; i >= 5; i--) {
+                if (Character.isLetter(upperMpn.charAt(i)) &&
+                        i + 1 < upperMpn.length() && Character.isDigit(upperMpn.charAt(i + 1))) {
+                    return String.valueOf(upperMpn.charAt(i));
+                }
+            }
+        }
+
+        // PSMN MOSFETs: PSMN[SPEC]-[PACKAGE]
+        // Example: PSMN4R3-30PL -> PL
+        if (upperMpn.startsWith("PSMN")) {
+            int dashPos = upperMpn.lastIndexOf('-');
+            if (dashPos > 0 && upperMpn.length() > dashPos + 2) {
+                // Extract letters after the last dash and digits
+                String suffix = upperMpn.substring(dashPos + 1);
+                int pos = 0;
+                // Skip digits (voltage rating)
+                while (pos < suffix.length() && Character.isDigit(suffix.charAt(pos))) {
+                    pos++;
+                }
+                if (pos < suffix.length()) {
+                    return suffix.substring(pos);
+                }
+            }
+        }
+
+        // BUK MOSFETs: BUK[LEVEL][PACKAGE][TECH][VOLTAGE][RESISTANCE]
+        // Example: BUK9Y40-100B -> Y (LFPAK56)
+        if (upperMpn.startsWith("BUK")) {
+            // Package code is typically the 5th character
+            if (upperMpn.length() > 4) {
+                char pkgChar = upperMpn.charAt(4);
+                if (Character.isLetter(pkgChar)) {
+                    return String.valueOf(pkgChar);
+                }
+            }
+        }
+
+        // BC transistors: BC847[GAIN][PACKAGE_SUFFIX]
+        // Example: BC847W -> W (SOT-323), BC847MB -> MB (DFN)
+        if (upperMpn.startsWith("BC84") || upperMpn.startsWith("BC85")) {
+            if (upperMpn.length() > 5) {
+                // Skip BC847 or BC857, extract remaining letters
+                String suffix = upperMpn.substring(5);
+                // First char might be gain (A, B, C), then package
+                if (suffix.length() > 1 && Character.isLetter(suffix.charAt(0)) && Character.isLetter(suffix.charAt(1))) {
+                    return suffix.substring(1);  // Package after gain
+                } else if (suffix.length() == 1 && !suffix.matches("[ABC]")) {
+                    return suffix;  // Package without gain
+                }
             }
         }
 
@@ -209,15 +322,49 @@ public class NXPHandler implements ManufacturerHandler {
         if (mpn == null || mpn.isEmpty()) return "";
         String upperMpn = mpn.toUpperCase();
 
+        // Microcontrollers
         if (upperMpn.startsWith("LPC")) return "LPC";
         if (upperMpn.startsWith("MK")) return "Kinetis";
         if (upperMpn.startsWith("MCIMX")) return "i.MX";
+        if (upperMpn.startsWith("IMX")) return "i.MX";  // Plain IMX prefix (datasheets often use this)
         if (upperMpn.startsWith("S32K")) return "S32K";
         if (upperMpn.startsWith("P") && Character.isDigit(getCharAt(upperMpn, 1))) return "QorIQ";
+
+        // Memory
         if (upperMpn.startsWith("SE")) return "EEPROM";
         if (upperMpn.startsWith("SPI")) return "SPI Flash";
+        if (upperMpn.startsWith("MX25")) return "MX25 Flash";
+        if (upperMpn.startsWith("S25FL")) return "S25FL Flash";
+
+        // MOSFETs
         if (upperMpn.startsWith("PSMN")) return "PSMN MOSFET";
         if (upperMpn.startsWith("BUK")) return "BUK MOSFET";
+        if (upperMpn.startsWith("PMV")) return "PMV MOSFET";
+        if (upperMpn.startsWith("BSS")) return "BSS MOSFET";
+
+        // Transistors
+        if (upperMpn.startsWith("BC847")) return "BC847";
+        if (upperMpn.startsWith("BC857")) return "BC857";
+        if (upperMpn.startsWith("PN2222")) return "PN2222";
+        if (upperMpn.startsWith("PN2907")) return "PN2907";
+        if (upperMpn.startsWith("PN3904")) return "PN3904";
+        if (upperMpn.startsWith("PN3906")) return "PN3906";
+        if (upperMpn.startsWith("PN4401")) return "PN4401";
+        if (upperMpn.startsWith("PN4403")) return "PN4403";
+
+        // Sensors - CHECK SPECIFIC PREFIXES FIRST!
+        if (upperMpn.startsWith("MPXV")) return "MPXV Pressure Sensor";
+        if (upperMpn.startsWith("MPXA")) return "MPXA Pressure Sensor";
+        if (upperMpn.startsWith("MPX")) return "MPX Pressure Sensor";  // Generic last
+
+        // Audio codecs
+        if (upperMpn.startsWith("UDA")) return "UDA Audio Codec";
+        if (upperMpn.startsWith("TDA")) return "TDA Audio";
+        if (upperMpn.startsWith("TFA")) return "TFA Audio Amplifier";
+
+        // Interface ICs
+        if (upperMpn.startsWith("PCA")) return "PCA Interface IC";
+        if (upperMpn.startsWith("PCF")) return "PCF Interface IC";
 
         return "";
     }

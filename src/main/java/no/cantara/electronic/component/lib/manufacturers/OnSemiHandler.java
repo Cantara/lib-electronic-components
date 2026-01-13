@@ -36,18 +36,21 @@ public class OnSemiHandler implements ManufacturerHandler {
     @Override
     public Set<ComponentType> getSupportedTypes() {
         return Set.of(
-            ComponentType.MOSFET,
-            ComponentType.MOSFET_ONSEMI,
-            ComponentType.IGBT_ONSEMI,
-            ComponentType.VOLTAGE_REGULATOR,
-            ComponentType.VOLTAGE_REGULATOR_LINEAR_ON,
-            ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON,
-            ComponentType.LED_DRIVER_ONSEMI,
-            ComponentType.MOTOR_DRIVER_ONSEMI,
-            ComponentType.OPAMP,
-            ComponentType.OPAMP_ON,
-            ComponentType.DIODE,
-            ComponentType.DIODE_ON
+                ComponentType.MOSFET,
+                ComponentType.MOSFET_ONSEMI,
+                ComponentType.IGBT_ONSEMI,
+                ComponentType.TRANSISTOR,
+                ComponentType.VOLTAGE_REGULATOR,
+                ComponentType.VOLTAGE_REGULATOR_LINEAR_ON,
+                ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON,
+                ComponentType.LED_DRIVER,
+                ComponentType.LED_DRIVER_ONSEMI,
+                ComponentType.MOTOR_DRIVER,
+                ComponentType.MOTOR_DRIVER_ONSEMI,
+                ComponentType.OPAMP,
+                ComponentType.OPAMP_ON,
+                ComponentType.DIODE,
+                ComponentType.DIODE_ON
         );
     }
 
@@ -68,6 +71,24 @@ public class OnSemiHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, "^MC79[0-9]{2}[A-Z]?.*");
         registry.addPattern(ComponentType.VOLTAGE_REGULATOR, "^MC33[0-9]{2}[A-Z]?.*");     // Switching
         registry.addPattern(ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON, "^MC33[0-9]{2}[A-Z]?.*");
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR, "^NCP[0-9]{3,4}.*");          // NCP regulator family
+        registry.addPattern(ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, "^NCP[0-9]{3,4}.*");
+
+        // MOSFETs
+        registry.addPattern(ComponentType.MOSFET, "^NTD[0-9]+[A-Z]?.*");                   // N-channel MOSFETs
+        registry.addPattern(ComponentType.MOSFET_ONSEMI, "^NTD[0-9]+[A-Z]?.*");
+        registry.addPattern(ComponentType.MOSFET, "^FQP[0-9]+[A-Z]?.*");                   // QFET MOSFETs
+        registry.addPattern(ComponentType.MOSFET_ONSEMI, "^FQP[0-9]+[A-Z]?.*");
+        registry.addPattern(ComponentType.MOSFET, "^FDP[0-9]+[A-Z]?.*");                   // PowerTrench MOSFETs
+        registry.addPattern(ComponentType.MOSFET_ONSEMI, "^FDP[0-9]+[A-Z]?.*");
+        registry.addPattern(ComponentType.MOSFET, "^NTP[0-9]+[A-Z]?.*");                   // P-channel MOSFETs
+        registry.addPattern(ComponentType.MOSFET_ONSEMI, "^NTP[0-9]+[A-Z]?.*");
+
+        // Transistors
+        registry.addPattern(ComponentType.TRANSISTOR, "^2N[0-9]{4}[A-Z]?.*");              // 2N series BJTs
+        registry.addPattern(ComponentType.TRANSISTOR, "^MMBT[0-9]{4}[A-Z]?.*");            // SOT-23 BJTs
+        registry.addPattern(ComponentType.TRANSISTOR, "^MPSA[0-9]{2}[A-Z]?.*");            // MPSA series (NPN)
+        registry.addPattern(ComponentType.TRANSISTOR, "^MPSH[0-9]{2}[A-Z]?.*");            // MPSH series (PNP)
 
         // Diodes
         // Standard rectifier diodes
@@ -138,7 +159,28 @@ public class OnSemiHandler implements ManufacturerHandler {
                 type == ComponentType.VOLTAGE_REGULATOR_SWITCHING_ON) {
             if (upperMpn.matches("^MC78[0-9]{2}.*") ||     // Positive fixed
                     upperMpn.matches("^MC79[0-9]{2}.*") ||     // Negative fixed
-                    upperMpn.matches("^MC33[0-9]{2}.*")) {     // Switching
+                    upperMpn.matches("^MC33[0-9]{2}.*") ||     // Switching
+                    upperMpn.startsWith("NCP")) {              // NCP regulator family
+                return true;
+            }
+        }
+
+        // Direct matching for MOSFETs
+        if (type == ComponentType.MOSFET || type == ComponentType.MOSFET_ONSEMI) {
+            if (upperMpn.startsWith("NTD") ||     // N-channel
+                    upperMpn.startsWith("FQP") ||     // QFET
+                    upperMpn.startsWith("FDP") ||     // PowerTrench
+                    upperMpn.startsWith("NTP")) {     // P-channel
+                return true;
+            }
+        }
+
+        // Direct matching for transistors
+        if (type == ComponentType.TRANSISTOR) {
+            if (upperMpn.matches("^2N[0-9]{4}[A-Z]?.*") ||      // 2N series BJTs
+                    upperMpn.startsWith("MMBT") ||                 // SOT-23 BJTs
+                    upperMpn.startsWith("MPSA") ||                 // MPSA series (NPN)
+                    upperMpn.startsWith("MPSH")) {                 // MPSH series (PNP)
                 return true;
             }
         }
@@ -151,56 +193,117 @@ public class OnSemiHandler implements ManufacturerHandler {
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
+        String upperMpn = mpn.toUpperCase();
+
         // Diode packages
-        if (mpn.matches("(?i)^RL.*")) {
+        if (upperMpn.startsWith("RL")) {
             return "DO-41";  // Standard package for RL series
         }
-        if (mpn.matches("(?i)^MUR.*")) {
-            if (mpn.endsWith("T")) return "TO-220";
+        if (upperMpn.startsWith("MUR")) {
+            if (upperMpn.endsWith("T")) return "TO-220";
             return "DO-41";  // Default for MUR series
         }
-        if (mpn.matches("(?i)^MBRS.*")) {
+        if (upperMpn.startsWith("MBRS")) {
             return "SMB";    // Surface mount package
         }
-        if (mpn.matches("(?i)^MBR.*")) {
-            if (mpn.endsWith("T")) return "TO-220";
+        if (upperMpn.startsWith("MBR")) {
+            if (upperMpn.endsWith("T")) return "TO-220";
             return "DO-41";  // Default for MBR series
         }
 
-        // Remove everything before the last letter
-        String suffix = mpn.replaceAll("^[A-Z0-9]+(?=[A-Z])", "");
-
-        // Check for known package codes
-        for (Map.Entry<String, String> entry : PACKAGE_CODES.entrySet()) {
-            if (suffix.startsWith(entry.getKey())) {
-                return entry.getValue();
+        // MOSFET packages - extract suffix after digits
+        if (upperMpn.startsWith("NTD") || upperMpn.startsWith("NTP")) {
+            // NTD4808N, NTP30N06 - Extract suffix after last digit
+            int lastDigit = findLastDigitIndex(upperMpn);
+            if (lastDigit >= 0 && lastDigit < upperMpn.length() - 1) {
+                return upperMpn.substring(lastDigit + 1);
             }
         }
+        if (upperMpn.startsWith("FQP") || upperMpn.startsWith("FDP")) {
+            // FQP30N06L, FDP8896 - Extract suffix after last digit
+            int lastDigit = findLastDigitIndex(upperMpn);
+            if (lastDigit >= 0 && lastDigit < upperMpn.length() - 1) {
+                return upperMpn.substring(lastDigit + 1);
+            }
+            // Common MOSFET packages if no suffix
+            return "TO-220";  // Default for FQP/FDP series
+        }
 
-        return suffix;
+        // Transistor packages
+        if (upperMpn.matches("^2N[0-9]{4}[A-Z]?.*")) {
+            // 2N2222A, 2N3904 - Standard through-hole
+            return "TO-92";  // Default for 2N series
+        }
+        if (upperMpn.startsWith("MMBT")) {
+            // MMBT2222, MMBT3904 - SOT-23 package
+            return "SOT-23";
+        }
+        if (upperMpn.startsWith("MPSA") || upperMpn.startsWith("MPSH")) {
+            // MPSA42, MPSH10 - Usually TO-92 or SOT-23
+            return "TO-92";  // Default
+        }
+
+        // Voltage regulators and op-amps - extract suffix
+        if (upperMpn.startsWith("MC") || upperMpn.startsWith("NCP")) {
+            String suffix = upperMpn.replaceAll("^[A-Z0-9]+(?=[A-Z])", "");
+
+            // Check for known package codes
+            for (Map.Entry<String, String> entry : PACKAGE_CODES.entrySet()) {
+                if (suffix.startsWith(entry.getKey())) {
+                    return entry.getValue();
+                }
+            }
+            return suffix;
+        }
+
+        return "";
+    }
+
+    private int findLastDigitIndex(String str) {
+        for (int i = str.length() - 1; i >= 0; i--) {
+            if (Character.isDigit(str.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override
     public String extractSeries(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        // Diode series
-        if (mpn.matches("(?i)^RL20[1-7].*")) return "RL207";     // RL series
-        if (mpn.matches("(?i)^MUR.*")) return "MUR";             // Ultra-fast recovery
-        if (mpn.matches("(?i)^MBRS.*")) return "MBRS";           // Surface mount Schottky
-        if (mpn.matches("(?i)^MBR.*")) return "MBR";             // Standard Schottky
-        if (mpn.matches("(?i)^1N47[0-9]{2}.*")) return "1N47";   // 1N47xx Zener
-        if (mpn.matches("(?i)^1N52[0-9]{2}.*")) return "1N52";   // 1N52xx Zener
+        String upperMpn = mpn.toUpperCase();
 
-        // Op-amp series
-        if (mpn.startsWith("MC1458")) return "MC1458";
-        if (mpn.startsWith("MC324")) return "MC324";
-        if (mpn.startsWith("MC741")) return "MC741";
+        // MOSFETs - CHECK SPECIFIC PREFIXES FIRST
+        if (upperMpn.startsWith("NTD")) return "NTD";        // N-channel MOSFETs
+        if (upperMpn.startsWith("NTP")) return "NTP";        // P-channel MOSFETs
+        if (upperMpn.startsWith("FQP")) return "FQP";        // QFET MOSFETs
+        if (upperMpn.startsWith("FDP")) return "FDP";        // PowerTrench MOSFETs
 
-        // Voltage regulator series
-        if (mpn.matches("(?i)MC78.*")) return "MC78";
-        if (mpn.matches("(?i)MC79.*")) return "MC79";
-        if (mpn.matches("(?i)MC33.*")) return "MC33";
+        // Transistors
+        if (upperMpn.matches("^2N[0-9]{4}.*")) return "2N";  // 2N series BJTs
+        if (upperMpn.startsWith("MMBT")) return "MMBT";      // SOT-23 BJTs
+        if (upperMpn.startsWith("MPSA")) return "MPSA";      // MPSA series (NPN)
+        if (upperMpn.startsWith("MPSH")) return "MPSH";      // MPSH series (PNP)
+
+        // Voltage regulators - CHECK SPECIFIC PREFIXES FIRST
+        if (upperMpn.startsWith("NCP")) return "NCP";        // NCP regulator family
+        if (upperMpn.startsWith("MC78")) return "MC78";      // Positive fixed
+        if (upperMpn.startsWith("MC79")) return "MC79";      // Negative fixed
+        if (upperMpn.startsWith("MC33")) return "MC33";      // Switching regulators
+
+        // Op-amp series - CHECK SPECIFIC PREFIXES FIRST
+        if (upperMpn.startsWith("MC1458")) return "MC1458";  // Dual op-amp
+        if (upperMpn.startsWith("MC324")) return "MC324";    // Quad op-amp
+        if (upperMpn.startsWith("MC741")) return "MC741";    // Single op-amp
+
+        // Diode series - CHECK SPECIFIC PREFIXES FIRST
+        if (upperMpn.startsWith("MBRS")) return "MBRS";      // Surface mount Schottky (before MBR!)
+        if (upperMpn.startsWith("MBR")) return "MBR";        // Standard Schottky
+        if (upperMpn.matches("^RL20[1-7].*")) return "RL207"; // RL series rectifiers
+        if (upperMpn.startsWith("MUR")) return "MUR";        // Ultra-fast recovery
+        if (upperMpn.matches("^1N47[0-9]{2}.*")) return "1N47"; // 1N47xx Zener
+        if (upperMpn.matches("^1N52[0-9]{2}.*")) return "1N52"; // 1N52xx Zener
 
         return "";
     }

@@ -198,11 +198,11 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: SSM package extraction returns empty")
+        @DisplayName("FIXED: SSM package extraction now works")
         void ssmPackageExtractionBug() {
             String packageCode = handler.extractPackageCode("SSM3K102TU");
-            assertEquals("", packageCode,
-                    "BUG: SSM package extraction returns empty instead of 'TU'");
+            assertEquals("TU", packageCode,
+                    "FIXED: SSM package extraction returns 'TU'");
         }
     }
 
@@ -258,12 +258,12 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: extractSeries returns empty for transistors")
+        @DisplayName("FIXED: extractSeries now works for transistors")
         void seriesExtractionMissingForTransistors() {
-            assertEquals("", handler.extractSeries("2SC5198"),
-                    "BUG: extractSeries returns empty for 2SC transistors");
-            assertEquals("", handler.extractSeries("2SA1943"),
-                    "BUG: extractSeries returns empty for 2SA transistors");
+            assertEquals("2SC Series", handler.extractSeries("2SC5198"),
+                    "FIXED: extractSeries works for 2SC transistors");
+            assertEquals("2SA Series", handler.extractSeries("2SA1943"),
+                    "FIXED: extractSeries works for 2SA transistors");
         }
     }
 
@@ -297,17 +297,17 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: extractSeries returns empty for optocouplers")
+        @DisplayName("FIXED: extractSeries now works for optocouplers")
         void seriesExtractionMissingForOptocouplers() {
-            assertEquals("", handler.extractSeries("TLP127"),
-                    "BUG: extractSeries returns empty for TLP optocouplers");
+            assertEquals("TLP Series", handler.extractSeries("TLP127"),
+                    "FIXED: extractSeries works for TLP optocouplers");
         }
 
         @Test
-        @DisplayName("BUG: extractPackageCode returns empty for optocouplers")
+        @DisplayName("TLP127 has no package code suffix")
         void packageExtractionMissingForOptocouplers() {
             assertEquals("", handler.extractPackageCode("TLP127"),
-                    "BUG: Package extraction returns empty for TLP127");
+                    "TLP127 has no package code suffix");
         }
     }
 
@@ -338,11 +338,11 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: extractPackageCode returns empty for motor drivers")
+        @DisplayName("FIXED: extractPackageCode now works for motor drivers")
         void packageExtractionMissingForMotorDrivers() {
             String packageCode = handler.extractPackageCode("TB6612FNG");
-            assertEquals("", packageCode,
-                    "BUG: Package extraction returns empty for TB6612FNG");
+            assertEquals("FNG", packageCode,
+                    "FIXED: Package extraction returns 'FNG' for TB6612FNG");
         }
     }
 
@@ -390,10 +390,10 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: extractSeries returns empty for voltage regulators")
+        @DisplayName("FIXED: extractSeries now works for voltage regulators")
         void seriesExtractionMissingForRegulators() {
-            assertEquals("", handler.extractSeries("TAR5S33"),
-                    "BUG: extractSeries returns empty for TAR regulators");
+            assertEquals("TAR Series", handler.extractSeries("TAR5S33"),
+                    "FIXED: extractSeries works for TAR regulators");
         }
     }
 
@@ -506,11 +506,11 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: TK series package extraction not implemented")
+        @DisplayName("FIXED: TK series package extraction now works")
         void tkPackageExtractionBug() {
             String pkgCode = handler.extractPackageCode("TK024N60Z1");
-            assertEquals("", pkgCode,
-                    "BUG: TK package extraction returns empty");
+            assertEquals("Z1", pkgCode,
+                    "FIXED: TK package extraction returns 'Z1'");
         }
     }
 
@@ -538,18 +538,18 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: Missing series extraction for several product families")
+        @DisplayName("FIXED: Series extraction now complete for all product families")
         void missingSeriesExtractionBugs() {
-            assertEquals("", handler.extractSeries("TLP127"),
-                    "BUG: TLP series not handled");
-            assertEquals("", handler.extractSeries("2SC5198"),
-                    "BUG: 2SC series not handled");
-            assertEquals("", handler.extractSeries("2SA1943"),
-                    "BUG: 2SA series not handled");
-            assertEquals("", handler.extractSeries("TAR5S33"),
-                    "BUG: TAR series not handled");
-            assertEquals("", handler.extractSeries("RN1002"),
-                    "BUG: RN series not handled");
+            assertEquals("TLP Series", handler.extractSeries("TLP127"),
+                    "FIXED: TLP series now handled");
+            assertEquals("2SC Series", handler.extractSeries("2SC5198"),
+                    "FIXED: 2SC series now handled");
+            assertEquals("2SA Series", handler.extractSeries("2SA1943"),
+                    "FIXED: 2SA series now handled");
+            assertEquals("TAR Series", handler.extractSeries("TAR5S33"),
+                    "FIXED: TAR series now handled");
+            assertEquals("RN Series", handler.extractSeries("RN1002"),
+                    "FIXED: RN series now handled");
         }
     }
 
@@ -633,19 +633,19 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: TRANSISTOR type not in supported types despite patterns existing")
+        @DisplayName("FIXED: TRANSISTOR type now in supported types")
         void transistorTypeMissing() {
             var types = handler.getSupportedTypes();
-            assertFalse(types.contains(ComponentType.TRANSISTOR),
-                    "BUG: TRANSISTOR type missing from getSupportedTypes() despite patterns existing");
+            assertTrue(types.contains(ComponentType.TRANSISTOR),
+                    "FIXED: TRANSISTOR type now in getSupportedTypes()");
         }
 
         @Test
-        @DisplayName("BUG: IC type not in supported types despite patterns existing")
+        @DisplayName("FIXED: IC type now in supported types")
         void icTypeMissing() {
             var types = handler.getSupportedTypes();
-            assertFalse(types.contains(ComponentType.IC),
-                    "BUG: IC type missing from getSupportedTypes() despite patterns existing");
+            assertTrue(types.contains(ComponentType.IC),
+                    "FIXED: IC type now in getSupportedTypes()");
         }
 
         @Test
@@ -714,8 +714,8 @@ class ToshibaHandlerTest {
         void tlp291() {
             String mpn = "TLP291";
             assertTrue(registry.matches(mpn, ComponentType.OPTOCOUPLER_TOSHIBA));
-            assertEquals("", handler.extractSeries(mpn),
-                    "BUG: TLP series not extracted");
+            assertEquals("TLP Series", handler.extractSeries(mpn),
+                    "FIXED: TLP series extracted");
         }
 
         @Test
@@ -774,45 +774,45 @@ class ToshibaHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG #2: TRANSISTOR type missing from getSupportedTypes")
+        @DisplayName("FIXED: TRANSISTOR type now in getSupportedTypes")
         void bug2_transistorTypeMissing() {
             var types = handler.getSupportedTypes();
-            assertFalse(types.contains(ComponentType.TRANSISTOR),
-                    "BUG: TRANSISTOR not in supported types despite patterns existing");
+            assertTrue(types.contains(ComponentType.TRANSISTOR),
+                    "FIXED: TRANSISTOR now in supported types");
         }
 
         @Test
-        @DisplayName("BUG #3: IC type missing from getSupportedTypes")
+        @DisplayName("FIXED: IC type now in getSupportedTypes")
         void bug3_icTypeMissing() {
             var types = handler.getSupportedTypes();
-            assertFalse(types.contains(ComponentType.IC),
-                    "BUG: IC not in supported types despite patterns existing");
+            assertTrue(types.contains(ComponentType.IC),
+                    "FIXED: IC now in supported types");
         }
 
         @Test
-        @DisplayName("BUG #4: Package extraction incomplete")
+        @DisplayName("FIXED: Package extraction now complete")
         void bug4_packageExtractionIncomplete() {
-            assertEquals("", handler.extractPackageCode("TK024N60Z1"),
-                    "TK package extraction missing");
+            assertEquals("Z1", handler.extractPackageCode("TK024N60Z1"),
+                    "FIXED: TK package extraction works");
             assertEquals("", handler.extractPackageCode("TLP127"),
-                    "TLP package extraction missing");
-            assertEquals("", handler.extractPackageCode("SSM3K102TU"),
-                    "SSM package extraction missing");
-            assertEquals("", handler.extractPackageCode("TB6612FNG"),
-                    "TB package extraction missing");
+                    "TLP127 has no package code suffix");
+            assertEquals("TU", handler.extractPackageCode("SSM3K102TU"),
+                    "FIXED: SSM package extraction works");
+            assertEquals("FNG", handler.extractPackageCode("TB6612FNG"),
+                    "FIXED: TB package extraction works");
         }
 
         @Test
-        @DisplayName("BUG #5: Series extraction incomplete")
+        @DisplayName("FIXED: Series extraction now complete")
         void bug5_seriesExtractionIncomplete() {
-            assertEquals("", handler.extractSeries("TLP127"),
-                    "TLP series extraction missing");
-            assertEquals("", handler.extractSeries("2SC5198"),
-                    "2SC series extraction missing");
-            assertEquals("", handler.extractSeries("2SA1943"),
-                    "2SA series extraction missing");
-            assertEquals("", handler.extractSeries("TAR5S33"),
-                    "TAR series extraction missing");
+            assertEquals("TLP Series", handler.extractSeries("TLP127"),
+                    "FIXED: TLP series extraction works");
+            assertEquals("2SC Series", handler.extractSeries("2SC5198"),
+                    "FIXED: 2SC series extraction works");
+            assertEquals("2SA Series", handler.extractSeries("2SA1943"),
+                    "FIXED: 2SA series extraction works");
+            assertEquals("TAR Series", handler.extractSeries("TAR5S33"),
+                    "FIXED: TAR series extraction works");
         }
 
         @Test
