@@ -66,18 +66,18 @@ public class BournsHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.RESISTOR);
-        types.add(ComponentType.RESISTOR_CHIP_BOURNS);
-        types.add(ComponentType.INDUCTOR);
-        types.add(ComponentType.INDUCTOR_CHIP_BOURNS);
-        types.add(ComponentType.INDUCTOR_THT_BOURNS);
-        types.add(ComponentType.POTENTIOMETER_BOURNS);
-        types.add(ComponentType.TRANSFORMER_BOURNS);
-        types.add(ComponentType.CIRCUIT_PROTECTION_BOURNS);
-        types.add(ComponentType.TVS_DIODE_BOURNS);
-        types.add(ComponentType.PPTC_FUSE_BOURNS);
-        return types;
+        return Set.of(
+            ComponentType.RESISTOR,
+            ComponentType.RESISTOR_CHIP_BOURNS,
+            ComponentType.INDUCTOR,
+            ComponentType.INDUCTOR_CHIP_BOURNS,
+            ComponentType.INDUCTOR_THT_BOURNS,
+            ComponentType.POTENTIOMETER_BOURNS,
+            ComponentType.TRANSFORMER_BOURNS,
+            ComponentType.CIRCUIT_PROTECTION_BOURNS,
+            ComponentType.TVS_DIODE_BOURNS,
+            ComponentType.PPTC_FUSE_BOURNS
+        );
     }
 
     @Override

@@ -50,13 +50,11 @@ public class SpansionHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_FLASH);
-        types.add(ComponentType.MICROCONTROLLER);
-        // Note: Spansion was acquired by Cypress, which was then acquired by Infineon
-        // Could add specific Spansion types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_FLASH,
+            ComponentType.MICROCONTROLLER
+        );
     }
 
     @Override

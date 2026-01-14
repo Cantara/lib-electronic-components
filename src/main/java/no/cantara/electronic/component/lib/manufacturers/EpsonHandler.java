@@ -55,18 +55,18 @@ public class EpsonHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CRYSTAL);
-        types.add(ComponentType.CRYSTAL_EPSON);
-        types.add(ComponentType.OSCILLATOR);
-        types.add(ComponentType.OSCILLATOR_EPSON);
-        types.add(ComponentType.OSCILLATOR_TCXO_EPSON);
-        types.add(ComponentType.OSCILLATOR_VCXO_EPSON);
-        types.add(ComponentType.OSCILLATOR_OCXO_EPSON);
-        types.add(ComponentType.RTC_EPSON);
-        types.add(ComponentType.TIMER_EPSON);
-        types.add(ComponentType.GYRO_SENSOR_EPSON);
-        return types;
+        return Set.of(
+            ComponentType.CRYSTAL,
+            ComponentType.CRYSTAL_EPSON,
+            ComponentType.OSCILLATOR,
+            ComponentType.OSCILLATOR_EPSON,
+            ComponentType.OSCILLATOR_TCXO_EPSON,
+            ComponentType.OSCILLATOR_VCXO_EPSON,
+            ComponentType.OSCILLATOR_OCXO_EPSON,
+            ComponentType.RTC_EPSON,
+            ComponentType.TIMER_EPSON,
+            ComponentType.GYRO_SENSOR_EPSON
+        );
     }
 
     @Override

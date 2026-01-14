@@ -49,12 +49,9 @@ public class QualcommHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.WIFI_IC_QUALCOMM);
-       // types.add(ComponentType.WIFI_IC);
-        // Could add other Qualcomm wireless/RF/mobile types if they exist in ComponentType enum
-        // Such as cellular modems, SoCs, etc.
-        return types;
+        return Set.of(
+            ComponentType.WIFI_IC_QUALCOMM
+        );
     }
 
     @Override

@@ -65,18 +65,18 @@ public class AbraconHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CRYSTAL);
-        types.add(ComponentType.CRYSTAL_ABRACON);
-        types.add(ComponentType.OSCILLATOR);
-        types.add(ComponentType.OSCILLATOR_ABRACON);
-        types.add(ComponentType.OSCILLATOR_TCXO_ABRACON);
-        types.add(ComponentType.OSCILLATOR_VCXO_ABRACON);
-        types.add(ComponentType.OSCILLATOR_OCXO_ABRACON);
-        types.add(ComponentType.CLOCK_ABRACON);
-        types.add(ComponentType.ANTENNA_ABRACON);
-        types.add(ComponentType.RF_FILTER_ABRACON);
-        return types;
+        return Set.of(
+            ComponentType.CRYSTAL,
+            ComponentType.CRYSTAL_ABRACON,
+            ComponentType.OSCILLATOR,
+            ComponentType.OSCILLATOR_ABRACON,
+            ComponentType.OSCILLATOR_TCXO_ABRACON,
+            ComponentType.OSCILLATOR_VCXO_ABRACON,
+            ComponentType.OSCILLATOR_OCXO_ABRACON,
+            ComponentType.CLOCK_ABRACON,
+            ComponentType.ANTENNA_ABRACON,
+            ComponentType.RF_FILTER_ABRACON
+        );
     }
 
     @Override

@@ -1,5 +1,8 @@
 package no.cantara.electronic.component.lib;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -14,6 +17,7 @@ import java.util.jar.JarFile;
  * Factory for creating and initializing manufacturer handlers.
  */
 public class ManufacturerHandlerFactory {
+    private static final Logger logger = LoggerFactory.getLogger(ManufacturerHandlerFactory.class);
     private static final String MANUFACTURERS_PACKAGE = "no.cantara.electronic.component.lib.manufacturers";
     // Use TreeSet with deterministic ordering by class name to ensure consistent iteration order
     private static final Set<ManufacturerHandler> handlers = new TreeSet<>(
@@ -29,9 +33,9 @@ public class ManufacturerHandlerFactory {
         }
 
         try {
-            System.out.println("Initializing manufacturer handlers...");
+            logger.info("Initializing manufacturer handlers...");
             List<Class<?>> handlerClasses = findHandlerClasses();
-            System.out.println("Found " + handlerClasses.size() + " handler classes");
+            logger.info("Found {} handler classes", handlerClasses.size());
 
             PatternRegistry registry = new PatternRegistry();
             for (Class<?> handlerClass : handlerClasses) {
@@ -49,21 +53,19 @@ public class ManufacturerHandlerFactory {
                         registry.setCurrentHandlerClass(handlerClass);
                         handler.initializePatterns(registry);
                         handlers.add(handler);
-                        System.out.println("Initialized handler: " + handlerClass.getSimpleName());
+                        logger.debug("Initialized handler: {}", handlerClass.getSimpleName());
                     }
                 } catch (Exception e) {
-                    System.err.println("Error initializing handler: " + handlerClass.getName());
-                    e.printStackTrace();
+                    logger.error("Error initializing handler: {}", handlerClass.getName(), e);
                 }
             }
 
             initialized = true;
-            System.out.println("Successfully initialized " + handlers.size() + " manufacturer handlers");
+            logger.info("Successfully initialized {} manufacturer handlers", handlers.size());
             return handlers;
 
         } catch (Exception e) {
-            System.err.println("Error initializing manufacturer handlers");
-            e.printStackTrace();
+            logger.error("Error initializing manufacturer handlers", e);
             throw new RuntimeException("Failed to initialize manufacturer handlers", e);
         }
     }
@@ -78,7 +80,7 @@ public class ManufacturerHandlerFactory {
 
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
-            System.out.println("Scanning resource: " + resource);
+            logger.debug("Scanning resource: {}", resource);
 
             if (resource.getProtocol().equals("jar")) {
                 // Handle JAR file
@@ -106,8 +108,7 @@ public class ManufacturerHandlerFactory {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error during classpath scanning fallback");
-                e.printStackTrace();
+                logger.error("Error during classpath scanning fallback", e);
             }
         }
 
@@ -119,8 +120,7 @@ public class ManufacturerHandlerFactory {
             String jarPath = resource.getPath().substring(5, resource.getPath().indexOf("!"));  // strip out "jar:"
             handleJarFile(new File(URLDecoder.decode(jarPath, StandardCharsets.UTF_8)), classes);
         } catch (Exception e) {
-            System.err.println("Error processing JAR resource: " + resource);
-            e.printStackTrace();
+            logger.error("Error processing JAR resource: {}", resource, e);
         }
     }
 
@@ -142,17 +142,15 @@ public class ManufacturerHandlerFactory {
                                 !Modifier.isAbstract(cls.getModifiers()) &&
                                 !cls.isInterface()) {
                             classes.add(cls);
-                            System.out.println("Found handler class in JAR: " + className);
+                            logger.debug("Found handler class in JAR: {}", className);
                         }
                     } catch (Exception e) {
-                        System.err.println("Error loading class from JAR: " + className);
-                        e.printStackTrace();
+                        logger.error("Error loading class from JAR: {}", className, e);
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error processing JAR file: " + jarFile);
-            e.printStackTrace();
+            logger.error("Error processing JAR file: {}", jarFile, e);
         }
     }
 
@@ -160,13 +158,13 @@ public class ManufacturerHandlerFactory {
         try {
             File directory = new File(URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8));
             if (!directory.exists()) {
-                System.out.println("Directory does not exist: " + directory);
+                logger.debug("Directory does not exist: {}", directory);
                 return;
             }
 
             File[] files = directory.listFiles((dir, name) -> name.endsWith(".class"));
             if (files == null) {
-                System.out.println("No class files found in directory: " + directory);
+                logger.debug("No class files found in directory: {}", directory);
                 return;
             }
 
@@ -179,16 +177,14 @@ public class ManufacturerHandlerFactory {
                             !Modifier.isAbstract(cls.getModifiers()) &&
                             !cls.isInterface()) {
                         classes.add(cls);
-                        System.out.println("Found handler class in filesystem: " + className);
+                        logger.debug("Found handler class in filesystem: {}", className);
                     }
                 } catch (Exception e) {
-                    System.err.println("Error loading class from filesystem: " + className);
-                    e.printStackTrace();
+                    logger.error("Error loading class from filesystem: {}", className, e);
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error processing filesystem resource: " + resource);
-            e.printStackTrace();
+            logger.error("Error processing filesystem resource: {}", resource, e);
         }
     }
 

@@ -2,8 +2,11 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(DiodeSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -21,11 +24,11 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing diodes: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing diodes: {} vs {}", mpn1, mpn2);
 
         // First check if these are even diodes
         if (!isDiode(mpn1) || !isDiode(mpn2)) {
-            System.out.println("One or both parts are not diodes");
+            logger.debug("One or both parts are not diodes");
             return 0.0;
         }
 
@@ -33,7 +36,7 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
         String family1 = getDiodeFamily(mpn1);
         String family2 = getDiodeFamily(mpn2);
 
-        System.out.println("Diode families: " + family1 + " vs " + family2);
+        logger.debug("Diode families: {} vs {}", family1, family2);
 
         // Signal diode equivalents - specifically handle 1N4148 and 1N914
         if (isSignalDiode(mpn1) && isSignalDiode(mpn2)) {
@@ -64,7 +67,7 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
         if (family1.equals("ZENER") && family2.equals("ZENER")) {
             double voltage1 = getZenerVoltage(mpn1);
             double voltage2 = getZenerVoltage(mpn2);
-            System.out.println("Comparing Zener voltages: " + voltage1 + "V vs " + voltage2 + "V");
+            logger.trace("Comparing Zener voltages: {}V vs {}V", voltage1, voltage2);
 
             if (voltage1 == voltage2) {
                 return HIGH_SIMILARITY;
@@ -77,7 +80,7 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
             // First check if they're the same base part with different package
             String base1 = getBasePart(mpn1);
             String base2 = getBasePart(mpn2);
-            System.out.println("Comparing Schottky base parts: " + base1 + " vs " + base2);
+            logger.trace("Comparing Schottky base parts: {} vs {}", base1, base2);
 
             if (base1.equals(base2)) {
                 return HIGH_SIMILARITY;
@@ -86,7 +89,7 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
             // If different base parts, check voltage compatibility
             int voltage1 = getSchottkyVoltage(mpn1);
             int voltage2 = getSchottkyVoltage(mpn2);
-            System.out.println("Comparing Schottky voltages: " + voltage1 + "V vs " + voltage2 + "V");
+            logger.trace("Comparing Schottky voltages: {}V vs {}V", voltage1, voltage2);
 
             if (voltage1 == voltage2) {
                 return HIGH_SIMILARITY;
@@ -98,7 +101,7 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
 
         // Check for equivalent families
         if (areEquivalentFamilies(family1, family2)) {
-            System.out.println("Equivalent families -> HIGH_SIMILARITY");
+            logger.debug("Equivalent families -> HIGH_SIMILARITY");
             return HIGH_SIMILARITY;
         }
 
@@ -106,14 +109,14 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
         if (family1.equals(family2)) {
             // All diodes in these families are typically interchangeable
             if (family1.equals("1N400x") || family1.equals("SIGNAL")) {
-                System.out.println("Same interchangeable family -> HIGH_SIMILARITY");
+                logger.debug("Same interchangeable family -> HIGH_SIMILARITY");
                 return HIGH_SIMILARITY;
             }
 
             // For rectifiers, check voltage ratings
             int voltage1 = getRectifierVoltage(mpn1);
             int voltage2 = getRectifierVoltage(mpn2);
-            System.out.println("Comparing rectifier voltages: " + voltage1 + "V vs " + voltage2 + "V");
+            logger.trace("Comparing rectifier voltages: {}V vs {}V", voltage1, voltage2);
 
             if (voltage1 == voltage2) {
                 return HIGH_SIMILARITY;

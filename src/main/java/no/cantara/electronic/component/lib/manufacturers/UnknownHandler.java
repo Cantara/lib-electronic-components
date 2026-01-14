@@ -46,10 +46,9 @@ public class UnknownHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.GENERIC);
-        // For unknown manufacturers, we only support the generic component type
-        return types;
+        return Set.of(
+            ComponentType.GENERIC
+        );
     }
 
     @Override

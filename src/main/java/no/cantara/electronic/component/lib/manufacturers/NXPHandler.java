@@ -76,22 +76,22 @@ public class NXPHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_NXP);
-        types.add(ComponentType.MCU_NXP);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_NXP);
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_NXP);
-        types.add(ComponentType.TRANSISTOR);
-        types.add(ComponentType.TRANSISTOR_NXP);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_NXP);
-        types.add(ComponentType.KINETIS_MCU);
-        types.add(ComponentType.LPC_MCU);
-        types.add(ComponentType.IMX_PROCESSOR);
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_NXP,
+            ComponentType.MCU_NXP,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_NXP,
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_NXP,
+            ComponentType.TRANSISTOR,
+            ComponentType.TRANSISTOR_NXP,
+            ComponentType.OPAMP,
+            ComponentType.OPAMP_NXP,
+            ComponentType.KINETIS_MCU,
+            ComponentType.LPC_MCU,
+            ComponentType.IMX_PROCESSOR
+        );
     }
 
     @Override

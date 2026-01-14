@@ -20,10 +20,9 @@ public class LGHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.LED);
-        // Add any LG-specific LED or semiconductor types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.LED
+        );
     }
 
     @Override

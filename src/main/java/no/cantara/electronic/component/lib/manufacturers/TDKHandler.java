@@ -89,16 +89,16 @@ public class TDKHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_CERAMIC_TDK);
-        types.add(ComponentType.INDUCTOR);
-        types.add(ComponentType.INDUCTOR_CHIP_TDK);
-        types.add(ComponentType.INDUCTOR_POWER_TDK);
-        types.add(ComponentType.EMI_FILTER_TDK);
-        types.add(ComponentType.FERRITE_BEAD_TDK);
-        types.add(ComponentType.COMMON_MODE_CHOKE_TDK);
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_CERAMIC_TDK,
+            ComponentType.INDUCTOR,
+            ComponentType.INDUCTOR_CHIP_TDK,
+            ComponentType.INDUCTOR_POWER_TDK,
+            ComponentType.EMI_FILTER_TDK,
+            ComponentType.FERRITE_BEAD_TDK,
+            ComponentType.COMMON_MODE_CHOKE_TDK
+        );
     }
 
     @Override

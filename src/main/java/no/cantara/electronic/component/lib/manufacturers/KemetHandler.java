@@ -5,10 +5,8 @@ import no.cantara.electronic.component.lib.ManufacturerHandler;
 import no.cantara.electronic.component.lib.ManufacturerComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,20 +30,20 @@ public class KemetHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_CERAMIC_KEMET);
-        types.add(ComponentType.CAPACITOR_TANTALUM_KEMET);
-        types.add(ComponentType.CAPACITOR_ALUMINUM_KEMET);
-        types.add(ComponentType.CAPACITOR_FILM_KEMET);
-        types.add(ComponentType.EMI_FILTER_KEMET);
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_CERAMIC_KEMET,
+            ComponentType.CAPACITOR_TANTALUM_KEMET,
+            ComponentType.CAPACITOR_ALUMINUM_KEMET,
+            ComponentType.CAPACITOR_FILM_KEMET,
+            ComponentType.EMI_FILTER_KEMET
+        );
     }
 
     // Compatible package groups for replacements
-    private static final Set<String> MLCC_SIZES = new HashSet<>(Arrays.asList(
+    private static final Set<String> MLCC_SIZES = Set.of(
             "0402", "0603", "0805", "1206", "1210", "1812", "2220"
-    ));
+    );
 
     @Override
     public void initializePatterns(PatternRegistry registry) {

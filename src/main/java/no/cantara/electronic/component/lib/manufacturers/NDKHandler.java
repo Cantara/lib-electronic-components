@@ -63,17 +63,17 @@ public class NDKHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CRYSTAL);
-        types.add(ComponentType.CRYSTAL_NDK);
-        types.add(ComponentType.OSCILLATOR);
-        types.add(ComponentType.OSCILLATOR_NDK);
-        types.add(ComponentType.OSCILLATOR_TCXO_NDK);
-        types.add(ComponentType.OSCILLATOR_VCXO_NDK);
-        types.add(ComponentType.OSCILLATOR_OCXO_NDK);
-        types.add(ComponentType.SAW_FILTER_NDK);
-        types.add(ComponentType.SAW_RESONATOR_NDK);
-        return types;
+        return Set.of(
+            ComponentType.CRYSTAL,
+            ComponentType.CRYSTAL_NDK,
+            ComponentType.OSCILLATOR,
+            ComponentType.OSCILLATOR_NDK,
+            ComponentType.OSCILLATOR_TCXO_NDK,
+            ComponentType.OSCILLATOR_VCXO_NDK,
+            ComponentType.OSCILLATOR_OCXO_NDK,
+            ComponentType.SAW_FILTER_NDK,
+            ComponentType.SAW_RESONATOR_NDK
+        );
     }
 
     @Override

@@ -68,22 +68,20 @@ public class RohmHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_ROHM);
-        types.add(ComponentType.DIODE);
-        types.add(ComponentType.DIODE_ROHM);
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_ROHM);
-//        types.add(ComponentType.LED_DRIVER);
-        types.add(ComponentType.LED_DRIVER_ROHM);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_ROHM);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_ROHM);
-//        types.add(ComponentType.MOTOR_DRIVER);
-        types.add(ComponentType.MOTOR_DRIVER_ROHM);
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_ROHM,
+            ComponentType.DIODE,
+            ComponentType.DIODE_ROHM,
+            ComponentType.LED,
+            ComponentType.LED_ROHM,
+            ComponentType.LED_DRIVER_ROHM,
+            ComponentType.OPAMP,
+            ComponentType.OPAMP_ROHM,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_ROHM,
+            ComponentType.MOTOR_DRIVER_ROHM
+        );
     }
 
     @Override

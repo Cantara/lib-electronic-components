@@ -2,12 +2,15 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class TransistorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(TransistorSimilarityCalculator.class);
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -63,17 +66,17 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing transistors: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing transistors: {} vs {}", mpn1, mpn2);
 
         // Extract base numbers (without prefix and suffix)
         String base1 = extractBaseNumber(mpn1);
         String base2 = extractBaseNumber(mpn2);
 
-        System.out.println("Base numbers: " + base1 + " and " + base2);
+        logger.debug("Base numbers: {} and {}", base1, base2);
 
         // Check if they're even transistors
         if (!isTransistor(mpn1) || !isTransistor(mpn2)) {
-            System.out.println("One or both parts are not transistors");
+            logger.debug("One or both parts are not transistors");
             return 0.0;
         }
 
@@ -81,7 +84,7 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
         String family1 = getTransistorFamily(mpn1);
         String family2 = getTransistorFamily(mpn2);
         if (!family1.isEmpty() && !family2.isEmpty() && !family1.equals(family2)) {
-            System.out.println("Different transistor families: " + family1 + " vs " + family2);
+            logger.debug("Different transistor families: {} vs {}", family1, family2);
             return LOW_SIMILARITY;  // Different families should have low similarity
         }
 
@@ -92,14 +95,14 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
         for (Set<String> group : EQUIVALENT_GROUPS.values()) {
             if (isInEquivalentGroup(normalizedMpn1, group) &&
                     isInEquivalentGroup(normalizedMpn2, group)) {
-                System.out.println("Found in equivalent group");
+                logger.debug("Found in equivalent group");
                 return HIGH_SIMILARITY;
             }
         }
 
         // Check for exact same base part with optional A suffix
         if (isSameBasePart(mpn1, mpn2)) {
-            System.out.println("Same transistor with/without suffix");
+            logger.debug("Same transistor with/without suffix");
             return HIGH_SIMILARITY;
         }
 
@@ -111,7 +114,7 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
         if (char1 != null && char2 != null) {
             // Must be same type (NPN/PNP)
             if (char1.isNPN != char2.isNPN) {
-                System.out.println("Different transistor types (NPN vs PNP)");
+                logger.debug("Different transistor types (NPN vs PNP)");
                 return LOW_SIMILARITY;
             }
 
@@ -123,11 +126,11 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
 
         // Different transistors in same series
         if (areInSameSeries(base1, base2)) {
-            System.out.println("Same series but different transistors");
+            logger.debug("Same series but different transistors");
             return MEDIUM_SIMILARITY;
         }
 
-        System.out.println("Different transistor types");
+        logger.debug("Different transistor types");
         return LOW_SIMILARITY;
     }
 

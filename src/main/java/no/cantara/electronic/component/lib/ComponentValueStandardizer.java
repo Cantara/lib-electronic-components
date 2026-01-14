@@ -1,5 +1,8 @@
 package no.cantara.electronic.component.lib;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.math.BigDecimal;
@@ -8,6 +11,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class ComponentValueStandardizer {
+    private static final Logger logger = LoggerFactory.getLogger(ComponentValueStandardizer.class);
     // Value format patterns
     private static final Pattern STANDARD_NOTATION = Pattern.compile("^(\\d*\\.?\\d+)([pnuμmkKMG])?([FΩH])?$");
     private static final Pattern ENGINEERING_NOTATION = Pattern.compile("^(\\d*\\.?\\d+)[Ee]([+-]?\\d+)([FΩH])?$");
@@ -326,7 +330,7 @@ public class ComponentValueStandardizer {
                 value.matches("^\\d+(\\.\\d+)?[PNUΜMK]H$") ||     // Uppercase prefix
                 value.matches("^\\d+[pnuµmkM]\\d+H$");            // Format like 4u7H
 
-        System.out.println("Is valid: " + isValid); // Debug output
+        logger.trace("Inductor value validation for '{}': {}", value, isValid);
         return isValid;
     }
 

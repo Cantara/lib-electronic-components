@@ -58,13 +58,12 @@ public class SamsungHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.CAPACITOR);
-        types.add(ComponentType.CAPACITOR_CERAMIC_SAMSUNG);
-        types.add(ComponentType.LED);
-        types.add(ComponentType.LED_HIGHPOWER_SAMSUNG);
-        // Add other Samsung component types if they exist in ComponentType enum
-        return types;
+        return Set.of(
+            ComponentType.CAPACITOR,
+            ComponentType.CAPACITOR_CERAMIC_SAMSUNG,
+            ComponentType.LED,
+            ComponentType.LED_HIGHPOWER_SAMSUNG
+        );
     }
 
     @Override

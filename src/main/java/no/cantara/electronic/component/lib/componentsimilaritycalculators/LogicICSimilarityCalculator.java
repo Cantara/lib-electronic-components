@@ -2,6 +2,9 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
@@ -9,6 +12,7 @@ import java.util.Set;
 import java.util.HashMap;
 
 public class LogicICSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(LogicICSimilarityCalculator.class);
     private static final Pattern TTL_PATTERN = Pattern.compile("([0-9]+)([A-Z]+)([0-9]+).*");
     private static final Pattern CMOS_PATTERN = Pattern.compile("CD([0-9]+)([A-Z]*).*");
 
@@ -40,15 +44,15 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
     @Override
     public boolean isApplicable(ComponentType type) {
         if (type == null) {
-            System.out.println("LogicICSimilarityCalculator: type is null");
+            logger.trace("LogicICSimilarityCalculator: type is null");
             return false;
         }
 
-        System.out.println("LogicICSimilarityCalculator checking applicability for type: " + type);
+        logger.trace("LogicICSimilarityCalculator checking applicability for type: {}", type);
 
         // Check if it's an IC and if the component being checked is a logic IC
         if (type == ComponentType.IC) {
-            System.out.println("LogicICSimilarityCalculator: Handling generic IC type");
+            logger.trace("LogicICSimilarityCalculator: Handling generic IC type");
             return true;
         }
 
@@ -56,7 +60,7 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
                 type == ComponentType.LOGIC_IC_NEXPERIA ||
                 type == ComponentType.LOGIC_IC_DIODES;
 
-        System.out.println("LogicICSimilarityCalculator: Is applicable for " + type + "? " + result);
+        logger.trace("LogicICSimilarityCalculator: Is applicable for {}? {}", type, result);
         return result;
     }
 
@@ -64,7 +68,7 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
     public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
         if (mpn1 == null || mpn2 == null) return 0.0;
 
-        System.out.println("Comparing logic ICs: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing logic ICs: {} vs {}", mpn1, mpn2);
 
         // CD4000 series comparison
         if (mpn1.matches("^CD4.*") || mpn2.matches("^CD4.*")) {
@@ -75,7 +79,7 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
                 String base1 = m1.group(1);  // The numbers after CD4
                 String base2 = m2.group(1);
 
-                System.out.println("CD4000 series bases: " + base1 + " vs " + base2);
+                logger.trace("CD4000 series bases: {} vs {}", base1, base2);
 
                 // Same base number means same function
                 if (base1.equals(base2)) {
@@ -89,7 +93,7 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
         String base1 = extractBasePart(mpn1);
         String base2 = extractBasePart(mpn2);
 
-        System.out.println("Base parts: " + base1 + " and " + base2);
+        logger.trace("Base parts: {} and {}", base1, base2);
 
         // Different functions should have low similarity
         if (!areSameFunction(base1, base2)) {
@@ -110,16 +114,16 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
     }
 
     private double compareCD4000Series(String mpn1, String mpn2) {
-        System.out.println("Comparing CD4000 series: " + mpn1 + " vs " + mpn2);
+        logger.trace("Comparing CD4000 series: {} vs {}", mpn1, mpn2);
 
         // Extract base part (e.g., CD4001 from CD4001BE)
         String base1 = mpn1.replaceAll("(?:BE|BM|UBE|N|P|DG|PW|DR|DGK|DBV|DRG4)$", "");
         String base2 = mpn2.replaceAll("(?:BE|BM|UBE|N|P|DG|PW|DR|DGK|DBV|DRG4)$", "");
 
-        System.out.println("Base parts: " + base1 + " vs " + base2);
+        logger.trace("Base parts: {} vs {}", base1, base2);
 
         if (base1.equals(base2)) {
-            System.out.println("Same CD4000 series IC with different package codes");
+            logger.debug("Same CD4000 series IC with different package codes");
             return 0.9;
         }
 

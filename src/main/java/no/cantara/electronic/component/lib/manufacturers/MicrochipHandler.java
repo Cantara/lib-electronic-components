@@ -125,21 +125,20 @@ public class MicrochipHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_MICROCHIP);
-        types.add(ComponentType.MCU_MICROCHIP);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_MICROCHIP);
-        types.add(ComponentType.PIC_MCU);
-        types.add(ComponentType.AVR_MCU);
-        // Add for former Atmel products now under Microchip
-        types.add(ComponentType.MICROCONTROLLER_ATMEL);
-        types.add(ComponentType.MCU_ATMEL);
-        types.add(ComponentType.MEMORY_ATMEL);
-        types.add(ComponentType.TOUCH_ATMEL);
-        types.add(ComponentType.CRYPTO_ATMEL);
-        return types;
+        return Set.of(
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_MICROCHIP,
+            ComponentType.MCU_MICROCHIP,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_MICROCHIP,
+            ComponentType.PIC_MCU,
+            ComponentType.AVR_MCU,
+            ComponentType.MICROCONTROLLER_ATMEL,
+            ComponentType.MCU_ATMEL,
+            ComponentType.MEMORY_ATMEL,
+            ComponentType.TOUCH_ATMEL,
+            ComponentType.CRYPTO_ATMEL
+        );
     }
 
 

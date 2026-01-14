@@ -2,10 +2,14 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ResistorSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(ResistorSimilarityCalculator.class);
     @Override
     public boolean isApplicable(ComponentType type) {
         if (type == null) {
@@ -23,7 +27,7 @@ public class ResistorSimilarityCalculator implements ComponentSimilarityCalculat
             return 0.0;
         }
 
-        System.out.println("Comparing resistors: " + mpn1 + " and " + mpn2);
+        logger.debug("Comparing resistors: {} and {}", mpn1, mpn2);
 
         // Extract and compare key characteristics
         String size1 = extractPackageSize(mpn1);
@@ -31,29 +35,29 @@ public class ResistorSimilarityCalculator implements ComponentSimilarityCalculat
         String value1 = extractValue(mpn1);
         String value2 = extractValue(mpn2);
 
-        System.out.println("Size1: " + size1 + ", Size2: " + size2);
-        System.out.println("Value1: " + value1 + ", Value2: " + value2);
+        logger.trace("Size1: {}, Size2: {}", size1, size2);
+        logger.trace("Value1: {}, Value2: {}", value1, value2);
 
         double similarity = 0.0;
 
         // Same package size
         if (size1 != null && size2 != null && size1.equals(size2)) {
             similarity += 0.3;
-            System.out.println("Package size match (+0.3)");
+            logger.trace("Package size match (+0.3)");
         }
 
         // Same resistance value
         if (value1 != null && value2 != null) {
             String norm1 = normalizeValue(value1);
             String norm2 = normalizeValue(value2);
-            System.out.println("Normalized values: " + norm1 + " and " + norm2);
+            logger.trace("Normalized values: {} and {}", norm1, norm2);
             if (norm1.equals(norm2)) {
                 similarity += 0.5;
-                System.out.println("Value match (+0.5)");
+                logger.trace("Value match (+0.5)");
             }
         }
 
-        System.out.println("Final similarity: " + similarity);
+        logger.debug("Final similarity: {}", similarity);
         return similarity;
     }
 

@@ -1,10 +1,14 @@
 package no.cantara.electronic.component.lib;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 public class ComponentTypeDetector {
-/**
+    private static final Logger logger = LoggerFactory.getLogger(ComponentTypeDetector.class);
+
+    /**
         * Determines the specific ComponentType for an MPN.
             */
     public static ComponentType determineComponentType(String mpn) {
@@ -12,10 +16,10 @@ public class ComponentTypeDetector {
             return null;
         }
 
-        System.out.println("Determining type for MPN: " + mpn);
+        logger.debug("Determining type for MPN: {}", mpn);
 
         ComponentManufacturer manufacturer = ComponentManufacturer.fromMPN(mpn);
-        System.out.println("Found manufacturer: " + manufacturer.getName());
+        logger.debug("Found manufacturer: {}", manufacturer.getName());
 
         // Special case for 78xx and 79xx series - always voltage regulator
         if (mpn.matches("^(?:LM|MC)?(?:78|79)\\d{2}.*")) {
@@ -58,7 +62,7 @@ public class ComponentTypeDetector {
         ComponentType matchedType = null;
         for (ComponentType type : supportedTypes) {
             if (handler.matches(mpn, type, manufacturer.getPatterns())) {
-                System.out.println("Matched type: " + type);
+                logger.trace("Matched type: {}", type);
                 if (matchedType == null ||
                         isMoreSpecific(type, matchedType)) {
                     matchedType = type;
@@ -70,9 +74,9 @@ public class ComponentTypeDetector {
             return ComponentType.IC;
         }
 
-        System.out.println("Final determined type: " + matchedType);
+        logger.debug("Final determined type: {}", matchedType);
         if (matchedType != null) {
-            System.out.println("Base type: " + matchedType.getBaseType());
+            logger.trace("Base type: {}", matchedType.getBaseType());
         }
 
         return matchedType;
@@ -254,10 +258,10 @@ public class ComponentTypeDetector {
             return false;
         }
 
-        System.out.println("\nChecking MPN: " + mpn + " against type: " + type);
+        logger.trace("Checking MPN: {} against type: {}", mpn, type);
 
         ComponentManufacturer manufacturer = ComponentManufacturer.fromMPN(mpn);
-        System.out.println("Found manufacturer: " + manufacturer.getName());
+        logger.trace("Found manufacturer: {}", manufacturer.getName());
 
         ManufacturerHandler handler = manufacturer.getHandler();
         PatternRegistry patterns = manufacturer.getPatterns();
@@ -357,17 +361,17 @@ public class ComponentTypeDetector {
      */
     public static boolean isAnalogIC(String mpn) {
         if (mpn == null) {
-            System.out.println("MPN is null");
+            logger.trace("MPN is null");
             return false;
         }
 
-        System.out.println("\nAnalog IC check for MPN: " + mpn);
+        logger.debug("Analog IC check for MPN: {}", mpn);
 
         ComponentType type = determineComponentType(mpn);
-        System.out.println("Determined type: " + type);
+        logger.debug("Determined type: {}", type);
 
         if (type == null) {
-            System.out.println("Type is null");
+            logger.trace("Type is null");
             return false;
         }
 
@@ -379,7 +383,7 @@ public class ComponentTypeDetector {
                 type.name().startsWith("OPAMP_"));
 
         if (isKnownAnalogType) {
-            System.out.println("Matched known analog type");
+            logger.trace("Matched known analog type");
             return true;
         }
 
@@ -392,7 +396,7 @@ public class ComponentTypeDetector {
                                 type.getBaseType() == ComponentType.VOLTAGE_REGULATOR ||
                                 type.getBaseType() == ComponentType.ANALOG_IC)));
 
-        System.out.println("Base type check result: " + isAnalogBaseType);
+        logger.trace("Base type check result: {}", isAnalogBaseType);
 
         return isAnalogBaseType;
     }

@@ -38,26 +38,23 @@ public class InfineonHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_INFINEON);
-       // types.add(ComponentType.IGBT);
-        types.add(ComponentType.IGBT_INFINEON);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_LINEAR_INFINEON);
-        types.add(ComponentType.VOLTAGE_REGULATOR_SWITCHING_INFINEON);
-     //   types.add(ComponentType.LED_DRIVER);
-        types.add(ComponentType.LED_DRIVER_INFINEON);
-     //   types.add(ComponentType.GATE_DRIVER);
-        types.add(ComponentType.GATE_DRIVER_INFINEON);
-        types.add(ComponentType.OPAMP);
-        types.add(ComponentType.OPAMP_INFINEON);
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_INFINEON);
-        types.add(ComponentType.MCU_INFINEON);
-        types.add(ComponentType.MEMORY);
-        types.add(ComponentType.MEMORY_INFINEON);
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_INFINEON,
+            ComponentType.IGBT_INFINEON,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_LINEAR_INFINEON,
+            ComponentType.VOLTAGE_REGULATOR_SWITCHING_INFINEON,
+            ComponentType.LED_DRIVER_INFINEON,
+            ComponentType.GATE_DRIVER_INFINEON,
+            ComponentType.OPAMP,
+            ComponentType.OPAMP_INFINEON,
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_INFINEON,
+            ComponentType.MCU_INFINEON,
+            ComponentType.MEMORY,
+            ComponentType.MEMORY_INFINEON
+        );
     }
 
     @Override

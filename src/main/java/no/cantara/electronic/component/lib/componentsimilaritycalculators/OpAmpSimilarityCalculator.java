@@ -2,6 +2,8 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator {
+    private static final Logger logger = LoggerFactory.getLogger(OpAmpSimilarityCalculator.class);
 
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
@@ -131,19 +134,19 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
             return 0.0;
         }
 
-        System.out.println("Comparing op-amps: " + mpn1 + " vs " + mpn2);
+        logger.debug("Comparing op-amps: {} vs {}", mpn1, mpn2);
 
         // Extract base part numbers (without package codes)
         String base1 = extractBasePart(mpn1);
         String base2 = extractBasePart(mpn2);
-        System.out.println("Base part numbers: " + base1 + " and " + base2);
+        logger.trace("Base part numbers: {} and {}", base1, base2);
 
         // Same exact part
         if (base1.equals(base2)) {
             String pkg1 = extractPackageCode(mpn1);
             String pkg2 = extractPackageCode(mpn2);
             if (areCompatiblePackages(pkg1, pkg2)) {
-                System.out.println("Same part, compatible packages - similarity: " + HIGH_SIMILARITY);
+                logger.debug("Same part, compatible packages - similarity: {}", HIGH_SIMILARITY);
                 return HIGH_SIMILARITY;
             }
         }
@@ -151,21 +154,21 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
         // Extract families (LM358, MC1458, etc.)
         String family1 = extractFamily(base1);
         String family2 = extractFamily(base2);
-        System.out.println("Families: " + family1 + " and " + family2);
+        logger.trace("Families: {} and {}", family1, family2);
 
         // Check for equivalent families
         if (areEquivalentFamilies(family1, family2)) {
-            System.out.println("Equivalent families with characteristics - similarity: " + HIGH_SIMILARITY);
+            logger.debug("Equivalent families with characteristics - similarity: {}", HIGH_SIMILARITY);
             return HIGH_SIMILARITY;
         }
 
         // Same function (dual, quad, etc.)
         if (haveSameFunction(family1, family2)) {
-            System.out.println("Same function type - similarity: " + MEDIUM_SIMILARITY);
+            logger.debug("Same function type - similarity: {}", MEDIUM_SIMILARITY);
             return MEDIUM_SIMILARITY;
         }
 
-        System.out.println("Both are op-amps - similarity: " + LOW_SIMILARITY);
+        logger.debug("Both are op-amps - similarity: {}", LOW_SIMILARITY);
         return LOW_SIMILARITY;
     }
 

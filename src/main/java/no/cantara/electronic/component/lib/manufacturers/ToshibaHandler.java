@@ -58,22 +58,18 @@ public class ToshibaHandler implements ManufacturerHandler {
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
-        Set<ComponentType> types = new HashSet<>();
-        types.add(ComponentType.MOSFET);
-        types.add(ComponentType.MOSFET_TOSHIBA);
-//        types.add(ComponentType.IGBT);
-        types.add(ComponentType.IGBT_TOSHIBA);
-//        types.add(ComponentType.MOTOR_DRIVER);
-        types.add(ComponentType.MOTOR_DRIVER_TOSHIBA);
-//        types.add(ComponentType.GATE_DRIVER);
-        types.add(ComponentType.GATE_DRIVER_TOSHIBA);
-//        types.add(ComponentType.OPTOCOUPLER);
-        types.add(ComponentType.OPTOCOUPLER_TOSHIBA);
-        types.add(ComponentType.VOLTAGE_REGULATOR);
-        types.add(ComponentType.VOLTAGE_REGULATOR_TOSHIBA);
-        types.add(ComponentType.MICROCONTROLLER);
-        types.add(ComponentType.MICROCONTROLLER_TOSHIBA);
-        return types;
+        return Set.of(
+            ComponentType.MOSFET,
+            ComponentType.MOSFET_TOSHIBA,
+            ComponentType.IGBT_TOSHIBA,
+            ComponentType.MOTOR_DRIVER_TOSHIBA,
+            ComponentType.GATE_DRIVER_TOSHIBA,
+            ComponentType.OPTOCOUPLER_TOSHIBA,
+            ComponentType.VOLTAGE_REGULATOR,
+            ComponentType.VOLTAGE_REGULATOR_TOSHIBA,
+            ComponentType.MICROCONTROLLER,
+            ComponentType.MICROCONTROLLER_TOSHIBA
+        );
     }
 
     @Override
