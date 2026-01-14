@@ -182,6 +182,94 @@ mvn test -Dtest=TransistorSimilarityCalculatorTest
 
 ---
 
+## Metadata-Driven Architecture (January 2026)
+
+The similarity system now uses a **metadata-driven architecture** for configurable, type-specific similarity rules.
+
+### Core Metadata Classes
+
+| Class | Purpose |
+|-------|---------|
+| `ComponentTypeMetadata` | Defines specs, importance levels, tolerance rules per component type |
+| `ComponentTypeMetadataRegistry` | Singleton registry mapping ComponentType → metadata |
+| `SpecImportance` | Enum: CRITICAL (1.0), HIGH (0.7), MEDIUM (0.4), LOW (0.2), OPTIONAL (0.0) |
+| `ToleranceRule` | Interface for comparing spec values (ExactMatch, Percentage, MinRequired, MaxAllowed, Range) |
+| `SimilarityProfile` | Context-aware profiles (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION, PERFORMANCE_UPGRADE, EMERGENCY_SOURCING) |
+
+### Retrieving Metadata
+
+```java
+ComponentTypeMetadataRegistry registry = ComponentTypeMetadataRegistry.getInstance();
+
+// Get metadata for a component type
+Optional<ComponentTypeMetadata> metadata = registry.getMetadata(ComponentType.RESISTOR);
+
+// Query specs
+if (metadata.isPresent()) {
+    ComponentTypeMetadata meta = metadata.get();
+
+    // Check if spec is critical
+    boolean critical = meta.isCritical("resistance"); // true
+
+    // Get tolerance rule for a spec
+    SpecConfig config = meta.getSpecConfig("resistance");
+    if (config != null) {
+        ToleranceRule rule = config.getToleranceRule();
+        SpecImportance importance = config.getImportance();
+    }
+
+    // Get all configured specs
+    Set<String> allSpecs = meta.getAllSpecs();
+}
+```
+
+### Pre-Registered Types (10)
+
+RESISTOR, CAPACITOR, MOSFET, TRANSISTOR, DIODE, OPAMP, MICROCONTROLLER, MEMORY, LED, CONNECTOR
+
+Each type has:
+- Critical specs (must match for similarity)
+- High/Medium/Low importance specs (contribute to score)
+- Tolerance rules (how to compare values)
+- Default similarity profile
+
+### Context-Aware Profiles
+
+Adjust importance multipliers based on use case:
+
+| Profile | Threshold | CRITICAL | HIGH | MEDIUM | LOW | Use Case |
+|---------|-----------|----------|------|--------|-----|----------|
+| DESIGN_PHASE | 0.85 | 1.0 | 0.9 | 0.7 | 0.4 | Exact match for new designs |
+| REPLACEMENT | 0.75 | 1.0 | 0.7 | 0.4 | 0.2 | **Default**: Direct replacement |
+| COST_OPTIMIZATION | 0.60 | 1.0 | 0.4 | 0.2 | 0.0 | Maintain critical specs only |
+| EMERGENCY_SOURCING | 0.50 | 0.8 | 0.4 | 0.2 | 0.0 | Urgent, relaxed requirements |
+
+```java
+// Check if similarity meets threshold for a profile
+SimilarityProfile profile = SimilarityProfile.REPLACEMENT;
+double similarity = 0.78;
+boolean passes = profile.meetsThreshold(similarity); // true
+
+// Get effective weight for a spec
+double effectiveWeight = profile.getEffectiveWeight(SpecImportance.HIGH); // 0.7 × 0.7 = 0.49
+```
+
+### Migration Path
+
+**Future calculators** should:
+1. Use `ComponentTypeMetadataRegistry` to get metadata
+2. Query tolerance rules for spec comparison
+3. Use `SimilarityProfile` for context-aware thresholds
+4. Avoid hardcoded weights - query `SpecImportance.getBaseWeight()`
+
+**Existing calculators** (17 legacy implementations):
+- Still work with hardcoded logic
+- Gradual migration planned (Milestone 2)
+
+See CLAUDE.md § "Similarity Metadata System" for complete architecture details.
+
+---
+
 ## Learnings & Quirks
 
 ### General Patterns
@@ -193,5 +281,37 @@ mvn test -Dtest=TransistorSimilarityCalculatorTest
 - Parts starting with digits (e.g., "2N2222") need special regex handling - `^[A-Za-z]+` won't match
 - Some MPNs have significant hyphens (Molex) vs decorative hyphens (TI)
 - Reel/tape suffixes (-RL, -T, -TR) should generally be ignored
+
+### Metadata System Gotchas (January 2026)
+
+**SpecValue Instantiation**:
+```java
+// NO static factory - use constructor
+SpecValue<Double> v = new SpecValue<>(100.0, SpecUnit.FARAD); // ✓
+SpecValue<Double> v = SpecValue.of(100.0); // ✗ Does not exist
+```
+
+**API Return Types**:
+```java
+// Registry returns Optional, metadata methods return direct values
+Optional<ComponentTypeMetadata> meta = registry.getMetadata(type); // Optional
+SpecConfig config = metadata.getSpecConfig("resistance"); // Can be null
+boolean critical = metadata.isCritical("resistance"); // false if not found
+```
+
+**Singleton Side Effects**:
+- Registry is shared across all tests
+- Custom registrations persist
+- Use unregistered types (CRYSTAL, FUSE) for tests, not RESISTOR/CAPACITOR
+
+**Profile Multiplier Values**:
+- COST_OPTIMIZATION maintains CRITICAL=1.0 (safety specs never compromised)
+- EMERGENCY_SOURCING relaxes CRITICAL to 0.8 (only for urgent scenarios)
+
+**Builder Validation**:
+```java
+ComponentTypeMetadata.builder(null).build(); // IllegalArgumentException
+ComponentTypeMetadata.builder(ComponentType.IC).build(); // IllegalStateException (no specs)
+```
 
 <!-- Add new learnings above this line -->
