@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +16,11 @@ import java.util.Optional;
 /**
  * Similarity calculator for diode components.
  *
- * Note: Diode similarity is primarily based on equivalent families and voltage ratings.
+ * Uses metadata-driven comparison based on extracted specs (type, voltage rating, current rating).
  * Signal diodes (1N4148≈1N914), rectifiers (1N400x≈RL20x), Zeners (voltage-specific),
- * and Schottkys have manufacturer-specific equivalent groups that are preserved
- * in the family-matching logic.
+ * and Schottkys are compared using their electrical specifications.
  *
- * Metadata infrastructure is available for future spec-based enhancements.
+ * Fallback to family-matching for unknown diode types.
  */
 public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(DiodeSimilarityCalculator.class);
@@ -52,20 +55,223 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
             return 0.0;
         }
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Get metadata for spec-based comparison
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.DIODE);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for DIODE, using family-matching approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven comparison for diodes");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // Diode comparison uses family-matching approach based on equivalent groups
-        // and voltage ratings rather than extracting individual electrical specs
+        // Fallback to family-matching if metadata not available
+        logger.trace("No metadata found for DIODE, using family-matching fallback");
         return calculateFamilyBasedSimilarity(mpn1, mpn2);
     }
 
     /**
+     * Calculate similarity using metadata-driven weighted comparison.
+     * Extracts specs from MPNs and uses tolerance rules for comparison.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        logger.trace("Using profile: {}", profile);
+
+        // Extract specs from both MPNs
+        String type1 = extractType(mpn1);
+        String type2 = extractType(mpn2);
+        Integer voltage1 = extractVoltageRating(mpn1);
+        Integer voltage2 = extractVoltageRating(mpn2);
+        Integer current1 = extractCurrentRating(mpn1);
+        Integer current2 = extractCurrentRating(mpn2);
+        String package1 = extractPackage(mpn1);
+        String package2 = extractPackage(mpn2);
+
+        logger.trace("MPN1 specs: type={}, voltage={}V, current={}A, package={}", type1, voltage1, current1, package1);
+        logger.trace("MPN2 specs: type={}, voltage={}V, current={}A, package={}", type2, voltage2, current2, package2);
+
+        // Short-circuit: For Zener diodes, voltage IS the critical spec - if it doesn't match, they're not similar
+        if (type1 != null && type1.contains("zener") && voltage1 != null && voltage2 != null && !voltage1.equals(voltage2)) {
+            logger.debug("Zener diodes with different voltages: {}V vs {}V -> LOW_SIMILARITY", voltage1, voltage2);
+            return LOW_SIMILARITY;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare type (CRITICAL)
+        ComponentTypeMetadata.SpecConfig typeConfig = metadata.getSpecConfig("type");
+        if (typeConfig != null && type1 != null && type2 != null) {
+            ToleranceRule rule = typeConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(type1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(type2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(typeConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Type comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare voltageRating (CRITICAL)
+        ComponentTypeMetadata.SpecConfig voltageConfig = metadata.getSpecConfig("voltageRating");
+        if (voltageConfig != null && voltage1 != null && voltage2 != null) {
+            // For Zener diodes, voltage must match exactly (it's the spec, not a rating)
+            // For other diodes (rectifiers, schottkys), higher voltage is acceptable
+            ToleranceRule rule = type1 != null && type1.contains("zener")
+                ? ToleranceRule.exactMatch()
+                : voltageConfig.getToleranceRule();
+            SpecValue<Integer> orig = new SpecValue<>(voltage1, SpecUnit.VOLTS);
+            SpecValue<Integer> cand = new SpecValue<>(voltage2, SpecUnit.VOLTS);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(voltageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Voltage comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare currentRating (CRITICAL)
+        ComponentTypeMetadata.SpecConfig currentConfig = metadata.getSpecConfig("currentRating");
+        if (currentConfig != null && current1 != null && current2 != null) {
+            ToleranceRule rule = currentConfig.getToleranceRule();
+            SpecValue<Integer> orig = new SpecValue<>(current1, SpecUnit.MILLIAMPS);
+            SpecValue<Integer> cand = new SpecValue<>(current2, SpecUnit.MILLIAMPS);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(currentConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Current comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (HIGH)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && package1 != null && package2 != null) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Normalize to [0.0, 1.0]
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+        // Check for known equivalent groups and boost score if applicable
+        if (areEquivalentSignalDiodes(mpn1, mpn2) || areEquivalent1N400xDiodes(mpn1, mpn2)) {
+            logger.trace("Known equivalent group detected, boosting similarity");
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+        }
+
+        logger.debug("Final similarity: {}", similarity);
+        return similarity;
+    }
+
+    /**
+     * Extract diode type from MPN (signal, rectifier, zener, schottky, fast_rectifier).
+     */
+    private String extractType(String mpn) {
+        if (mpn == null) return null;
+        String family = getDiodeFamily(mpn);
+        return family.toLowerCase().replace("_", " ");
+    }
+
+    /**
+     * Extract voltage rating from MPN in volts.
+     */
+    private Integer extractVoltageRating(String mpn) {
+        if (mpn == null) return null;
+
+        String upperMpn = mpn.toUpperCase();
+
+        // Try rectifier voltage first
+        int rectifierVoltage = getRectifierVoltage(upperMpn);
+        if (rectifierVoltage > 0) return rectifierVoltage;
+
+        // Try zener voltage (returns double, convert to int)
+        double zenerVoltage = getZenerVoltage(upperMpn);
+        if (zenerVoltage > 0) return (int) zenerVoltage;
+
+        // Try schottky voltage
+        int schottkyVoltage = getSchottkyVoltage(upperMpn);
+        if (schottkyVoltage > 0) return schottkyVoltage;
+
+        // Default for unknown signal diodes
+        if (isSignalDiode(upperMpn)) return 100; // Typical 1N4148 rating
+
+        return null;
+    }
+
+    /**
+     * Extract current rating from MPN in milliamperes.
+     */
+    private Integer extractCurrentRating(String mpn) {
+        if (mpn == null) return null;
+
+        String upperMpn = mpn.toUpperCase();
+
+        // Signal diodes: typically 200-300mA
+        if (isSignalDiode(upperMpn)) return 200;
+
+        // Zener diodes: typically 500mA-1A
+        if (upperMpn.matches("^(BZX|1N47|1N52)[0-9].*")) return 500;
+
+        // Schottky diodes: varies widely, default 1A
+        if (upperMpn.matches("^(BAT|SB|SD)[0-9].*")) return 1000;
+
+        // Rectifier diodes (1N400x, RL20x): typically 1A
+        if (upperMpn.matches("^(1N400[1-7]|RL20[1-7]).*")) return 1000;
+
+        // Fast recovery: typically higher current
+        if (upperMpn.matches("^(FR|UF|MUR)[0-9].*")) return 3000;
+
+        // Default for unknown
+        return 1000;
+    }
+
+    /**
+     * Extract package type from MPN.
+     */
+    private String extractPackage(String mpn) {
+        if (mpn == null) return null;
+
+        String upperMpn = mpn.toUpperCase();
+
+        // Common SMD packages
+        if (upperMpn.contains("SOD-123")) return "SOD-123";
+        if (upperMpn.contains("SOD-323")) return "SOD-323";
+        if (upperMpn.contains("SOT-23")) return "SOT-23";
+        if (upperMpn.contains("DO-214")) return "DO-214";
+        if (upperMpn.contains("DO-41")) return "DO-41";
+        if (upperMpn.contains("DO-35")) return "DO-35";
+
+        // Suffix-based detection
+        if (upperMpn.endsWith("W")) return "SOD-123";
+        if (upperMpn.endsWith("S")) return "SOT-23";
+        if (upperMpn.endsWith("C")) return "SOT-23"; // Common for BAT54C, etc.
+        if (upperMpn.endsWith("A")) return "DO-41";
+
+        // Default: assume generic through-hole
+        return "DO-41";
+    }
+
+    /**
+     * Check if two diodes are equivalent 1N400x series (including RL20x equivalents).
+     */
+    private boolean areEquivalent1N400xDiodes(String mpn1, String mpn2) {
+        // Check 1N400x ≈ RL20x equivalents
+        if ((mpn1.matches("1N400[1-7]") && mpn2.matches("RL20[1-7]")) ||
+                (mpn2.matches("1N400[1-7]") && mpn1.matches("RL20[1-7]"))) {
+            int suffix1 = extractSuffix(mpn1);
+            int suffix2 = extractSuffix(mpn2);
+            return suffix1 == suffix2;
+        }
+        return false;
+    }
+
+    /**
      * Calculate similarity based on diode families, equivalent groups, and voltage ratings.
-     * This is the primary diode comparison method.
+     * This is the fallback comparison method when metadata is not available.
      */
     private double calculateFamilyBasedSimilarity(String mpn1, String mpn2) {
 
