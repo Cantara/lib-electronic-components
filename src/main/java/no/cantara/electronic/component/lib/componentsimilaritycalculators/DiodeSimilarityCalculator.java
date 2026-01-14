@@ -2,14 +2,34 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
+/**
+ * Similarity calculator for diode components.
+ *
+ * Note: Diode similarity is primarily based on equivalent families and voltage ratings.
+ * Signal diodes (1N4148≈1N914), rectifiers (1N400x≈RL20x), Zeners (voltage-specific),
+ * and Schottkys have manufacturer-specific equivalent groups that are preserved
+ * in the family-matching logic.
+ *
+ * Metadata infrastructure is available for future spec-based enhancements.
+ */
 public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(DiodeSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
+
+    public DiodeSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
 
     @Override
     public boolean isApplicable(ComponentType type) {
@@ -31,6 +51,23 @@ public class DiodeSimilarityCalculator implements ComponentSimilarityCalculator 
             logger.debug("One or both parts are not diodes");
             return 0.0;
         }
+
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.DIODE);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for DIODE, using family-matching approach");
+        }
+
+        // Diode comparison uses family-matching approach based on equivalent groups
+        // and voltage ratings rather than extracting individual electrical specs
+        return calculateFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on diode families, equivalent groups, and voltage ratings.
+     * This is the primary diode comparison method.
+     */
+    private double calculateFamilyBasedSimilarity(String mpn1, String mpn2) {
 
         // Get the diode families
         String family1 = getDiodeFamily(mpn1);

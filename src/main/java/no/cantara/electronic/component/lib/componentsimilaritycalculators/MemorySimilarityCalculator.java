@@ -2,17 +2,28 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Similarity calculator for memory devices (EEPROM, Flash, SRAM).
+ *
+ * Uses equivalent groups (24LC256≈AT24C256, W25Q32 variants) and characteristics comparison.
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class MemorySimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(MemorySimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -106,6 +117,10 @@ public class MemorySimilarityCalculator implements ComponentSimilarityCalculator
         CHARACTERISTICS.put("MX25L12833F", spiFlash128m);
     }
 
+    public MemorySimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
+
     @Override
     public boolean isApplicable(ComponentType type) {
         if (type == null) return true;  // Handle unrecognized memory devices
@@ -125,6 +140,22 @@ public class MemorySimilarityCalculator implements ComponentSimilarityCalculator
             logger.debug("One or both parts are not memory devices");
             return 0.0;
         }
+
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.MEMORY);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for MEMORY, using equivalent group approach");
+        }
+
+        // Memory comparison primarily uses equivalent groups and characteristics
+        return calculateEquivalentGroupBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on equivalent groups and known characteristics.
+     * This is the primary memory comparison method.
+     */
+    private double calculateEquivalentGroupBasedSimilarity(String mpn1, String mpn2) {
 
         // Extract base part numbers
         String base1 = extractBasePart(mpn1);
