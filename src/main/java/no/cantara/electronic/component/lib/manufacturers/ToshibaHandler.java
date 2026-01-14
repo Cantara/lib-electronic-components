@@ -19,10 +19,12 @@ public class ToshibaHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.MOSFET, "^TPH[0-9].*");          // High voltage MOSFETs
         registry.addPattern(ComponentType.MOSFET, "^SSM[0-9].*");          // Small signal MOSFETs
         registry.addPattern(ComponentType.MOSFET, "^TK[0-9].*");           // Digital power MOSFETs
+        registry.addPattern(ComponentType.MOSFET, "^2SK[0-9].*");          // JIS N-channel MOSFETs
         registry.addPattern(ComponentType.MOSFET_TOSHIBA, "^TPC[0-9].*");
         registry.addPattern(ComponentType.MOSFET_TOSHIBA, "^TPH[0-9].*");
         registry.addPattern(ComponentType.MOSFET_TOSHIBA, "^SSM[0-9].*");
         registry.addPattern(ComponentType.MOSFET_TOSHIBA, "^TK[0-9].*");
+        registry.addPattern(ComponentType.MOSFET_TOSHIBA, "^2SK[0-9].*");
 
         // Transistors
         registry.addPattern(ComponentType.TRANSISTOR, "^2SC[0-9].*");       // NPN transistors
@@ -59,16 +61,18 @@ public class ToshibaHandler implements ManufacturerHandler {
     @Override
     public Set<ComponentType> getSupportedTypes() {
         return Set.of(
-            ComponentType.MOSFET,
-            ComponentType.MOSFET_TOSHIBA,
-            ComponentType.IGBT_TOSHIBA,
-            ComponentType.MOTOR_DRIVER_TOSHIBA,
-            ComponentType.GATE_DRIVER_TOSHIBA,
-            ComponentType.OPTOCOUPLER_TOSHIBA,
-            ComponentType.VOLTAGE_REGULATOR,
-            ComponentType.VOLTAGE_REGULATOR_TOSHIBA,
-            ComponentType.MICROCONTROLLER,
-            ComponentType.MICROCONTROLLER_TOSHIBA
+                ComponentType.MOSFET,
+                ComponentType.MOSFET_TOSHIBA,
+                ComponentType.TRANSISTOR,
+                ComponentType.IC,
+                ComponentType.IGBT_TOSHIBA,
+                ComponentType.MOTOR_DRIVER_TOSHIBA,
+                ComponentType.GATE_DRIVER_TOSHIBA,
+                ComponentType.OPTOCOUPLER_TOSHIBA,
+                ComponentType.VOLTAGE_REGULATOR,
+                ComponentType.VOLTAGE_REGULATOR_TOSHIBA,
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_TOSHIBA
         );
     }
 
@@ -90,6 +94,62 @@ public class ToshibaHandler implements ManufacturerHandler {
             int dashIndex = upperMpn.lastIndexOf('-');
             if (dashIndex >= 0 && dashIndex < upperMpn.length() - 1) {
                 return upperMpn.substring(dashIndex + 1);
+            }
+        }
+
+        // TK series MOSFETs - format: TK[digits][letter][digits][package]
+        // Example: TK024N60Z1 → Z1
+        if (upperMpn.startsWith("TK")) {
+            String suffix = upperMpn.substring(2); // Skip "TK"
+            // Skip first set of digits
+            int pos = 0;
+            while (pos < suffix.length() && Character.isDigit(suffix.charAt(pos))) {
+                pos++;
+            }
+            // Skip channel type letter (N/P)
+            if (pos < suffix.length() && Character.isLetter(suffix.charAt(pos))) {
+                pos++;
+            }
+            // Skip voltage digits
+            while (pos < suffix.length() && Character.isDigit(suffix.charAt(pos))) {
+                pos++;
+            }
+            // Remaining is package code
+            if (pos < suffix.length()) {
+                return suffix.substring(pos);
+            }
+        }
+
+        // SSM series small signal MOSFETs - package code after K/J designation
+        // Format: SSM3K102TU → TU
+        if (upperMpn.startsWith("SSM")) {
+            int lastDigitIndex = findLastDigit(upperMpn);
+            if (lastDigitIndex >= 0 && lastDigitIndex < upperMpn.length() - 1) {
+                return upperMpn.substring(lastDigitIndex + 1);
+            }
+        }
+
+        // TLP optocouplers - package code after digits
+        // Format: TLP127 → nothing, TLP291(GB-TP,SE) → (GB-TP,SE) but we strip that
+        if (upperMpn.startsWith("TLP")) {
+            int lastDigitIndex = findLastDigit(upperMpn);
+            if (lastDigitIndex >= 0 && lastDigitIndex < upperMpn.length() - 1) {
+                String suffix = upperMpn.substring(lastDigitIndex + 1);
+                // Strip packaging options like (GB-TP,SE)
+                int parenIndex = suffix.indexOf('(');
+                if (parenIndex > 0) {
+                    suffix = suffix.substring(0, parenIndex);
+                }
+                return suffix;
+            }
+        }
+
+        // TB motor drivers - package code after digits
+        // Format: TB6612FNG → FNG
+        if (upperMpn.startsWith("TB")) {
+            int lastDigitIndex = findLastDigit(upperMpn);
+            if (lastDigitIndex >= 0 && lastDigitIndex < upperMpn.length() - 1) {
+                return upperMpn.substring(lastDigitIndex + 1);
             }
         }
 
@@ -115,6 +175,13 @@ public class ToshibaHandler implements ManufacturerHandler {
         if (upperMpn.startsWith("TPH")) return "TPH Series";
         if (upperMpn.startsWith("SSM")) return "SSM Series";
         if (upperMpn.startsWith("TK")) return "TK Series";
+        if (upperMpn.startsWith("2SK")) return "2SK Series";
+
+        // Transistors
+        if (upperMpn.startsWith("2SC")) return "2SC Series";
+        if (upperMpn.startsWith("2SA")) return "2SA Series";
+        if (upperMpn.startsWith("RN")) return "RN Series";
+        if (upperMpn.startsWith("RP")) return "RP Series";
 
         // IGBTs
         if (upperMpn.startsWith("GT")) return "GT Series";
@@ -123,6 +190,12 @@ public class ToshibaHandler implements ManufacturerHandler {
         // Motor Drivers
         if (upperMpn.startsWith("TB")) return "TB Series";
         if (upperMpn.startsWith("TPD")) return "TPD Series";
+
+        // Optocouplers
+        if (upperMpn.startsWith("TLP")) return "TLP Series";
+
+        // Voltage Regulators
+        if (upperMpn.startsWith("TAR")) return "TAR Series";
 
         // Microcontrollers
         if (upperMpn.startsWith("TMPM")) return "ARM MCU";

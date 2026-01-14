@@ -30,50 +30,114 @@ public class AnalogDevicesHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.TEMPERATURE_SENSOR, "^ADT[0-9].*"); // Digital temp
         registry.addPattern(ComponentType.TEMPERATURE_SENSOR_AD, "^ADT[0-9].*");
 
-        // ADCs and DACs
+        // ADCs - register both IC and ADC_AD types
         registry.addPattern(ComponentType.IC, "^AD7[0-9].*");               // ADCs
+        registry.addPattern(ComponentType.ADC_AD, "^AD7[0-9].*");
+
+        // DACs - register both IC and DAC_AD types
         registry.addPattern(ComponentType.IC, "^AD5[0-9].*");               // DACs
+        registry.addPattern(ComponentType.DAC_AD, "^AD5[0-9].*");
     }
 
     @Override
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        // Handle package codes
-        String[] parts = mpn.split("-");
-        if (parts.length > 0) {
-            String mainPart = parts[0];
-            String suffix = mainPart.replaceAll("^[A-Z0-9]+", "");
+        String upperMpn = mpn.toUpperCase();
+
+        // Analog Devices format examples:
+        // AD8065ARZ = AD8065 + A (grade) + RZ (package)
+        // ADXL345BCCZ = ADXL345 + B (grade) + CCZ (package)
+        // AD7606BSTZ = AD7606 + BSTZ (grade + package)
+        // AD7606-4BSTZ = AD7606-4 + BSTZ (with variant number)
+
+        // Split on hyphen first
+        String[] parts = upperMpn.split("-");
+        String mainPart = parts[0];
+
+        // Extract package suffix (typically 1-4 characters after the numeric part)
+        // Look for letter patterns after digits
+        int lastDigitIndex = -1;
+        for (int i = mainPart.length() - 1; i >= 0; i--) {
+            if (Character.isDigit(mainPart.charAt(i))) {
+                lastDigitIndex = i;
+                break;
+            }
+        }
+
+        if (lastDigitIndex >= 0 && lastDigitIndex < mainPart.length() - 1) {
+            String suffix = mainPart.substring(lastDigitIndex + 1);
+
+            // Map common Analog Devices package codes
             return switch (suffix) {
-                case "Z" -> "QFN";
-                case "CP" -> "LGA";
-                case "BCCZ" -> "LGA";
-                case "CCZ" -> "LGA";
-                case "R" -> "SOIC";
+                // QFN variants
+                case "Z", "BZ", "CZ" -> "QFN";
+                case "CCZ", "BCCZ" -> "LGA";  // Ceramic Leadless Chip Carrier
+                case "CPZ", "BCPZ" -> "LFCSP";  // Lead Frame Chip Scale Package
+
+                // SOIC variants
+                case "R", "RZ", "ARZ" -> "SOIC";
                 case "RT" -> "SOIC";
-                case "RM" -> "MSOP";
-                case "RU" -> "TSSOP";
-                default -> suffix;
+                case "RZV7" -> "SOIC";
+                case "R7" -> "SOIC";
+
+                // MSOP variants
+                case "RM", "RMZ" -> "MSOP";
+
+                // TSSOP variants
+                case "RU", "RUZ" -> "TSSOP";
+
+                // TSOT variants
+                case "TRZ" -> "TSOT-23";
+                case "TRM" -> "TSOT-23";
+
+                // Special packages
+                case "BSTZ" -> "LQFP";  // Low profile QFP
+                case "BCQZ" -> "CQFP";  // Ceramic QFP
+                case "BEYZ" -> "TQFP";  // Thin QFP
+
+                default -> suffix;  // Return raw suffix if not recognized
             };
         }
+
+        // Check second part after hyphen (e.g., AD7606-4BSTZ)
+        if (parts.length > 1) {
+            String suffix = parts[1];
+            // Remove leading digits/letters for variant code
+            int suffixDigitEnd = 0;
+            while (suffixDigitEnd < suffix.length() && Character.isDigit(suffix.charAt(suffixDigitEnd))) {
+                suffixDigitEnd++;
+            }
+            if (suffixDigitEnd < suffix.length()) {
+                String pkgCode = suffix.substring(suffixDigitEnd);
+                return switch (pkgCode) {
+                    case "BSTZ" -> "LQFP";
+                    case "BCQZ" -> "CQFP";
+                    case "BRUZ", "BRU" -> "TSSOP";
+                    default -> pkgCode;
+                };
+            }
+        }
+
         return "";
     }
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
         return Set.of(
-            ComponentType.OPAMP,
-            ComponentType.OPAMP_AD,
-            ComponentType.ADC_AD,
-            ComponentType.DAC_AD,
-            ComponentType.AMPLIFIER_AD,
-            ComponentType.VOLTAGE_REFERENCE_AD,
-            ComponentType.TEMPERATURE_SENSOR,
-            ComponentType.TEMPERATURE_SENSOR_AD,
-            ComponentType.ACCELEROMETER,
-            ComponentType.ACCELEROMETER_AD,
-            ComponentType.GYROSCOPE,
-            ComponentType.GYROSCOPE_AD
+                ComponentType.OPAMP,
+                ComponentType.OPAMP_AD,
+                ComponentType.ADC_AD,
+                ComponentType.DAC_AD,
+                ComponentType.AMPLIFIER_AD,
+                ComponentType.VOLTAGE_REFERENCE_AD,
+                ComponentType.TEMPERATURE_SENSOR,
+                ComponentType.TEMPERATURE_SENSOR_AD,
+                ComponentType.ACCELEROMETER,
+                ComponentType.ACCELEROMETER_AD,
+                ComponentType.GYROSCOPE,
+                ComponentType.GYROSCOPE_AD,
+                ComponentType.IC
         );
     }
 

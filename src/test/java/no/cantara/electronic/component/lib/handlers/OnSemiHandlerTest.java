@@ -250,42 +250,45 @@ class OnSemiHandlerTest {
     class MOSFETPatternBugs {
 
         @Test
-        @DisplayName("BUG: NTD series MOSFETs not detected - no patterns registered")
-        void ntdMosfetsNotDetected() {
-            // These are ON Semiconductor native MOSFETs but have no patterns
-            assertFalse(handler.matches("NTD20N06L", ComponentType.MOSFET, registry),
-                    "BUG: NTD20N06L not matched - no MOSFET pattern for NTD series");
-            assertFalse(handler.matches("NTD20N06L", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: NTD20N06L not matched - no MOSFET_ONSEMI pattern for NTD series");
-            assertFalse(handler.matches("NTD2955", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: NTD2955 not matched");
-            assertFalse(handler.matches("NTD4809N", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: NTD4809N not matched");
+        @DisplayName("FIXED: NTD series MOSFETs now detected with patterns")
+        void ntdMosfetsNowDetected() {
+            // Fixed: Added NTD patterns for ON Semiconductor native MOSFETs
+            assertTrue(handler.matches("NTD20N06L", ComponentType.MOSFET, registry),
+                    "NTD20N06L should match MOSFET");
+            assertTrue(handler.matches("NTD20N06L", ComponentType.MOSFET_ONSEMI, registry),
+                    "NTD20N06L should match MOSFET_ONSEMI");
+            assertTrue(handler.matches("NTD2955", ComponentType.MOSFET_ONSEMI, registry),
+                    "NTD2955 should match");
+            assertTrue(handler.matches("NTD4809N", ComponentType.MOSFET_ONSEMI, registry),
+                    "NTD4809N should match");
         }
 
         @Test
-        @DisplayName("BUG: FQP series MOSFETs not detected - no patterns registered")
-        void fqpMosfetsNotDetected() {
-            // Legacy Fairchild QFET MOSFETs have no patterns
-            assertFalse(handler.matches("FQP50N06L", ComponentType.MOSFET, registry),
-                    "BUG: FQP50N06L not matched - no MOSFET pattern for FQP series");
-            assertFalse(handler.matches("FQP50N06L", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FQP50N06L not matched - no MOSFET_ONSEMI pattern for FQP series");
-            assertFalse(handler.matches("FQP27P06", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FQP27P06 not matched");
-            assertFalse(handler.matches("FQP4N20L", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FQP4N20L not matched");
+        @DisplayName("FIXED: FQP series MOSFETs now detected with patterns")
+        void fqpMosfetsNowDetected() {
+            // Fixed: Added FQP patterns for legacy Fairchild QFET MOSFETs
+            assertTrue(handler.matches("FQP50N06L", ComponentType.MOSFET, registry),
+                    "FQP50N06L should match MOSFET");
+            assertTrue(handler.matches("FQP50N06L", ComponentType.MOSFET_ONSEMI, registry),
+                    "FQP50N06L should match MOSFET_ONSEMI");
+            assertTrue(handler.matches("FQP27P06", ComponentType.MOSFET_ONSEMI, registry),
+                    "FQP27P06 should match");
+            assertTrue(handler.matches("FQP4N20L", ComponentType.MOSFET_ONSEMI, registry),
+                    "FQP4N20L should match");
         }
 
         @Test
-        @DisplayName("BUG: FDP/FDD/FDB PowerTrench MOSFETs not detected")
-        void powerTrenchMosfetsNotDetected() {
-            assertFalse(handler.matches("FDP3680", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FDP3680 not matched");
+        @DisplayName("FIXED: FDP PowerTrench MOSFETs now detected")
+        void powerTrenchMosfetsNowDetected() {
+            // Fixed: Added FDP patterns (FDD/FDB still need patterns)
+            assertTrue(handler.matches("FDP3680", ComponentType.MOSFET_ONSEMI, registry),
+                    "FDP3680 should match");
+
+            // Note: FDD and FDB patterns not yet added - different series
             assertFalse(handler.matches("FDD3680", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FDD3680 not matched");
+                    "FDD series not yet supported");
             assertFalse(handler.matches("FDB3632", ComponentType.MOSFET_ONSEMI, registry),
-                    "BUG: FDB3632 not matched");
+                    "FDB series not yet supported");
         }
 
         @Test
@@ -303,13 +306,13 @@ class OnSemiHandlerTest {
     class TransistorPatternBugs {
 
         @Test
-        @DisplayName("BUG: No transistor patterns registered at all")
-        void noTransistorPatternsRegistered() {
-            // Handler declares no TRANSISTOR component type in getSupportedTypes()
-            // and has no transistor patterns in initializePatterns()
+        @DisplayName("FIXED: Transistor patterns now registered")
+        void transistorPatternsNowRegistered() {
+            // Fixed: Handler now declares TRANSISTOR component type in getSupportedTypes()
+            // and has transistor patterns in initializePatterns()
             var types = handler.getSupportedTypes();
-            assertFalse(types.stream().anyMatch(t -> t.name().contains("TRANSISTOR")),
-                    "BUG: No TRANSISTOR types in getSupportedTypes()");
+            assertTrue(types.stream().anyMatch(t -> t.name().contains("TRANSISTOR")),
+                    "TRANSISTOR type now in getSupportedTypes()");
         }
 
         @Test
@@ -340,15 +343,15 @@ class OnSemiHandlerTest {
     class NCPRegulatorPatternBugs {
 
         @Test
-        @DisplayName("BUG: NCP series regulators not detected")
-        void ncpRegulatorsNotDetected() {
-            // NCP is ON Semi's newer regulator series
-            assertFalse(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR, registry),
-                    "BUG: NCP1117ST33T3G not matched");
-            assertFalse(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry),
-                    "BUG: NCP1117 not matched by LINEAR_ON pattern");
-            assertFalse(handler.matches("NCP5500", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry),
-                    "BUG: NCP5500 not matched");
+        @DisplayName("FIXED: NCP series regulators now detected")
+        void ncpRegulatorsNowDetected() {
+            // Fixed: NCP is ON Semi's newer regulator series - patterns now added
+            assertTrue(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR, registry),
+                    "NCP1117ST33T3G should match VOLTAGE_REGULATOR");
+            assertTrue(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry),
+                    "NCP1117 should match VOLTAGE_REGULATOR_LINEAR_ON");
+            assertTrue(handler.matches("NCP5500", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry),
+                    "NCP5500 should match VOLTAGE_REGULATOR_LINEAR_ON");
         }
     }
 
@@ -445,15 +448,15 @@ class OnSemiHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: MOSFET series extraction returns empty")
-        void mosfetSeriesExtractionReturnsEmpty() {
-            // No series extraction logic for MOSFETs
-            assertEquals("", handler.extractSeries("FQP50N06L"),
-                    "BUG: No series extraction for FQP");
-            assertEquals("", handler.extractSeries("NTD20N06L"),
-                    "BUG: No series extraction for NTD");
-            assertEquals("", handler.extractSeries("FDP3680"),
-                    "BUG: No series extraction for FDP");
+        @DisplayName("FIXED: MOSFET series extraction now works")
+        void mosfetSeriesExtractionNowWorks() {
+            // Fixed: Series extraction logic now added for MOSFETs
+            assertEquals("FQP", handler.extractSeries("FQP50N06L"),
+                    "Should extract FQP series");
+            assertEquals("NTD", handler.extractSeries("NTD20N06L"),
+                    "Should extract NTD series");
+            assertEquals("FDP", handler.extractSeries("FDP3680"),
+                    "Should extract FDP series");
         }
     }
 
@@ -709,28 +712,27 @@ class OnSemiHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG #2: No MOSFET patterns registered")
-        void bug2_noMosfetPatterns() {
-            // Handler declares MOSFET and MOSFET_ONSEMI in getSupportedTypes()
-            // but has no patterns for NTD, FQP, FDP, etc.
-            assertFalse(handler.matches("FQP50N06L", ComponentType.MOSFET_ONSEMI, registry));
-            assertFalse(handler.matches("NTD20N06L", ComponentType.MOSFET_ONSEMI, registry));
+        @DisplayName("FIXED #2: MOSFET patterns now registered")
+        void bug2_mosfetPatternsFixed() {
+            // Fixed: Handler now has patterns for NTD, FQP, FDP, NTP
+            assertTrue(handler.matches("FQP50N06L", ComponentType.MOSFET_ONSEMI, registry));
+            assertTrue(handler.matches("NTD20N06L", ComponentType.MOSFET_ONSEMI, registry));
         }
 
         @Test
-        @DisplayName("BUG #3: No transistor support")
-        void bug3_noTransistorSupport() {
-            // Handler doesn't support TRANSISTOR type at all
-            // 2N and MMBT series transistors can't be detected
+        @DisplayName("FIXED #3: Transistor support now added")
+        void bug3_transistorSupportFixed() {
+            // Fixed: Handler now supports TRANSISTOR type
+            // 2N and MMBT series transistors can now be detected
             var types = handler.getSupportedTypes();
-            assertFalse(types.stream().anyMatch(t -> t.name().contains("TRANSISTOR")));
+            assertTrue(types.stream().anyMatch(t -> t.name().contains("TRANSISTOR")));
         }
 
         @Test
-        @DisplayName("BUG #4: NCP regulator patterns missing")
-        void bug4_ncpPatternsMissing() {
-            // NCP is ON Semi's modern regulator series
-            assertFalse(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry));
+        @DisplayName("FIXED #4: NCP regulator patterns now added")
+        void bug4_ncpPatternsFixed() {
+            // Fixed: NCP is ON Semi's modern regulator series - now supported
+            assertTrue(handler.matches("NCP1117ST33T3G", ComponentType.VOLTAGE_REGULATOR_LINEAR_ON, registry));
         }
 
         @Test

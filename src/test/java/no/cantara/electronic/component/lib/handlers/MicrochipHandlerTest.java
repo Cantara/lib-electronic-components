@@ -375,81 +375,81 @@ class MicrochipHandlerTest {
          */
 
         @ParameterizedTest
-        @DisplayName("Current behavior: returns raw suffix for temp/package format")
+        @DisplayName("FIXED: Now returns decoded package names for temp/package format")
         @CsvSource({
-                "PIC16F877A-I/P, I/P",
-                "PIC18F4550-I/P, I/P",
-                "PIC12F675-I/P, I/P"
+                "PIC16F877A-I/P, PDIP",
+                "PIC18F4550-I/P, PDIP",
+                "PIC12F675-I/P, PDIP"
         })
-        void shouldExtractRawSuffixCurrentBehavior(String mpn, String expectedPackage) {
-            // Documenting current (buggy) behavior - returns raw suffix not mapped package
+        void shouldExtractPDIPPackageFixed(String mpn, String expectedPackage) {
+            // FIXED: Now extracts "P" from "-I/P" and maps to "PDIP"
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: TQFP format with temp/package")
+        @DisplayName("FIXED: TQFP format now properly decoded")
         @CsvSource({
-                "PIC16F887-I/PT, I/PT",
-                "PIC18F4550-I/PT, I/PT",
-                "dsPIC33FJ128GP706A-I/PT, I/PT",
-                "PIC32MX795F512H-80I/PT, 80I/PT"
+                "PIC16F887-I/PT, TQFP",
+                "PIC18F4550-I/PT, TQFP",
+                "dsPIC33FJ128GP706A-I/PT, TQFP",
+                "PIC32MX795F512H-80I/PT, TQFP"
         })
-        void shouldExtractTQFPSuffixCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractTQFPPackageFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: QFN format with temp/package")
+        @DisplayName("FIXED: QFN format now properly decoded")
         @CsvSource({
-                "PIC18F46K22-I/ML, I/ML",
-                "PIC32MX250F128B-I/ML, I/ML"
+                "PIC18F46K22-I/ML, QFN",
+                "PIC32MX250F128B-I/ML, QFN"
         })
-        void shouldExtractQFNSuffixCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractQFNPackageFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: SOIC format with temp/package")
+        @DisplayName("FIXED: SOIC format now properly decoded")
         @CsvSource({
-                "24LC256-I/SO, I/SO",
-                "MCP2515-I/SO, I/SO"
+                "24LC256-I/SO, SOIC",
+                "MCP2515-I/SO, SOIC"
         })
-        void shouldExtractSOICSuffixCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractSOICPackageFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: SSOP format with temp/package")
+        @DisplayName("FIXED: SSOP format now properly decoded")
         @CsvSource({
-                "PIC16F1459-I/SS, I/SS",
-                "PIC18F14K50-I/SS, I/SS"
+                "PIC16F1459-I/SS, SSOP",
+                "PIC18F14K50-I/SS, SSOP"
         })
-        void shouldExtractSSOPSuffixCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractSSOPPackageFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: TSSOP format with temp/package")
+        @DisplayName("FIXED: TSSOP format now properly decoded")
         @CsvSource({
-                "PIC16F1829-I/ST, I/ST"
+                "PIC16F1829-I/ST, TSSOP"
         })
-        void shouldExtractTSSOPSuffixCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractTSSOPPackageFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
 
         @ParameterizedTest
-        @DisplayName("Current behavior: memory device package codes")
+        @DisplayName("FIXED: Memory device package codes now properly decoded")
         @CsvSource({
-                "24LC256-I/SN, I/SN",
-                "24FC512-E/SM, E/SM"
+                "24LC256-I/SN, SOIC",
+                "24FC512-E/SM, SOIC"
         })
-        void shouldExtractMemoryPackageCodesCurrentBehavior(String mpn, String expectedPackage) {
+        void shouldExtractMemoryPackageCodesFixed(String mpn, String expectedPackage) {
             assertEquals(expectedPackage, handler.extractPackageCode(mpn),
                     "Package code for " + mpn);
         }
@@ -794,25 +794,22 @@ class MicrochipHandlerTest {
     class BugDocumentationTests {
 
         @Test
-        @DisplayName("BUG: HashSet used instead of Set.of() in getSupportedTypes")
-        void documentHashSetUsage() {
-            // The handler uses new HashSet<>() which is mutable
-            // Better practice would be Set.of() for immutable sets
+        @DisplayName("FIXED: Now uses Set.of() instead of HashSet in getSupportedTypes")
+        void documentHashSetUsageFixed() {
+            // FIXED: The handler now uses Set.of() which is immutable
+            // This is best practice for public API
             var types = handler.getSupportedTypes();
             assertNotNull(types);
-            // Attempting to modify would throw if Set.of() was used
-            // Current implementation allows modification (bug)
+            // Attempting to modify will now throw UnsupportedOperationException
         }
 
         @Test
-        @DisplayName("BUG: Package extraction doesn't parse temp/package format")
-        void documentPackageExtractionBug() {
+        @DisplayName("FIXED: Package extraction now parses temp/package format correctly")
+        void documentPackageExtractionFixed() {
             // Standard Microchip format: PIC16F877A-I/P
-            // Expected: extract "P" and map to "PDIP"
-            // Actual: returns "I/P" without mapping
+            // FIXED: extracts "P" after "/" and maps to "PDIP"
             String result = handler.extractPackageCode("PIC16F877A-I/P");
-            assertEquals("I/P", result, "BUG: Returns raw suffix instead of mapped package");
-            // Should be "PDIP" after proper parsing and mapping
+            assertEquals("PDIP", result, "FIXED: Returns mapped package name");
         }
 
         @Test

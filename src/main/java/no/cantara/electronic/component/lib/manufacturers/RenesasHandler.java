@@ -61,11 +61,34 @@ public class RenesasHandler implements ManufacturerHandler {
         if (mpn == null || mpn.isEmpty()) return "";
         String upperMpn = mpn.toUpperCase();
 
+        // Strip version suffix if present (e.g., #V1, #30, #AA0)
+        int hashIndex = upperMpn.indexOf('#');
+        if (hashIndex >= 0) {
+            upperMpn = upperMpn.substring(0, hashIndex);
+        }
+
         // Example: R5F51303ADFN -> DFN package
         // Example: R7FA2A1AB3CFM -> FM package
+        // Example: R7FA4M2AD3CFP -> CFP package (not LEAFB)
         int lastDigitIndex = getLastDigitIndex(upperMpn);
         if (lastDigitIndex >= 0 && lastDigitIndex < upperMpn.length() - 1) {
-            return upperMpn.substring(lastDigitIndex + 1);
+            String suffix = upperMpn.substring(lastDigitIndex + 1);
+
+            // Extract package code (2-3 letters, not the full suffix)
+            // For MPNs like R7FA4M2AD3CFP, extract "CFP" (last 2-3 chars)
+            // For MPNs like R5F51303ADFN, extract "DFN" (last 3 chars)
+            if (suffix.length() >= 2) {
+                // Common package codes are 2-3 characters
+                int pkgLength = Math.min(3, suffix.length());
+                // Try to extract the last 2-3 uppercase letters
+                if (suffix.length() <= 4) {
+                    return suffix;  // Short suffix, return as-is
+                } else {
+                    // Longer suffix, extract last 2-3 chars as package
+                    return suffix.substring(suffix.length() - pkgLength);
+                }
+            }
+            return suffix;
         }
 
         return "";
@@ -102,8 +125,32 @@ public class RenesasHandler implements ManufacturerHandler {
 
     @Override
     public boolean isOfficialReplacement(String mpn1, String mpn2) {
-        // Renesas typically doesn't have direct replacements between series
-        // but might have pin-compatible parts within same series
+        if (mpn1 == null || mpn2 == null) return false;
+
+        // Strip version suffixes for comparison
+        String clean1 = mpn1.toUpperCase().replaceAll("#.*$", "");
+        String clean2 = mpn2.toUpperCase().replaceAll("#.*$", "");
+
+        String series1 = extractSeries(clean1);
+        String series2 = extractSeries(clean2);
+
+        // Must be same series
+        if (series1.isEmpty() || !series1.equals(series2)) return false;
+
+        // For microcontrollers, check if same base part with different package
+        // Example: R7FA4M2AD3CFP vs R7FA4M2AD3CFM (same part, different package)
+        // Extract base part (everything before last 2-3 chars which is package)
+        int lastDigit1 = getLastDigitIndex(clean1);
+        int lastDigit2 = getLastDigitIndex(clean2);
+
+        if (lastDigit1 >= 0 && lastDigit2 >= 0) {
+            String base1 = clean1.substring(0, lastDigit1 + 1);
+            String base2 = clean2.substring(0, lastDigit2 + 1);
+
+            // Same base part number = package variant = official replacement
+            return base1.equals(base2);
+        }
+
         return false;
     }
 

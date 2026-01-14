@@ -82,8 +82,8 @@ public class MicrochipHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^25AA.*");
         registry.addPattern(ComponentType.MEMORY, "^25LC.*");                      // SPI EEPROM
         registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^25LC.*");
-        registry.addPattern(ComponentType.MEMORY, "^93[A|L]C.*");                  // Microwire EEPROM
-        registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^93[A|L]C.*");
+        registry.addPattern(ComponentType.MEMORY, "^93[AL]C.*");                  // Microwire EEPROM
+        registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^93[AL]C.*");
 
         // I²C EEPROM
         registry.addPattern(ComponentType.MEMORY, "^24AA[0-9].*");                      // I²C EEPROM
@@ -103,8 +103,8 @@ public class MicrochipHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^AT25[A-Z][0-9].*");
 
         // Microwire EEPROM
-        registry.addPattern(ComponentType.MEMORY, "^93[A|L]C[0-9].*");                  // Microwire EEPROM
-        registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^93[A|L]C[0-9].*");
+        registry.addPattern(ComponentType.MEMORY, "^93[AL]C[0-9].*");                  // Microwire EEPROM
+        registry.addPattern(ComponentType.MEMORY_MICROCHIP, "^93[AL]C[0-9].*");
 
         // Interface ICs
         registry.addPattern(ComponentType.IC, "^MCP2515.*");                      // CAN Controller
@@ -121,23 +121,33 @@ public class MicrochipHandler implements ManufacturerHandler {
         // Real-Time Clocks
         registry.addPattern(ComponentType.IC, "^MCP794[0-9].*");                  // RTCs
         registry.addPattern(ComponentType.IC, "^MCP795[0-9].*");                  // RTCs with SRAM
+
+        // AVR32 Microcontrollers (legacy from Atmel acquisition)
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT32UC.*");          // AVR32 UC series
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT32UC.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_MICROCHIP, "^AT32UC.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER, "^AT32AP.*");          // AVR32 AP series
+        registry.addPattern(ComponentType.MICROCONTROLLER_ATMEL, "^AT32AP.*");
+        registry.addPattern(ComponentType.MICROCONTROLLER_MICROCHIP, "^AT32AP.*");
     }
 
     @Override
     public Set<ComponentType> getSupportedTypes() {
         return Set.of(
-            ComponentType.MICROCONTROLLER,
-            ComponentType.MICROCONTROLLER_MICROCHIP,
-            ComponentType.MCU_MICROCHIP,
-            ComponentType.MEMORY,
-            ComponentType.MEMORY_MICROCHIP,
-            ComponentType.PIC_MCU,
-            ComponentType.AVR_MCU,
-            ComponentType.MICROCONTROLLER_ATMEL,
-            ComponentType.MCU_ATMEL,
-            ComponentType.MEMORY_ATMEL,
-            ComponentType.TOUCH_ATMEL,
-            ComponentType.CRYPTO_ATMEL
+                ComponentType.MICROCONTROLLER,
+                ComponentType.MICROCONTROLLER_MICROCHIP,
+                ComponentType.MCU_MICROCHIP,
+                ComponentType.MEMORY,
+                ComponentType.MEMORY_MICROCHIP,
+                ComponentType.PIC_MCU,
+                ComponentType.AVR_MCU,
+                // Former Atmel products now under Microchip
+                ComponentType.MICROCONTROLLER_ATMEL,
+                ComponentType.MCU_ATMEL,
+                ComponentType.MEMORY_ATMEL,
+                ComponentType.TOUCH_ATMEL,
+                ComponentType.CRYPTO_ATMEL,
+                ComponentType.IC
         );
     }
 
@@ -152,7 +162,7 @@ public class MicrochipHandler implements ManufacturerHandler {
         if (type == ComponentType.MEMORY || type == ComponentType.MEMORY_MICROCHIP) {
             if (upperMpn.matches("^(24AA|24LC|24FC|AT24C)[0-9].*") ||    // I²C EEPROM
                     upperMpn.matches("^(25AA|25LC|AT25)[0-9].*") ||          // SPI EEPROM
-                    upperMpn.matches("^93[A|L]C[0-9].*")) {                  // Microwire EEPROM
+                    upperMpn.matches("^93[AL]C[0-9].*")) {                  // Microwire EEPROM
                 return true;
             }
         }
@@ -175,29 +185,60 @@ public class MicrochipHandler implements ManufacturerHandler {
     public String extractPackageCode(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
-        // Handle package codes in suffix
-        String[] parts = mpn.split("-");
+        String upperMpn = mpn.toUpperCase();
+
+        // Standard format: PIC16F877A-I/P
+        // -I/P = Industrial temp grade / PDIP package
+        // Need to extract just the package code after "/"
+        String[] parts = upperMpn.split("-");
         if (parts.length > 1) {
             String suffix = parts[parts.length - 1];
-            return switch (suffix) {
-                case "P", "PDI" -> "PDIP";           // Plastic DIP
-                case "PT", "TQ" -> "TQFP";           // Thin QFP
-                case "PF" -> "PLCC";                 // Plastic Leaded Chip Carrier
-                case "ML", "MV" -> "QFN";            // Quad Flat No-Lead
-                case "SO", "SM" -> "SOIC";           // Small Outline IC
-                case "SP" -> "SPDIP";                // Skinny PDIP
-                case "SS" -> "SSOP";                 // Shrink Small Outline Package
-                case "ST" -> "TSSOP";                // Thin Shrink Small Outline Package
-                case "IPT" -> "TQFP";                // Industrial TQFP
-                default -> suffix;
-            };
+
+            // Check if suffix contains "/" (temp grade + package format)
+            if (suffix.contains("/")) {
+                String[] tempPkg = suffix.split("/");
+                if (tempPkg.length > 1) {
+                    String pkgCode = tempPkg[1];
+                    return switch (pkgCode) {
+                        case "P" -> "PDIP";              // Plastic DIP
+                        case "PT" -> "TQFP";             // Thin QFP
+                        case "PF" -> "PLCC";             // Plastic Leaded Chip Carrier
+                        case "ML", "MV" -> "QFN";        // Quad Flat No-Lead
+                        case "SO", "SM" -> "SOIC";       // Small Outline IC
+                        case "SP" -> "SPDIP";            // Skinny PDIP
+                        case "SS" -> "SSOP";             // Shrink Small Outline Package
+                        case "ST" -> "TSSOP";            // Thin Shrink Small Outline Package
+                        case "SN" -> "SOIC";             // SOIC (narrow)
+                        case "OT" -> "SOT-23";           // SOT-23
+                        case "GZ" -> "UQFN";             // Ultra QFN
+                        default -> pkgCode;
+                    };
+                }
+            } else {
+                // No "/" - simple suffix format like PIC16F877A-P
+                return switch (suffix) {
+                    case "P", "PDI" -> "PDIP";           // Plastic DIP
+                    case "PT", "TQ" -> "TQFP";           // Thin QFP
+                    case "PF" -> "PLCC";                 // Plastic Leaded Chip Carrier
+                    case "ML", "MV" -> "QFN";            // Quad Flat No-Lead
+                    case "SO", "SM" -> "SOIC";           // Small Outline IC
+                    case "SP" -> "SPDIP";                // Skinny PDIP
+                    case "SS" -> "SSOP";                 // Shrink Small Outline Package
+                    case "ST" -> "TSSOP";                // Thin Shrink Small Outline Package
+                    case "IPT" -> "TQFP";                // Industrial TQFP
+                    default -> suffix;
+                };
+            }
         }
 
-        // Handle embedded package codes
-        if (mpn.contains("/P")) return "PDIP";
-        if (mpn.contains("/PT")) return "TQFP";
-        if (mpn.contains("/ML")) return "QFN";
-        if (mpn.contains("/SO")) return "SOIC";
+        // Handle embedded package codes (format without hyphen: PIC16F877A/P)
+        // Check /PT before /P to avoid false match
+        if (upperMpn.contains("/PT")) return "TQFP";
+        if (upperMpn.contains("/P")) return "PDIP";
+        if (upperMpn.contains("/ML")) return "QFN";
+        if (upperMpn.contains("/SO")) return "SOIC";
+        if (upperMpn.contains("/SS")) return "SSOP";
+        if (upperMpn.contains("/ST")) return "TSSOP";
 
         return "";
     }

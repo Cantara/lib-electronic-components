@@ -243,27 +243,57 @@ class NXPHandlerTest {
     class PackageCodeTests {
 
         @Test
-        @DisplayName("BUG: LPC package extraction returns empty - algorithm incorrect")
-        void bugLPCPackageExtractionIncorrect() {
-            // The extractPackageCode algorithm has a bug:
-            // It looks for first digit after "LPC" (position 3), finds digit at position 3
-            // Then looks for last digit from that position
-            // But then checks if numEnd < length, and extracts from numEnd
-            // For LPC1768FBD100: numStart=3, keeps finding digits until position 6 (after 1768)
-            // numEnd = 7 (position after last digit 8)
-            // But the actual numbers continue (100 at end), so the logic is confused
+        @DisplayName("FIXED: LPC package extraction now works correctly")
+        void fixedLPCPackageExtraction() {
+            // Fixed: Algorithm now correctly skips series digits and extracts package code
+            String result1 = handler.extractPackageCode("LPC1768FBD100");
+            assertEquals("FBD", result1, "LPC1768FBD100 should extract FBD");
 
-            String result = handler.extractPackageCode("LPC1768FBD100");
-            // Current buggy behavior returns empty string
-            assertEquals("", result, "BUG: Package extraction doesn't work for full LPC part numbers");
+            // Fixed: Handles S variant letter correctly
+            String result2 = handler.extractPackageCode("LPC55S69JBD100");
+            assertEquals("JBD", result2, "LPC55S69JBD100 should extract JBD");
+
+            // Other LPC variants
+            String result3 = handler.extractPackageCode("LPC4357FET180");
+            assertEquals("FET", result3, "LPC4357FET180 should extract FET");
+
+            String result4 = handler.extractPackageCode("LPC1115FBD48");
+            assertEquals("FBD", result4, "LPC1115FBD48 should extract FBD");
         }
 
         @Test
-        @DisplayName("BUG: LPC55S69 package extraction fails - S after numbers breaks algorithm")
-        void bugLPC55S69PackageExtractionFails() {
-            String result = handler.extractPackageCode("LPC55S69JBD100");
-            // LPC55S69JBD100 has S (letter) in the middle which breaks the digit-finding logic
-            assertEquals("", result, "BUG: Package extraction fails when letters appear in series");
+        @DisplayName("Kinetis package extraction works correctly")
+        void kinetisPackageExtraction() {
+            // MK64FN1M0VLL12 -> VLL (LQFP100)
+            assertEquals("VLL", handler.extractPackageCode("MK64FN1M0VLL12"));
+
+            // MKL25Z128VLK4 -> VLK (LQFP80)
+            assertEquals("VLK", handler.extractPackageCode("MKL25Z128VLK4"));
+
+            // MK66FN2M0VMD18 -> VMD (BGA144)
+            assertEquals("VMD", handler.extractPackageCode("MK66FN2M0VMD18"));
+        }
+
+        @Test
+        @DisplayName("MOSFET package extraction works correctly")
+        void mosfetPackageExtraction() {
+            // PSMN: Extract letters after voltage digits
+            assertEquals("PL", handler.extractPackageCode("PSMN4R3-30PL"));
+
+            // BUK: 5th character is package code
+            assertEquals("Y", handler.extractPackageCode("BUK9Y40-100B"));
+        }
+
+        @Test
+        @DisplayName("Transistor package extraction works correctly")
+        void transistorPackageExtraction() {
+            // BC847 with package suffix
+            assertEquals("W", handler.extractPackageCode("BC847AW"), "BC847AW -> W (SOT-323)");
+            assertEquals("MB", handler.extractPackageCode("BC847AMB"), "BC847AMB -> MB (DFN)");
+
+            // BC847 without package (default SOT-23)
+            assertEquals("", handler.extractPackageCode("BC847"), "BC847 -> empty (default SOT-23)");
+            assertEquals("", handler.extractPackageCode("BC847A"), "BC847A -> empty (gain only)");
         }
 
         @Test
@@ -322,11 +352,31 @@ class NXPHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: Plain IMX prefix not recognized by extractSeries")
-        void bugPlainIMXNotRecognized() {
-            // extractSeries only checks for MCIMX prefix, not plain IMX
+        @DisplayName("FIXED: Plain IMX prefix now recognized by extractSeries")
+        void fixedPlainIMXRecognition() {
+            // Fixed: extractSeries now checks for both MCIMX and plain IMX
             String result = handler.extractSeries("IMX6");
-            assertEquals("", result, "BUG: Plain IMX not recognized - returns empty");
+            assertEquals("i.MX", result, "Plain IMX prefix now returns i.MX");
+
+            // MCIMX still works
+            String result2 = handler.extractSeries("MCIMX6Q5EYM10AC");
+            assertEquals("i.MX", result2, "MCIMX prefix also returns i.MX");
+        }
+
+        @Test
+        @DisplayName("Memory series extraction works correctly")
+        void memorySeriesExtraction() {
+            assertEquals("MX25 Flash", handler.extractSeries("MX25L3233F"));
+            assertEquals("S25FL Flash", handler.extractSeries("S25FL128S"));
+            assertEquals("EEPROM", handler.extractSeries("SE97B"));
+        }
+
+        @Test
+        @DisplayName("Sensor series extraction works correctly")
+        void sensorSeriesExtraction() {
+            assertEquals("MPX Pressure Sensor", handler.extractSeries("MPX5700"));
+            assertEquals("MPXV Pressure Sensor", handler.extractSeries("MPXV5004"));
+            assertEquals("MPXA Pressure Sensor", handler.extractSeries("MPXA6115"));
         }
 
         @ParameterizedTest
@@ -432,18 +482,20 @@ class NXPHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: getSupportedTypes uses mutable HashSet instead of Set.of()")
-        void bugUsesHashSetInsteadOfSetOf() {
+        @DisplayName("FIXED: getSupportedTypes now uses immutable Set.of()")
+        void fixedUsesSetOf() {
             var types = handler.getSupportedTypes();
-            // HashSet is mutable - this is a code smell
-            // Should use Set.of() for immutability
-            try {
-                // Don't actually modify to avoid side effects, just document the issue
-                assertNotNull(types, "Types should not be null");
-                System.out.println("NOTE: getSupportedTypes() returns HashSet (mutable) - should use Set.of()");
-            } catch (Exception e) {
-                // Unexpected
-            }
+            assertNotNull(types, "Types should not be null");
+
+            // Verify it's immutable by checking class name (Set.of returns ImmutableCollections)
+            String className = types.getClass().getName();
+            assertFalse(className.contains("HashSet"),
+                    "Should not be HashSet - now uses immutable Set.of()");
+
+            // Verify we can't modify it
+            assertThrows(UnsupportedOperationException.class,
+                    () -> types.add(ComponentType.IC),
+                    "Set should be immutable");
         }
     }
 
@@ -555,18 +607,19 @@ class NXPHandlerTest {
         }
 
         @Test
-        @DisplayName("PMV/BSS MOSFETs work via matches() but missing from initializePatterns()")
-        void pmvBssMosfetPatternMissing() {
-            // Handler's matches() method checks for PMV and BSS prefixes
-            // but initializePatterns() doesn't register these patterns
+        @DisplayName("FIXED: PMV/BSS MOSFETs now registered in initializePatterns()")
+        void fixedPmvBssMosfetPatterns() {
+            // Fixed: Patterns are now registered in initializePatterns()
             boolean pmvMatches = handler.matches("PMV45EN", ComponentType.MOSFET_NXP, registry);
             boolean bssMatches = handler.matches("BSS138", ComponentType.MOSFET_NXP, registry);
 
-            // These work via direct string check in matches()
-            assertTrue(pmvMatches, "PMV MOSFETs work via direct check");
-            assertTrue(bssMatches, "BSS MOSFETs work via direct check");
+            // These now work via both direct check AND pattern registry
+            assertTrue(pmvMatches, "PMV MOSFETs match");
+            assertTrue(bssMatches, "BSS MOSFETs match");
 
-            System.out.println("NOTE: PMV/BSS patterns missing from initializePatterns() but work via matches() direct check");
+            // Verify they work via base type too
+            assertTrue(handler.matches("PMV45EN", ComponentType.MOSFET, registry));
+            assertTrue(handler.matches("BSS138", ComponentType.MOSFET, registry));
         }
 
         @Test
@@ -595,6 +648,60 @@ class NXPHandlerTest {
                     mpn + " should match MEMORY_NXP");
             assertTrue(handler.matches(mpn, ComponentType.MEMORY, registry),
                     mpn + " should match MEMORY base type");
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should detect MX25 Flash memory")
+        @ValueSource(strings = {"MX25L3233F", "MX25L6436E", "MX25V8035F"})
+        void shouldDetectMX25Flash(String mpn) {
+            assertTrue(handler.matches(mpn, ComponentType.MEMORY_NXP, registry),
+                    mpn + " should match MEMORY_NXP");
+            assertTrue(handler.matches(mpn, ComponentType.MEMORY, registry),
+                    mpn + " should match MEMORY base type");
+            assertEquals("MX25 Flash", handler.extractSeries(mpn));
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should detect S25FL Flash memory")
+        @ValueSource(strings = {"S25FL128S", "S25FL256S", "S25FL064L"})
+        void shouldDetectS25FLFlash(String mpn) {
+            assertTrue(handler.matches(mpn, ComponentType.MEMORY_NXP, registry),
+                    mpn + " should match MEMORY_NXP");
+            assertTrue(handler.matches(mpn, ComponentType.MEMORY, registry),
+                    mpn + " should match MEMORY base type");
+            assertEquals("S25FL Flash", handler.extractSeries(mpn));
+        }
+    }
+
+    @Nested
+    @DisplayName("Sensor Products")
+    class SensorTests {
+
+        @ParameterizedTest
+        @DisplayName("Should detect MPX pressure sensors")
+        @ValueSource(strings = {"MPX5700", "MPX5010", "MPX2200"})
+        void shouldDetectMPXSensors(String mpn) {
+            assertTrue(handler.matches(mpn, ComponentType.SENSOR, registry),
+                    mpn + " should match SENSOR type");
+            assertEquals("MPX Pressure Sensor", handler.extractSeries(mpn));
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should detect MPXV voltage output sensors")
+        @ValueSource(strings = {"MPXV5004", "MPXV7002", "MPXV5010"})
+        void shouldDetectMPXVSensors(String mpn) {
+            assertTrue(handler.matches(mpn, ComponentType.SENSOR, registry),
+                    mpn + " should match SENSOR type");
+            assertEquals("MPXV Pressure Sensor", handler.extractSeries(mpn));
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should detect MPXA analog sensors")
+        @ValueSource(strings = {"MPXA6115", "MPXA6400"})
+        void shouldDetectMPXASensors(String mpn) {
+            assertTrue(handler.matches(mpn, ComponentType.SENSOR, registry),
+                    mpn + " should match SENSOR type");
+            assertEquals("MPXA Pressure Sensor", handler.extractSeries(mpn));
         }
     }
 }

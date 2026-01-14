@@ -170,19 +170,19 @@ class AnalogDevicesHandlerTest {
     class PackageCodeTests {
 
         @Test
-        @DisplayName("BUG: Package extraction returns empty for most parts")
-        void bugPackageExtractionReturnsEmpty() {
-            // Current implementation has broken logic
+        @DisplayName("FIXED: Package extraction now works for most parts")
+        void packageExtractionFixed() {
+            // FIXED: Now properly extracts package suffix
             String pkg = handler.extractPackageCode("AD8065ARZ");
-            assertEquals("", pkg, "BUG: Currently returns empty string");
+            assertEquals("SOIC", pkg, "FIXED: Now returns SOIC for ARZ suffix");
         }
 
         @Test
-        @DisplayName("Package extraction behavior documentation")
-        void packageExtractionBehavior() {
-            assertEquals("", handler.extractPackageCode("AD8065ARZ"));
-            assertEquals("", handler.extractPackageCode("ADXL345BCCZ"));
-            assertNotNull(handler.extractPackageCode("AD7606-4BSTZ"));
+        @DisplayName("FIXED: Package extraction behavior now working")
+        void packageExtractionBehaviorFixed() {
+            assertEquals("SOIC", handler.extractPackageCode("AD8065ARZ"));
+            assertEquals("LGA", handler.extractPackageCode("ADXL345BCCZ"));
+            assertEquals("LQFP", handler.extractPackageCode("AD7606-4BSTZ"));
         }
     }
 
