@@ -75,14 +75,16 @@ class OpAmpSimilarityCalculatorTest {
         @DisplayName("LM358 and MC1458 should be high similarity (dual op-amps)")
         void shouldMatchLM358andMC1458() {
             double similarity = calculator.calculateSimilarity("LM358", "MC1458", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "LM358 and MC1458 are equivalent duals");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "LM358 and MC1458 are equivalent duals - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
         @DisplayName("LM358 variants should match")
         void shouldMatchLM358Variants() {
             double similarity = calculator.calculateSimilarity("LM358", "LM358N", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01);
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "LM358 variants - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
@@ -170,7 +172,8 @@ class OpAmpSimilarityCalculatorTest {
         @DisplayName("Identical MPNs should have high similarity")
         void identicalMpnsShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("LM358", "LM358", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01);
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Identical MPNs - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
@@ -197,7 +200,8 @@ class OpAmpSimilarityCalculatorTest {
         void sameOpAmpDifferentPackagesShouldMatch() {
             // LM358N (DIP) vs LM358D (SOIC)
             double similarity = calculator.calculateSimilarity("LM358N", "LM358D", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same part different packages should match");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same part different packages should match - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
@@ -205,7 +209,8 @@ class OpAmpSimilarityCalculatorTest {
         void shouldExtractPackageCodes() {
             // Both DIP packages (N suffix)
             double similarity = calculator.calculateSimilarity("LM358N", "MC1458N", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01);
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Both DIP packages - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
     }
 }

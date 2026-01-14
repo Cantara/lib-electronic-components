@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,58 +67,58 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
     }
 
     // Op-amp characteristics
-    private static final Map<String, OpAmpCharacteristics> CHARACTERISTICS = new HashMap<>();
+    private static final Map<String, OpAmpChars> CHARACTERISTICS = new HashMap<>();
     static {
         // Dual op-amps
-        CHARACTERISTICS.put("LM358", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.DUAL,
-                OpAmpCharacteristics.InputType.BIPOLAR,
+        CHARACTERISTICS.put("LM358", new OpAmpChars(
+                OpAmpChars.Function.DUAL,
+                OpAmpChars.InputType.BIPOLAR,
                 false,  // railToRail
                 true,   // lowPower
                 false   // highSpeed
         ));
-        CHARACTERISTICS.put("TL072", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.DUAL,
-                OpAmpCharacteristics.InputType.JFET,
+        CHARACTERISTICS.put("TL072", new OpAmpChars(
+                OpAmpChars.Function.DUAL,
+                OpAmpChars.InputType.JFET,
                 false,  // railToRail
                 false,  // lowPower
                 false   // highSpeed
         ));
-        CHARACTERISTICS.put("MC1458", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.DUAL,
-                OpAmpCharacteristics.InputType.BIPOLAR,
+        CHARACTERISTICS.put("MC1458", new OpAmpChars(
+                OpAmpChars.Function.DUAL,
+                OpAmpChars.InputType.BIPOLAR,
                 false,  // railToRail
                 false,  // lowPower
                 false   // highSpeed
         ));
 
         // Quad op-amps
-        CHARACTERISTICS.put("LM324", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.QUAD,
-                OpAmpCharacteristics.InputType.BIPOLAR,
+        CHARACTERISTICS.put("LM324", new OpAmpChars(
+                OpAmpChars.Function.QUAD,
+                OpAmpChars.InputType.BIPOLAR,
                 false,  // railToRail
                 true,   // lowPower
                 false   // highSpeed
         ));
-        CHARACTERISTICS.put("TL074", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.QUAD,
-                OpAmpCharacteristics.InputType.JFET,
+        CHARACTERISTICS.put("TL074", new OpAmpChars(
+                OpAmpChars.Function.QUAD,
+                OpAmpChars.InputType.JFET,
                 false,  // railToRail
                 false,  // lowPower
                 false   // highSpeed
         ));
 
         // Single op-amps
-        CHARACTERISTICS.put("LM741", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.SINGLE,
-                OpAmpCharacteristics.InputType.BIPOLAR,
+        CHARACTERISTICS.put("LM741", new OpAmpChars(
+                OpAmpChars.Function.SINGLE,
+                OpAmpChars.InputType.BIPOLAR,
                 false,  // railToRail
                 false,  // lowPower
                 false   // highSpeed
         ));
-        CHARACTERISTICS.put("TL071", new OpAmpCharacteristics(
-                OpAmpCharacteristics.Function.SINGLE,
-                OpAmpCharacteristics.InputType.JFET,
+        CHARACTERISTICS.put("TL071", new OpAmpChars(
+                OpAmpChars.Function.SINGLE,
+                OpAmpChars.InputType.JFET,
                 false,  // railToRail
                 false,  // lowPower
                 false   // highSpeed
@@ -150,14 +154,150 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
 
         logger.debug("Comparing op-amps: {} vs {}", mpn1, mpn2);
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Try metadata-driven approach first
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.OPAMP);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for OPAMP, using equivalent family approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven similarity calculation");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // Op-amp comparison primarily uses equivalent families and configuration
+        // Fallback to equivalent family approach
+        logger.trace("No metadata found for OPAMP, using equivalent family approach");
         return calculateEquivalentFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity using metadata-driven weighted spec comparison.
+     * This is the preferred approach when metadata is available.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from both MPNs
+        String function1 = extractFunction(mpn1);
+        String function2 = extractFunction(mpn2);
+        String inputType1 = extractInputType(mpn1);
+        String inputType2 = extractInputType(mpn2);
+        Boolean railToRail1 = extractRailToRail(mpn1);
+        Boolean railToRail2 = extractRailToRail(mpn2);
+        Boolean lowPower1 = extractLowPower(mpn1);
+        Boolean lowPower2 = extractLowPower(mpn2);
+        Boolean highSpeed1 = extractHighSpeed(mpn1);
+        Boolean highSpeed2 = extractHighSpeed(mpn2);
+        String package1 = extractPackage(mpn1);
+        String package2 = extractPackage(mpn2);
+
+        logger.trace("MPN1 specs: function={}, inputType={}, railToRail={}, lowPower={}, highSpeed={}, package={}",
+                function1, inputType1, railToRail1, lowPower1, highSpeed1, package1);
+        logger.trace("MPN2 specs: function={}, inputType={}, railToRail={}, lowPower={}, highSpeed={}, package={}",
+                function2, inputType2, railToRail2, lowPower2, highSpeed2, package2);
+
+        // Short-circuit check: Different function types (SINGLE vs DUAL vs QUAD) are incompatible
+        if (function1 != null && function2 != null && !function1.equals(function2)) {
+            logger.debug("Different function types: {} vs {} - returning 0.0", function1, function2);
+            return 0.0;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare function (CRITICAL)
+        ComponentTypeMetadata.SpecConfig functionConfig = metadata.getSpecConfig("function");
+        if (functionConfig != null && function1 != null && function2 != null) {
+            ToleranceRule rule = functionConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(function1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(function2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(functionConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Function comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare inputType (HIGH)
+        ComponentTypeMetadata.SpecConfig inputTypeConfig = metadata.getSpecConfig("inputType");
+        if (inputTypeConfig != null && inputType1 != null && inputType2 != null) {
+            ToleranceRule rule = inputTypeConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(inputType1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(inputType2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(inputTypeConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("InputType comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare railToRail (MEDIUM)
+        ComponentTypeMetadata.SpecConfig railToRailConfig = metadata.getSpecConfig("railToRail");
+        if (railToRailConfig != null && railToRail1 != null && railToRail2 != null) {
+            ToleranceRule rule = railToRailConfig.getToleranceRule();
+            SpecValue<Boolean> orig = new SpecValue<>(railToRail1, SpecUnit.NONE);
+            SpecValue<Boolean> cand = new SpecValue<>(railToRail2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(railToRailConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("RailToRail comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare lowPower (LOW)
+        ComponentTypeMetadata.SpecConfig lowPowerConfig = metadata.getSpecConfig("lowPower");
+        if (lowPowerConfig != null && lowPower1 != null && lowPower2 != null) {
+            ToleranceRule rule = lowPowerConfig.getToleranceRule();
+            SpecValue<Boolean> orig = new SpecValue<>(lowPower1, SpecUnit.NONE);
+            SpecValue<Boolean> cand = new SpecValue<>(lowPower2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(lowPowerConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("LowPower comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare highSpeed (LOW)
+        ComponentTypeMetadata.SpecConfig highSpeedConfig = metadata.getSpecConfig("highSpeed");
+        if (highSpeedConfig != null && highSpeed1 != null && highSpeed2 != null) {
+            ToleranceRule rule = highSpeedConfig.getToleranceRule();
+            SpecValue<Boolean> orig = new SpecValue<>(highSpeed1, SpecUnit.NONE);
+            SpecValue<Boolean> cand = new SpecValue<>(highSpeed2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(highSpeedConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("HighSpeed comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (LOW)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && package1 != null && package2 != null) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+        logger.trace("Calculated metadata similarity: {} (totalScore={}, maxPossibleScore={})",
+                similarity, totalScore, maxPossibleScore);
+
+        // Boost for known equivalent families (e.g., LM358 ≈ MC1458)
+        String family1 = extractFamily(extractBasePart(mpn1));
+        String family2 = extractFamily(extractBasePart(mpn2));
+        if (areEquivalentFamilies(family1, family2)) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.debug("Boosted similarity to {} for equivalent families: {} and {}", HIGH_SIMILARITY, family1, family2);
+        }
+
+        return similarity;
     }
 
     /**
@@ -272,6 +412,114 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
         // Known compatible package sets
         Set<String> smallPkgs = Set.of("N", "D", "P", "DG", "PW", "DR", "DGK", "DBV");
         return smallPkgs.contains(pkg1) && smallPkgs.contains(pkg2);
+    }
+
+    // ==================== Spec Extraction Methods ====================
+
+    /**
+     * Extract op-amp function type (SINGLE, DUAL, QUAD).
+     * Uses CHARACTERISTICS map for known parts, falls back to pattern matching.
+     */
+    private String extractFunction(String mpn) {
+        if (mpn == null) return null;
+
+        String family = extractFamily(extractBasePart(mpn));
+        OpAmpChars chars = CHARACTERISTICS.get(family);
+        if (chars != null && chars.function != null) {
+            return chars.function.name();
+        }
+
+        // Fallback: pattern-based detection from external utility class
+        OpAmpCharacteristics.Function func = OpAmpCharacteristics.fromMPN(mpn);
+        return func != null ? func.name() : null;
+    }
+
+    /**
+     * Extract input type (BIPOLAR, JFET, CMOS).
+     * Uses CHARACTERISTICS map for known parts.
+     */
+    private String extractInputType(String mpn) {
+        if (mpn == null) return null;
+
+        String family = extractFamily(extractBasePart(mpn));
+        OpAmpChars chars = CHARACTERISTICS.get(family);
+        if (chars != null && chars.inputType != null) {
+            return chars.inputType.name();
+        }
+
+        // Default: assume BIPOLAR if not known
+        return "BIPOLAR";
+    }
+
+    /**
+     * Extract rail-to-rail capability.
+     * Uses CHARACTERISTICS map for known parts.
+     */
+    private Boolean extractRailToRail(String mpn) {
+        if (mpn == null) return null;
+
+        String family = extractFamily(extractBasePart(mpn));
+        OpAmpChars chars = CHARACTERISTICS.get(family);
+        return chars != null ? chars.railToRail : null;
+    }
+
+    /**
+     * Extract low-power indicator.
+     * Uses CHARACTERISTICS map for known parts.
+     */
+    private Boolean extractLowPower(String mpn) {
+        if (mpn == null) return null;
+
+        String family = extractFamily(extractBasePart(mpn));
+        OpAmpChars chars = CHARACTERISTICS.get(family);
+        return chars != null ? chars.lowPower : null;
+    }
+
+    /**
+     * Extract high-speed indicator.
+     * Uses CHARACTERISTICS map for known parts.
+     */
+    private Boolean extractHighSpeed(String mpn) {
+        if (mpn == null) return null;
+
+        String family = extractFamily(extractBasePart(mpn));
+        OpAmpChars chars = CHARACTERISTICS.get(family);
+        return chars != null ? chars.highSpeed : null;
+    }
+
+    /**
+     * Extract package code.
+     */
+    private String extractPackage(String mpn) {
+        return extractPackageCode(mpn);
+    }
+
+    /**
+     * Inner class to hold op-amp characteristics.
+     */
+    private static class OpAmpChars {
+        final Function function;
+        final InputType inputType;
+        final boolean railToRail;
+        final boolean lowPower;
+        final boolean highSpeed;
+
+        enum Function {
+            SINGLE, DUAL, QUAD, TRIPLE
+        }
+
+        enum InputType {
+            BIPOLAR, JFET, CMOS
+        }
+
+        OpAmpChars(Function function, InputType inputType, boolean railToRail,
+                             boolean lowPower, boolean highSpeed) {
+            this.function = function;
+            this.inputType = inputType;
+            this.railToRail = railToRail;
+            this.lowPower = lowPower;
+            this.highSpeed = highSpeed;
+        }
     }
 
 }

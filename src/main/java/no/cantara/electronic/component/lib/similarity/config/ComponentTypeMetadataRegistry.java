@@ -167,12 +167,12 @@ public class ComponentTypeMetadataRegistry {
 
     private void registerOpAmpMetadata() {
         ComponentTypeMetadata metadata = ComponentTypeMetadata.builder(ComponentType.OPAMP)
-                .addSpec("configuration", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // single, dual, quad
-                .addSpec("inputType", SpecImportance.HIGH, ToleranceRule.exactMatch()) // JFET, bipolar, CMOS
-                .addSpec("package", SpecImportance.HIGH, ToleranceRule.exactMatch())
-                .addSpec("gbw", SpecImportance.MEDIUM, ToleranceRule.minimumRequired()) // Gain-bandwidth product
-                .addSpec("slewRate", SpecImportance.MEDIUM, ToleranceRule.minimumRequired())
-                .addSpec("inputOffset", SpecImportance.LOW, ToleranceRule.maximumAllowed(1.5))
+                .addSpec("function", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // SINGLE, DUAL, QUAD
+                .addSpec("inputType", SpecImportance.HIGH, ToleranceRule.exactMatch()) // BIPOLAR, JFET, CMOS
+                .addSpec("railToRail", SpecImportance.MEDIUM, ToleranceRule.exactMatch()) // true/false
+                .addSpec("lowPower", SpecImportance.LOW, ToleranceRule.exactMatch()) // true/false
+                .addSpec("highSpeed", SpecImportance.LOW, ToleranceRule.exactMatch()) // true/false
+                .addSpec("package", SpecImportance.LOW, ToleranceRule.exactMatch())
                 .defaultProfile(SimilarityProfile.REPLACEMENT)
                 .build();
 
