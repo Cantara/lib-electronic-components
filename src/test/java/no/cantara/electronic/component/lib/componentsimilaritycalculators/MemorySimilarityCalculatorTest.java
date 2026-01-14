@@ -102,11 +102,14 @@ class MemorySimilarityCalculatorTest {
         }
 
         @Test
-        @DisplayName("Different capacity SPI EEPROMs should have low similarity")
-        void differentCapacitySpiEepromsShouldHaveLowSimilarity() {
+        @DisplayName("Different capacity SPI EEPROMs (larger can replace smaller)")
+        void differentCapacitySpiEepromsShouldBeCompatible() {
             double similarity = calculator.calculateSimilarity(
                     "25LC256", "25LC512", registry);
-            assertEquals(LOW_SIMILARITY, similarity, 0.1, "Different capacity should have low similarity");
+            // Metadata-driven: larger capacity can replace smaller (minimumRequired tolerance)
+            // Same type (EEPROM) + same interface (SPI) = high compatibility
+            assertTrue(similarity >= MEDIUM_SIMILARITY,
+                    "Larger capacity EEPROM can replace smaller - Expected >= " + MEDIUM_SIMILARITY + " but was: " + similarity);
         }
     }
 
@@ -131,11 +134,14 @@ class MemorySimilarityCalculatorTest {
         }
 
         @Test
-        @DisplayName("Different size Flash should have low similarity")
-        void differentSizeFlashShouldHaveLowSimilarity() {
+        @DisplayName("Different size Flash (larger can replace smaller)")
+        void differentSizeFlashShouldBeCompatible() {
             double similarity = calculator.calculateSimilarity(
                     "W25Q32JV", "W25Q128JV", registry);
-            assertEquals(LOW_SIMILARITY, similarity, 0.1, "Different size Flash should have low similarity");
+            // Metadata-driven: larger capacity can replace smaller (minimumRequired tolerance)
+            // Same type (Flash) + same interface (SPI) = high compatibility
+            assertTrue(similarity >= MEDIUM_SIMILARITY,
+                    "Larger capacity Flash can replace smaller - Expected >= " + MEDIUM_SIMILARITY + " but was: " + similarity);
         }
     }
 

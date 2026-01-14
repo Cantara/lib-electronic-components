@@ -170,7 +170,8 @@ public class ComponentMatchingTest {
 
         // Flash
         assertHighSimilarity("W25Q32JVSSIQ", "W25Q32JVSIQ", "Same flash with/without suffix");
-        assertLowSimilarity("W25Q32", "W25Q64", "Different capacities");
+        // Metadata-driven: larger capacity can replace smaller (same type + interface = compatible)
+        assertHighSimilarity("W25Q32", "W25Q64", "Different capacities (larger can replace smaller)");
     }
 
     @Disabled
