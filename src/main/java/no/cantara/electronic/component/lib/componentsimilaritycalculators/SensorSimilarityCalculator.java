@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,14 +72,264 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
             return 0.0;
         }
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Try metadata-driven approach first
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.SENSOR);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for SENSOR, using family matching approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven similarity calculation for sensors");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // Sensor comparison uses family matching approach
+        // Fallback to family matching approach
+        logger.trace("No metadata found for SENSOR, using family matching approach");
         return calculateFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity using metadata-driven approach with spec-based comparison.
+     * Compares sensor type, family, interface, and package with weighted importance.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from both MPNs
+        String sensorType1 = extractSensorType(mpn1);
+        String sensorType2 = extractSensorType(mpn2);
+        String family1 = extractSensorFamily(mpn1);
+        String family2 = extractSensorFamily(mpn2);
+        String interface1 = extractInterface(mpn1);
+        String interface2 = extractInterface(mpn2);
+        String package1 = getPackageCode(mpn1);
+        String package2 = getPackageCode(mpn2);
+
+        // Short-circuit check for CRITICAL incompatibility - different sensor types
+        if (!sensorType1.isEmpty() && !sensorType2.isEmpty() && !sensorType1.equals(sensorType2)) {
+            logger.debug("Different sensor types: {} vs {} - returning LOW_SIMILARITY", sensorType1, sensorType2);
+            return LOW_SIMILARITY;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare sensor type (CRITICAL)
+        ComponentTypeMetadata.SpecConfig sensorTypeConfig = metadata.getSpecConfig("sensorType");
+        if (sensorTypeConfig != null && !sensorType1.isEmpty() && !sensorType2.isEmpty()) {
+            ToleranceRule rule = sensorTypeConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(sensorType1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(sensorType2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(sensorTypeConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Sensor type comparison: {} vs {} = {} (weight: {})", sensorType1, sensorType2, specScore, specWeight);
+        }
+
+        // Compare sensor family (HIGH)
+        ComponentTypeMetadata.SpecConfig familyConfig = metadata.getSpecConfig("family");
+        if (familyConfig != null && !family1.isEmpty() && !family2.isEmpty()) {
+            ToleranceRule rule = familyConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(family1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(family2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+
+            // Check for equivalent sensor families (e.g., DS18B20 variants, LM35 grades)
+            if (specScore < 1.0 && areEquivalentSensorsByFamily(mpn1, mpn2, family1, family2)) {
+                specScore = 1.0;
+                logger.trace("Equivalent sensor families detected: {} vs {}", family1, family2);
+            }
+
+            double specWeight = profile.getEffectiveWeight(familyConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Sensor family comparison: {} vs {} = {} (weight: {})", family1, family2, specScore, specWeight);
+        }
+
+        // Compare interface (MEDIUM)
+        ComponentTypeMetadata.SpecConfig interfaceConfig = metadata.getSpecConfig("interface");
+        if (interfaceConfig != null && !interface1.isEmpty() && !interface2.isEmpty()) {
+            ToleranceRule rule = interfaceConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(interface1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(interface2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(interfaceConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Interface comparison: {} vs {} = {} (weight: {})", interface1, interface2, specScore, specWeight);
+        }
+
+        // Compare package (LOW)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && !package1.isEmpty() && !package2.isEmpty()) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+
+            // Check for compatible packages even if not exact match
+            if (specScore < 1.0 && arePackagesCompatible(package1, package2)) {
+                specScore = 1.0;
+                logger.trace("Compatible packages detected: {} vs {}", package1, package2);
+            }
+
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: {} vs {} = {} (weight: {})", package1, package2, specScore, specWeight);
+        }
+
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+        logger.debug("Metadata-driven sensor similarity: {} vs {} = {}", mpn1, mpn2, similarity);
+
+        // Boost for same base sensor (ignoring package/suffix differences)
+        String base1 = getBasePart(mpn1);
+        String base2 = getBasePart(mpn2);
+        if (base1.equals(base2) && !base1.isEmpty()) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.trace("Same base sensor boost applied: {} = {}", base1, base2);
+        }
+
+        return similarity;
+    }
+
+    /**
+     * Checks if two sensors are equivalent based on their families.
+     * Used for equivalent sensor groups like DS18B20 variants, LM35 grades, etc.
+     */
+    private boolean areEquivalentSensorsByFamily(String mpn1, String mpn2, String family1, String family2) {
+        // Delegate to family-specific equivalence checks
+        SensorFamily sensorFamily1 = determineSensorFamily(mpn1);
+        SensorFamily sensorFamily2 = determineSensorFamily(mpn2);
+
+        if (sensorFamily1 != sensorFamily2) return false;
+
+        switch (sensorFamily1) {
+            case TEMPERATURE:
+                return areEquivalentTemperatureSensors(mpn1, mpn2);
+            case HUMIDITY:
+                return areEquivalentHumiditySensors(mpn1, mpn2);
+            case PRESSURE:
+                return areEquivalentPressureSensors(mpn1, mpn2);
+            case COMBINED:
+                return areEquivalentCombinedSensors(mpn1, mpn2);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Extracts the sensor type from an MPN.
+     * Returns: TEMPERATURE, ACCELEROMETER, GYROSCOPE, HUMIDITY, PRESSURE, COMBINED
+     */
+    private String extractSensorType(String mpn) {
+        if (mpn == null) return "";
+        SensorFamily family = determineSensorFamily(mpn);
+        return family.name();
+    }
+
+    /**
+     * Extracts the sensor family prefix from an MPN.
+     * Returns: LM35, DS18, TMP, ADXL, MMA, SHT, BME, etc.
+     */
+    private String extractSensorFamily(String mpn) {
+        if (mpn == null) return "";
+        String upperMpn = mpn.toUpperCase();
+
+        // Temperature sensors
+        if (upperMpn.startsWith("LM35")) return "LM35";
+        if (upperMpn.startsWith("DS18B20")) return "DS18B20";
+        if (upperMpn.startsWith("DS18")) return "DS18";
+        if (upperMpn.matches("^TMP[0-9]+.*")) {
+            // Extract TMP followed by digits (TMP36, TMP102, etc.)
+            java.util.regex.Matcher m = Pattern.compile("^(TMP[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.startsWith("MAX318")) return "MAX318";
+
+        // Accelerometers
+        if (upperMpn.matches("^ADXL[0-9]+.*")) {
+            // Extract ADXL followed by digits (ADXL345, ADXL362, etc.)
+            java.util.regex.Matcher m = Pattern.compile("^(ADXL[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^MMA[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(MMA[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^LIS[23][A-Z0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(LIS[23][A-Z0-9]+?)(?:-.*|$)").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+
+        // Gyroscopes
+        if (upperMpn.matches("^L3GD[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(L3GD[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^ITG[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(ITG[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^MPU[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(MPU[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+
+        // Humidity sensors
+        if (upperMpn.matches("^SHT[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(SHT[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^HIH[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(HIH[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+
+        // Combined sensors
+        if (upperMpn.matches("^BME[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(BME[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+        if (upperMpn.matches("^BMP[0-9]+.*")) {
+            java.util.regex.Matcher m = Pattern.compile("^(BMP[0-9]+).*").matcher(upperMpn);
+            if (m.matches()) return m.group(1);
+        }
+
+        return "";
+    }
+
+    /**
+     * Extracts the interface type from an MPN.
+     * Returns: I2C, SPI, 1-Wire, Analog, Digital
+     */
+    private String extractInterface(String mpn) {
+        if (mpn == null) return "";
+        String upperMpn = mpn.toUpperCase();
+
+        // DS18B20 series - 1-Wire
+        if (upperMpn.startsWith("DS18")) return "1-Wire";
+
+        // ADXL series - typically SPI/I2C
+        if (upperMpn.startsWith("ADXL")) return "SPI/I2C";
+
+        // MMA series - typically I2C
+        if (upperMpn.startsWith("MMA")) return "I2C";
+
+        // BME/BMP series - typically I2C/SPI
+        if (upperMpn.startsWith("BME") || upperMpn.startsWith("BMP")) return "I2C/SPI";
+
+        // SHT series - typically I2C
+        if (upperMpn.startsWith("SHT")) return "I2C";
+
+        // LM35 series - Analog
+        if (upperMpn.startsWith("LM35")) return "Analog";
+
+        // TMP series - varies
+        if (upperMpn.matches("^TMP3[0-9].*")) return "Analog";  // TMP36, TMP37
+        if (upperMpn.matches("^TMP1[0-9]{2}.*")) return "I2C";  // TMP102, TMP112
+
+        // MPU series - I2C
+        if (upperMpn.startsWith("MPU")) return "I2C";
+
+        return "";
     }
 
     /**

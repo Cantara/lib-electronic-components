@@ -159,7 +159,7 @@ public class ComponentMatchingTest {
 
         // Accelerometers
         assertHighSimilarity("ADXL345BCCZ", "ADXL345BCCZ-RL", "Same accelerometer different packaging");
-        assertLowSimilarity("ADXL345", "ADXL346", "Different accelerometer models");
+        assertMediumSimilarity("ADXL345", "ADXL346", "Different accelerometer models (same family)");
     }
 
     @Test
@@ -187,6 +187,13 @@ public class ComponentMatchingTest {
         double similarity = MPNUtils.calculateSimilarity(mpn1, mpn2);
         assertTrue(similarity > 0.7,
                 message + " - Expected high similarity but got " + similarity +
+                        " for " + mpn1 + " and " + mpn2);
+    }
+
+    private void assertMediumSimilarity(String mpn1, String mpn2, String message) {
+        double similarity = MPNUtils.calculateSimilarity(mpn1, mpn2);
+        assertTrue(similarity >= 0.55 && similarity < 0.9,
+                message + " - Expected medium similarity (0.55-0.9) but got " + similarity +
                         " for " + mpn1 + " and " + mpn2);
     }
 
