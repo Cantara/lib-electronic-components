@@ -16,9 +16,10 @@ public class MaximHandler implements ManufacturerHandler {
         registry.addPattern(ComponentType.TEMPERATURE_SENSOR, "^DS18[A-Z0-9]+\\+?$");
         registry.addPattern(ComponentType.SENSOR, "^DS18[A-Z0-9]+\\+?$");
 
-        registry.addPattern(ComponentType.TEMPERATURE_SENSOR_MAXIM, "^MAX6[0-9]{3}[A-Z0-9-]*$");
-        registry.addPattern(ComponentType.TEMPERATURE_SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*$");
-        registry.addPattern(ComponentType.SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*$");
+        // MAX6xxx temperature sensors (allow optional + for RoHS compliance indicator)
+        registry.addPattern(ComponentType.TEMPERATURE_SENSOR_MAXIM, "^MAX6[0-9]{3}[A-Z0-9-]*\\+?$");
+        registry.addPattern(ComponentType.TEMPERATURE_SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*\\+?$");
+        registry.addPattern(ComponentType.SENSOR, "^MAX6[0-9]{3}[A-Z0-9-]*\\+?$");
 
         // Real-Time Clocks (DS12xx, DS13xx, DS32xx)
         registry.addPattern(ComponentType.RTC_MAXIM, "^DS12[0-9]{2}.*");
@@ -86,7 +87,7 @@ public class MaximHandler implements ManufacturerHandler {
                 type == ComponentType.TEMPERATURE_SENSOR_MAXIM) {
 
             if (upperMpn.matches("^DS18[A-Z0-9]+\\+?$") ||    // DS18xxx series
-                    upperMpn.matches("^MAX6[0-9]{3}[A-Z0-9-]*$")) { // MAX6xxx series
+                    upperMpn.matches("^MAX6[0-9]{3}[A-Z0-9-]*\\+?$")) { // MAX6xxx series (allow + suffix)
                 return true;
             }
         }
@@ -115,14 +116,17 @@ public class MaximHandler implements ManufacturerHandler {
     public String extractSeries(String mpn) {
         if (mpn == null || mpn.isEmpty()) return "";
 
+        // Strip RoHS + suffix for series extraction
+        String baseMpn = mpn.replace("+", "");
+
         // Handle DS18B20 series
-        if (mpn.matches("(?i)^DS18B20.*")) {
+        if (baseMpn.matches("(?i)^DS18B20.*")) {
             return "DS18B20";  // Return base series without variants
         }
 
         // Handle MAX temperature sensors
-        if (mpn.matches("(?i)^MAX6[0-9]{3}.*")) {
-            return mpn.substring(0, 7);  // Return base MAX6xxx number
+        if (baseMpn.matches("(?i)^MAX6[0-9]{3}.*")) {
+            return baseMpn.substring(0, Math.min(7, baseMpn.length()));  // Return base MAX6xxx number
         }
 
         return "";

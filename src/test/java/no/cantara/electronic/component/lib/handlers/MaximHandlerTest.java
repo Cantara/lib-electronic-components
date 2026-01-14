@@ -67,12 +67,12 @@ class MaximHandlerTest {
         }
 
         @ParameterizedTest
-        @DisplayName("BUG: MAX6xxx with RoHS + suffix not detected - pattern anchoring issue")
+        @DisplayName("FIXED: MAX6xxx with RoHS + suffix now detected correctly")
         @ValueSource(strings = {"MAX6675ISA+", "MAX6675+"})
-        void bugMAX6xxxWithRoHSSuffixNotDetected(String mpn) {
-            // BUG: Pattern ^MAX6[0-9]+ requires digits only, but + suffix breaks anchoring
-            boolean matches = handler.matches(mpn, ComponentType.TEMPERATURE_SENSOR_MAXIM, registry);
-            assertFalse(matches, "BUG: " + mpn + " should match but pattern anchoring is too strict");
+        void fixedMAX6xxxWithRoHSSuffixDetected(String mpn) {
+            // FIXED: Pattern now includes optional \\+? suffix
+            assertTrue(handler.matches(mpn, ComponentType.TEMPERATURE_SENSOR_MAXIM, registry),
+                    mpn + " should match TEMPERATURE_SENSOR_MAXIM");
         }
 
         @Test
@@ -323,12 +323,11 @@ class MaximHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: MAX6675+ RoHS suffix not handled")
-        void bugMAX6675RoHSSuffixNotHandled() {
-            // BUG: MAX6675 pattern doesn't account for + suffix
-            // See bugMAX6xxxWithRoHSSuffixNotDetected for similar issue
-            boolean matches = handler.matches("MAX6675+", ComponentType.TEMPERATURE_SENSOR_MAXIM, registry);
-            assertFalse(matches, "BUG: MAX6675+ should match but pattern doesn't handle + suffix");
+        @DisplayName("FIXED: MAX6675+ RoHS suffix now handled correctly")
+        void fixedMAX6675RoHSSuffixHandled() {
+            // FIXED: Pattern now includes optional \\+? suffix
+            assertTrue(handler.matches("MAX6675+", ComponentType.TEMPERATURE_SENSOR_MAXIM, registry),
+                    "MAX6675+ should match with + suffix");
         }
     }
 
@@ -375,11 +374,11 @@ class MaximHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: MAX6675ISA+ not detected - see bugMAX6xxxWithRoHSSuffixNotDetected")
-        void bugPopularTempSensorMAX6675Plus() {
-            // BUG: MAX6675 with + suffix doesn't match
-            assertFalse(handler.matches("MAX6675ISA+", ComponentType.TEMPERATURE_SENSOR_MAXIM, registry),
-                    "BUG: MAX6675ISA+ should match but + suffix not handled");
+        @DisplayName("FIXED: MAX6675ISA+ now detected correctly")
+        void fixedPopularTempSensorMAX6675Plus() {
+            // FIXED: Pattern now includes optional \\+? suffix
+            assertTrue(handler.matches("MAX6675ISA+", ComponentType.TEMPERATURE_SENSOR_MAXIM, registry),
+                    "MAX6675ISA+ should match with + suffix");
         }
 
         @Test
