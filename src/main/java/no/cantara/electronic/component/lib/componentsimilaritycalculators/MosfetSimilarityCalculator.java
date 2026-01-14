@@ -2,6 +2,8 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,10 +11,19 @@ import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Similarity calculator for MOSFET components.
+ *
+ * Uses equivalent groups (IRF530≈STF530, IRF/IRFP families) and characteristics comparison.
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(MosfetSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -49,6 +60,10 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
         KNOWN_CHARACTERISTICS.put("FQP44N10", new MosfetCharacteristics(100, 44, 0.085, true, "TO-220"));
     }
 
+    public MosfetSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
+
     @Override
     public boolean isApplicable(ComponentType type) {
         // Check for null type to handle unrecognized MOSFETs
@@ -74,6 +89,21 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
             return 0.0;
         }
 
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.MOSFET);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for MOSFET, using equivalent group approach");
+        }
+
+        // MOSFET comparison primarily uses equivalent groups and characteristics
+        return calculateEquivalentGroupBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on equivalent groups and known characteristics.
+     * This is the primary MOSFET comparison method.
+     */
+    private double calculateEquivalentGroupBasedSimilarity(String mpn1, String mpn2) {
         // Check polarity FIRST
         boolean isN1 = isNChannel(mpn1);
         boolean isN2 = isNChannel(mpn2);

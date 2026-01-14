@@ -2,17 +2,27 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Similarity calculator for operational amplifier (op-amp) components.
+ *
+ * Uses equivalent families (LM358≈MC1458, TL072≈TL082) and configuration matching.
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(OpAmpSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
 
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
@@ -111,6 +121,10 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
         ));
     }
 
+    public OpAmpSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
+
     @Override
     public boolean isApplicable(ComponentType type) {
         // Handle null type
@@ -136,6 +150,21 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
 
         logger.debug("Comparing op-amps: {} vs {}", mpn1, mpn2);
 
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.OPAMP);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for OPAMP, using equivalent family approach");
+        }
+
+        // Op-amp comparison primarily uses equivalent families and configuration
+        return calculateEquivalentFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on equivalent families and known characteristics.
+     * This is the primary op-amp comparison method.
+     */
+    private double calculateEquivalentFamilyBasedSimilarity(String mpn1, String mpn2) {
         // Extract base part numbers (without package codes)
         String base1 = extractBasePart(mpn1);
         String base2 = extractBasePart(mpn2);

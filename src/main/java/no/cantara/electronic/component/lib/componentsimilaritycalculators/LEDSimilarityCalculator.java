@@ -2,15 +2,31 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Similarity calculator for LED components.
+ *
+ * Note: Unlike resistor/capacitor calculators, LED similarity is primarily based on
+ * equivalent groups and family matching rather than extractable electrical specs.
+ * LED MPNs encode families, bins, and color temperatures in manufacturer-specific ways
+ * that don't map cleanly to the metadata-driven spec extraction pattern.
+ *
+ * This calculator uses the family-matching approach with metadata infrastructure
+ * in place for potential future enhancements.
+ */
 public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(LEDSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
@@ -51,6 +67,9 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
         EQUIVALENT_GROUPS.put("NCSR", Set.of("NCSR170", "NCSR170T", "NCSR170AT"));
     }
 
+    public LEDSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
 
     @Override
     public boolean isApplicable(ComponentType type) {
@@ -66,6 +85,23 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
 
         logger.debug("Comparing LEDs: {} vs {}", mpn1, mpn2);
 
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.LED);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for LED, using family-matching approach");
+        }
+
+        // LED comparison uses family-matching approach rather than spec extraction
+        // because LED MPNs encode families, bins, and color temperatures in
+        // manufacturer-specific ways that don't map to extractable electrical specs
+        return calculateFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on LED families, bins, and color temperatures.
+     * This is the primary LED comparison method.
+     */
+    private double calculateFamilyBasedSimilarity(String mpn1, String mpn2) {
         // Get base parts without bin codes
         String base1 = getBasePart(mpn1);
         String base2 = getBasePart(mpn2);
