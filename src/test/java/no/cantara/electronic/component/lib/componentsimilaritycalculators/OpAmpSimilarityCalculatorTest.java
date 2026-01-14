@@ -44,10 +44,12 @@ class OpAmpSimilarityCalculatorTest {
         }
 
         @Test
-        @DisplayName("Should be applicable for generic IC types")
-        void shouldBeApplicableForICTypes() {
-            assertTrue(calculator.isApplicable(ComponentType.IC));
-            assertTrue(calculator.isApplicable(ComponentType.ANALOG_IC));
+        @DisplayName("Should NOT be applicable for generic IC types (to avoid intercepting other ICs)")
+        void shouldNotBeApplicableForGenericICTypes() {
+            // OpAmpSimilarityCalculator should only handle specific OPAMP types
+            // to avoid intercepting logic ICs, memory ICs, etc.
+            assertFalse(calculator.isApplicable(ComponentType.IC));
+            assertFalse(calculator.isApplicable(ComponentType.ANALOG_IC));
         }
 
         @Test
