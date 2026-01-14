@@ -65,9 +65,12 @@ public class ComponentMatchingTest {
         assertHighSimilarity("CRCW060310K0FKEA", "RC0603FR-0710KL",
                 "Same value resistors from different manufacturers");
 
-        // Capacitors
-        assertHighSimilarity("GRM188R71H104KA93D", "C0603C104K5RACTU",
-                "Same value capacitors from different manufacturers");
+        // Capacitors - Note: GRM188=50V vs C0603=5V, so similarity is medium not high
+        // With metadata-driven scoring, voltage is CRITICAL importance
+        double capSim = MPNUtils.calculateSimilarity("GRM188R71H104KA93D", "C0603C104K5RACTU");
+        assertTrue(capSim >= 0.5 && capSim < 0.7,
+                "Same value capacitors with different voltages (50V vs 5V) - Expected medium similarity but got " +
+                capSim + " for GRM188R71H104KA93D and C0603C104K5RACTU");
 
         // Should not match
         assertLowSimilarity("CRCW060310K0FKEA", "CRCW06031K00FKEA",

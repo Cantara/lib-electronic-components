@@ -153,4 +153,21 @@ calculator.calculateSimilarity("GRM188R71H104KA01D", "CL10B104KB8NNNC", registry
 - X7R and X5R are often interchangeable for general use
 - C0G is preferred for precision applications
 
+### Unicode Gotcha: Micro Sign (Milestone 2, January 2026)
+**Critical Bug**: The micro sign µ (U+00B5) becomes Greek capital MU Μ (U+039C) when uppercased:
+```java
+"0.1µF".toUpperCase() // Returns "0.1ΜF" NOT "0.1µF"!
+```
+
+**Impact**: If parseCapacitanceValue() uses toUpperCase() before checking for "µF", the check fails silently, returning null. This causes capacitance comparison to be skipped, reducing similarity from ~1.0 to ~0.33 (package match only).
+
+**Solution**: Replace µ→u and Μ→u before normalizing:
+```java
+String normalized = value.replace("µ", "u").replace("Μ", "u");
+normalized = normalizeValue(normalized); // Now safe to toUpperCase
+if (normalized.contains("UF")) { // Matches both µF and plain UF
+```
+
+**Lesson**: Always handle Greek-origin SI prefixes (µ, Ω) carefully in string normalization logic.
+
 <!-- Add new learnings above this line -->

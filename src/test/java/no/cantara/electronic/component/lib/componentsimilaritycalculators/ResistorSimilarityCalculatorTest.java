@@ -66,7 +66,7 @@ class ResistorSimilarityCalculatorTest {
         void sameVishayResistorsShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity(
                     "CRCW060310K0FKEA", "CRCW060310K0FKEA", registry);
-            assertEquals(0.8, similarity, 0.01, "Identical resistors should score 0.8 (0.3 size + 0.5 value)");
+            assertEquals(1.0, similarity, 0.01, "Identical resistors should score 1.0 (perfect match, metadata-driven normalized)");
         }
 
         @Test
@@ -74,7 +74,8 @@ class ResistorSimilarityCalculatorTest {
         void sameValueDifferentPackageShouldHaveMediumSimilarity() {
             double similarity = calculator.calculateSimilarity(
                     "CRCW060310K0FKEA", "CRCW080510K0FKEA", registry);
-            assertEquals(0.5, similarity, 0.01, "Same value, different package should score 0.5");
+            // Resistance (CRITICAL) weight dominates: 1.0 / 1.49 = 0.671
+            assertEquals(0.67, similarity, 0.02, "Same value, different package should score ~0.67 (resistance weight dominates)");
         }
 
         @Test
@@ -82,8 +83,8 @@ class ResistorSimilarityCalculatorTest {
         void samePackageDifferentValueShouldHaveLowSimilarity() {
             double similarity = calculator.calculateSimilarity(
                     "CRCW0603100RFKEA", "CRCW060310K0FKEA", registry);
-            // Only package matches (0.3), values are different (100R vs 10K)
-            assertEquals(0.3, similarity, 0.01, "Same package, different value should score 0.3");
+            // Only package matches: 0.49 / 1.49 = 0.329, values are different (100R vs 10K)
+            assertEquals(0.33, similarity, 0.02, "Same package, different value should score ~0.33 (package weight only)");
         }
 
         @Test
@@ -170,8 +171,8 @@ class ResistorSimilarityCalculatorTest {
         void identicalMpnsShouldHaveMaxSimilarity() {
             String mpn = "CRCW060310K0FKEA";
             double similarity = calculator.calculateSimilarity(mpn, mpn, registry);
-            // Max for this calculator is 0.8 (0.3 size + 0.5 value)
-            assertEquals(0.8, similarity, 0.01, "Identical MPNs should have max similarity");
+            // Max for metadata-driven calculator is 1.0 (normalized perfect match)
+            assertEquals(1.0, similarity, 0.01, "Identical MPNs should have max similarity (normalized to 1.0)");
         }
 
         @Test
@@ -209,8 +210,8 @@ class ResistorSimilarityCalculatorTest {
             String yageo10k = "RC0603FR-0710KL";
 
             double similarity = calculator.calculateSimilarity(vishay10k, yageo10k, registry);
-            // Should have at least the value match (0.5) since both are 10K
-            assertTrue(similarity >= 0.5, "10K resistors should match on value");
+            // Should have at least the value match (~0.67) since both are 10K resistors
+            assertTrue(similarity >= 0.6, "10K resistors should match on value");
         }
 
         @Test

@@ -1024,6 +1024,210 @@ metadata.getSpecConfig(null); // ✗ NullPointerException
 - Document expected behavior in test names (shouldXxxWhenYyy pattern)
 - Test both positive and negative cases (shouldAccept vs shouldReject)
 
+### Milestone 2: Calculator Integration (January 2026)
+
+**Milestone Status**: ✅ COMPLETED
+
+Integrated the metadata-driven architecture into existing similarity calculators, starting with ResistorSimilarityCalculator and CapacitorSimilarityCalculator.
+
+#### Integration Pattern
+
+Each refactored calculator follows this pattern:
+
+```java
+public class XxxSimilarityCalculator implements ComponentSimilarityCalculator {
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
+    public XxxSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
+
+    @Override
+    public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
+        // Get metadata
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.XXX);
+        if (metadataOpt.isEmpty()) {
+            return calculateLegacySimilarity(mpn1, mpn2); // Fallback
+        }
+
+        ComponentTypeMetadata metadata = metadataOpt.get();
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from MPNs
+        String spec1 = extractSpec(mpn1);
+        String spec2 = extractSpec(mpn2);
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // For each spec: compare using ToleranceRule
+        ComponentTypeMetadata.SpecConfig config = metadata.getSpecConfig("specName");
+        if (config != null && spec1 != null && spec2 != null) {
+            ToleranceRule rule = config.getToleranceRule();
+            SpecValue<T> orig = new SpecValue<>(parseSpec(spec1), SpecUnit.XXX);
+            SpecValue<T> cand = new SpecValue<>(parseSpec(spec2), SpecUnit.XXX);
+
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(config.getImportance());
+
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+        }
+
+        // Normalize to [0.0, 1.0]
+        return maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+    }
+
+    private double calculateLegacySimilarity(String mpn1, String mpn2) {
+        // Keep old hardcoded logic for backward compatibility
+    }
+}
+```
+
+#### Refactored Calculators
+
+**1. ResistorSimilarityCalculator** (PR #XXX)
+
+*Before*:
+- Hardcoded weights: 0.3 (package), 0.5 (value)
+- Max similarity: 0.8
+- String-based value comparison
+
+*After*:
+- Metadata-driven: package (HIGH), resistance (CRITICAL)
+- Max similarity: 1.0 (normalized)
+- Numeric comparison with PercentageToleranceRule(1.0%)
+- Effective weights: package=0.49, resistance=1.0 → total=1.49, normalized to [0.0, 1.0]
+
+*Score Changes*:
+- Perfect match: 0.8 → 1.0
+- Value match only: 0.5 → 0.67 (resistance dominates)
+- Package match only: 0.3 → 0.33 (normalized)
+
+*Test Updates*:
+- Updated 4 assertions to expect normalized [0.0, 1.0] range
+- Added comments explaining metadata-driven scoring
+- All 20 tests passing
+
+**2. CapacitorSimilarityCalculator** (PR #XXX)
+
+*Before*:
+- Hardcoded weights: 0.3 (package), 0.4 (value), 0.2 (voltage)
+- Max similarity: 0.9
+- Voltage comparison: simple `v1 >= v2` check
+
+*After*:
+- Metadata-driven: package (HIGH), capacitance (CRITICAL), voltage (CRITICAL)
+- Max similarity: 1.0 (normalized)
+- MinimumRequiredRule for voltage (asymmetric by design)
+- Effective weights: package=0.49, capacitance=1.0, voltage=1.0 → total=2.49, normalized to [0.0, 1.0]
+
+*Score Changes*:
+- Perfect match: 0.9 → 1.0
+- Asymmetry increased due to voltage weight (0.2 → 1.0)
+
+*Test Updates*:
+- Renamed symmetry test to "similarityRespectsVoltageRatingAsymmetry"
+- Documented that voltage asymmetry is **correct behavior** for replacement scenarios
+- All 20 tests passing
+
+#### Key Implementation Details
+
+**1. Legacy Fallback**
+```java
+if (metadataOpt.isEmpty()) {
+    logger.warn("No metadata found for {} type, falling back to legacy scoring", type);
+    return calculateLegacySimilarity(mpn1, mpn2);
+}
+```
+Ensures backward compatibility if metadata unavailable.
+
+**2. Value Parsing**
+Added type-specific parsing methods:
+- `parseResistanceValue(String)` → Double (in ohms): "10K" → 10000.0
+- `parseCapacitanceValue(String)` → Double (in farads): "0.1µF" → 1.0e-7
+
+**3. Normalization**
+Critical change: all scores now normalized to [0.0, 1.0]:
+```java
+double normalizedSimilarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+```
+
+**4. Voltage Asymmetry is Correct**
+MinimumRequiredRule creates intentional asymmetry:
+- Downgrading voltage (50V → 5V): score ~0.6 (voltage fails)
+- Upgrading voltage (5V → 50V): score ~1.0 (voltage passes)
+
+This is **correct** for component replacement: you can replace a 5V part with a 50V part, but not vice versa.
+
+#### Lessons Learned
+
+**1. API Discovery**
+- `ToleranceRule.compare()` not `calculateScore()`
+- `SpecUnit.OHMS` not `SpecUnit.OHM` (plural form)
+- Always read interfaces before implementing
+
+**2. Test Expectations**
+- Old hardcoded ranges [0.0, 0.8] / [0.0, 0.9] → New normalized [0.0, 1.0]
+- Update assertions with explanatory comments about metadata-driven scoring
+- Document expected score changes in test comments
+
+**3. Voltage Asymmetry**
+- Don't try to enforce symmetry for MinimumRequiredRule comparisons
+- Test the correctness of the asymmetry, not its absence
+- Document the business logic behind the asymmetry
+
+**4. Effective Weight Calculation**
+```
+effectiveWeight = baseWeight × profileMultiplier
+totalScore = Σ(specScore × effectiveWeight)
+normalized = totalScore / maxPossibleScore
+```
+
+Example (resistor with REPLACEMENT profile):
+- Package (HIGH): 1.0 × (0.7 × 0.7) = 0.49
+- Resistance (CRITICAL): 1.0 × (1.0 × 1.0) = 1.0
+- Total: 1.49
+- Normalized: 1.49 / 1.49 = 1.0 (perfect match)
+
+**5. Metadata-Driven Benefits**
+- Consistent scoring across all calculators
+- Easy to tune weights without touching calculator code
+- Context-aware profiles (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION)
+- Self-documenting: metadata explains what specs matter and why
+
+**6. Unicode Gotcha: Micro Sign (µ) vs Greek Mu (Μ)**
+
+**Problem**: The micro sign µ (U+00B5) becomes Greek capital MU Μ (U+039C) when uppercased in Java:
+```java
+"0.1µF".toUpperCase() // Returns "0.1ΜF" (Greek MU, not micro!)
+"0.1µF".toUpperCase().contains("µF") // false! Doesn't match
+```
+
+**Solution**: Replace micro variants before normalizing:
+```java
+String normalized = value.replace("µ", "u").replace("Μ", "u");
+normalized = normalizeValue(normalized); // Now toUpperCase() works
+if (normalized.contains("UF")) { // Matches both µF and plain UF
+    // Parse value
+}
+```
+
+**Why This Matters**: Component MPNs use µF for microfarads, and normalizeValue() calls toUpperCase(). Without the replacement, value parsing silently fails and comparisons return 0.0 similarity.
+
+**Affected**: CapacitorSimilarityCalculator parseCapacitanceValue() method. Any future value parsing with Greek-origin SI prefixes (µ, Ω) must handle this.
+
+#### Next Steps (Milestone 3)
+
+Remaining 15 calculators to refactor:
+- TransistorSimilarityCalculator
+- MosfetSimilarityCalculator
+- DiodeSimilarityCalculator
+- OpAmpSimilarityCalculator
+- And 11 more...
+
+Same pattern, faster implementation with established helpers and test templates.
+
 ---
 
 ## Jackson 3 Migration (January 2026)
