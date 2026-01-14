@@ -98,7 +98,7 @@ class ComponentTypeMetadataRegistryTest {
 
             assertTrue(metadata.isPresent());
             assertEquals(ComponentType.OPAMP, metadata.get().getComponentType());
-            assertNotNull(metadata.get().getSpecConfig("configuration"));
+            assertNotNull(metadata.get().getSpecConfig("function"));
             assertNotNull(metadata.get().getSpecConfig("inputType"));
         }
 
