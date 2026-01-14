@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,19 +88,156 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
 
         logger.debug("Comparing logic ICs: {} vs {}", mpn1, mpn2);
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Try metadata-driven approach first
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.LOGIC_IC);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for LOGIC_IC, using function/technology matching approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven similarity calculation for logic ICs");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // Logic IC comparison uses function/technology matching approach
+        // Fallback to function/technology matching approach
+        logger.trace("No metadata found for LOGIC_IC, using function/technology matching approach");
         return calculateFunctionBasedSimilarity(mpn1, mpn2);
     }
 
     /**
+     * Calculate similarity using metadata-driven approach with weighted spec comparison.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from both MPNs
+        String function1 = extractFunction(mpn1);
+        String function2 = extractFunction(mpn2);
+        String series1 = extractSeries(mpn1);
+        String series2 = extractSeries(mpn2);
+        String technology1 = extractTechnology(mpn1);
+        String technology2 = extractTechnology(mpn2);
+        String package1 = extractPackageCode(mpn1);
+        String package2 = extractPackageCode(mpn2);
+
+        // Short-circuit check for CRITICAL incompatibility - different functions
+        if (!function1.isEmpty() && !function2.isEmpty() && !areSameFunction(mpn1, mpn2)) {
+            logger.debug("Different logic IC functions: {} vs {} - returning LOW_SIMILARITY", function1, function2);
+            return LOW_SIMILARITY;
+        }
+
+        // Short-circuit check for series incompatibility (74xx vs CD4000)
+        if (!series1.isEmpty() && !series2.isEmpty() && !series1.equals(series2)) {
+            logger.debug("Different logic IC series: {} vs {} - returning 0.0", series1, series2);
+            return 0.0;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare function (CRITICAL)
+        ComponentTypeMetadata.SpecConfig functionConfig = metadata.getSpecConfig("function");
+        if (functionConfig != null && !function1.isEmpty() && !function2.isEmpty()) {
+            ToleranceRule rule = functionConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(function1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(function2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(functionConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Function comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare series (HIGH)
+        ComponentTypeMetadata.SpecConfig seriesConfig = metadata.getSpecConfig("series");
+        if (seriesConfig != null && !series1.isEmpty() && !series2.isEmpty()) {
+            ToleranceRule rule = seriesConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(series1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(series2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(seriesConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Series comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare technology (MEDIUM)
+        ComponentTypeMetadata.SpecConfig technologyConfig = metadata.getSpecConfig("technology");
+        if (technologyConfig != null && !technology1.isEmpty() && !technology2.isEmpty()) {
+            ToleranceRule rule = technologyConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(technology1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(technology2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(technologyConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Technology comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (LOW)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && !package1.isEmpty() && !package2.isEmpty()) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // voltageRange is not extracted currently, so skip it
+
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+        // Boost for same base part
+        String base1 = extractBasePart(mpn1);
+        String base2 = extractBasePart(mpn2);
+        if (base1.equals(base2)) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.debug("Boosted similarity to {} for same base part", HIGH_SIMILARITY);
+        }
+
+        return similarity;
+    }
+
+    /**
+     * Extract series (74xx or CD4000) from MPN.
+     */
+    private String extractSeries(String mpn) {
+        if (mpn == null) return "";
+        if (mpn.matches("^CD4.*")) return "CD4000";
+        if (mpn.matches("^74.*") || mpn.matches("^[0-9]{2,3}[A-Z]+[0-9]+.*")) return "74xx";
+        return "";
+    }
+
+    /**
+     * Extract package code from MPN.
+     */
+    private String extractPackageCode(String mpn) {
+        if (mpn == null) return "";
+
+        // For CD4000 series, extract suffix (BE, BM, UBE, etc.)
+        if (mpn.matches("^CD4.*")) {
+            Matcher m = Pattern.compile("CD4[0-9]+([A-Z]+)$").matcher(mpn);
+            if (m.matches()) {
+                return m.group(1);
+            }
+        }
+
+        // For 74xx series, extract trailing letters
+        Matcher m = Pattern.compile(".*([A-Z]{1,2})$").matcher(mpn);
+        if (m.matches()) {
+            return m.group(1);
+        }
+
+        return "";
+    }
+
+    /**
      * Calculate similarity based on function matching, series, and technology compatibility.
-     * This is the primary logic IC comparison method.
+     * This is the fallback logic IC comparison method.
      */
     private double calculateFunctionBasedSimilarity(String mpn1, String mpn2) {
 
@@ -183,6 +324,17 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
     }
 
     private String extractFunction(String mpn) {
+        if (mpn == null) return "";
+
+        // Handle CD4000 series (e.g., CD4001 → "001", CD4011 → "011")
+        if (mpn.matches("^CD4.*")) {
+            Matcher m = CMOS_PATTERN.matcher(mpn);
+            if (m.matches()) {
+                return m.group(1);  // The digits after CD4
+            }
+        }
+
+        // Handle 74xx series (e.g., 74LS00 → "00", 74HC138 → "138")
         Matcher matcher = TTL_PATTERN.matcher(mpn);
         if (matcher.matches()) {
             return matcher.group(3);  // The function number after technology code
