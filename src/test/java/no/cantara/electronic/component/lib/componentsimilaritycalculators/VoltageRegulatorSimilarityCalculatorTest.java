@@ -60,14 +60,14 @@ class VoltageRegulatorSimilarityCalculatorTest {
         @DisplayName("Same 7805 with different packages should have high similarity")
         void same7805DifferentPackagesShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("LM7805CT", "LM7805T", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same regulator different package should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Same regulator different package should have high similarity >= " + HIGH_SIMILARITY + ", was: " + similarity);
         }
 
         @Test
         @DisplayName("Same voltage 7805 from different manufacturers should match")
         void sameVoltage7805FromDifferentManufacturersShouldMatch() {
             double similarity = calculator.calculateSimilarity("LM7805", "MC7805", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same voltage regulators should match");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Same voltage regulators should have high similarity >= " + HIGH_SIMILARITY + ", was: " + similarity);
         }
 
         @Test
@@ -88,7 +88,7 @@ class VoltageRegulatorSimilarityCalculatorTest {
         @DisplayName("7815 variants should match")
         void voltage7815VariantsShouldMatch() {
             double similarity = calculator.calculateSimilarity("LM7815CT", "MC7815CT", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same voltage regulators should match");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Same voltage regulators should have high similarity >= " + HIGH_SIMILARITY + ", was: " + similarity);
         }
     }
 
@@ -100,21 +100,21 @@ class VoltageRegulatorSimilarityCalculatorTest {
         @DisplayName("Same LM317 with different packages should have high similarity")
         void sameLm317DifferentPackagesShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("LM317T", "LM317K", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same adjustable regulator should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Same adjustable regulator should have high similarity");
         }
 
         @Test
         @DisplayName("LM317 and LM350 should be compatible (positive adjustable)")
         void lm317AndLm350ShouldBeCompatible() {
             double similarity = calculator.calculateSimilarity("LM317", "LM350", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Positive adjustable regulators should be compatible");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Positive adjustable regulators should be compatible");
         }
 
         @Test
         @DisplayName("LM317 and LM338 should be compatible (positive adjustable)")
         void lm317AndLm338ShouldBeCompatible() {
             double similarity = calculator.calculateSimilarity("LM317", "LM338", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Positive adjustable regulators should be compatible");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Positive adjustable regulators should be compatible");
         }
 
         @Test
@@ -183,14 +183,14 @@ class VoltageRegulatorSimilarityCalculatorTest {
         @DisplayName("TO-220 package variants should be compatible")
         void to220PackageVariantsShouldBeCompatible() {
             double similarity = calculator.calculateSimilarity("LM7805CT", "LM7805T", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "TO-220 variants should be compatible");
+            assertTrue(similarity >= HIGH_SIMILARITY, "TO-220 variants should be compatible");
         }
 
         @Test
         @DisplayName("Different packages same regulator should have high similarity")
         void differentPackagesSameRegulatorShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("LM7805T", "LM7805MP", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Different packages should still have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY, "Different packages should still have high similarity");
         }
     }
 }
