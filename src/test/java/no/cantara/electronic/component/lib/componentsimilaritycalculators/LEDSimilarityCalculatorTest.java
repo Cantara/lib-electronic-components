@@ -60,14 +60,16 @@ class LEDSimilarityCalculatorTest {
         @DisplayName("Exact same LED should have high similarity")
         void exactSameLedShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("TLHR5400", "TLHR5400", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same LED should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same LED - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
         @DisplayName("Same LED different bins should have high similarity")
         void sameLedDifferentBinsShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("TLHR5400", "TLHR5401", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same LED family should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same LED family - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
     }
 
@@ -79,14 +81,16 @@ class LEDSimilarityCalculatorTest {
         @DisplayName("TI TLHR series should match")
         void tiTlhrSeriesShouldMatch() {
             double similarity = calculator.calculateSimilarity("TLHR5400", "TLHR5402", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same TI series should match");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same TI series - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
         @DisplayName("LG R series variants should match")
         void lgRSeriesVariantsShouldMatch() {
             double similarity = calculator.calculateSimilarity("LG R971", "LG R971-KN", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "LG R series variants should match");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "LG R series variants - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test

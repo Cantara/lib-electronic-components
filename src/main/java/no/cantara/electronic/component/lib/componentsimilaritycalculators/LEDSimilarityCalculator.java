@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,21 +89,140 @@ public class LEDSimilarityCalculator implements ComponentSimilarityCalculator {
 
         logger.debug("Comparing LEDs: {} vs {}", mpn1, mpn2);
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Try metadata-driven approach first
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.LED);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for LED, using family-matching approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven similarity calculation for LEDs");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // LED comparison uses family-matching approach rather than spec extraction
-        // because LED MPNs encode families, bins, and color temperatures in
-        // manufacturer-specific ways that don't map to extractable electrical specs
+        // Fallback to family-matching approach
+        logger.trace("No metadata found for LED, using family-matching approach");
         return calculateFamilyBasedSimilarity(mpn1, mpn2);
     }
 
     /**
+     * Calculate similarity using metadata-driven approach with weighted spec comparison.
+     * For LEDs, only color and package are reliably extractable from MPNs.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from both MPNs
+        String color1 = extractColor(mpn1);
+        String color2 = extractColor(mpn2);
+        String package1 = getPackageCode(mpn1);
+        String package2 = getPackageCode(mpn2);
+
+        // Short-circuit checks for CRITICAL incompatibilities
+        if (color1 != null && color2 != null && !color1.equals(color2)) {
+            logger.debug("Different LED colors: {} vs {} - returning 0.0", color1, color2);
+            return 0.0;
+        }
+
+        // Special check for Cree color temperature differences (FKx vs FCx patterns)
+        if (isCreeColorBin(mpn1) && isCreeColorBin(mpn2)) {
+            if (!haveSameColorTemperature(mpn1, mpn2)) {
+                logger.debug("Different color temperatures for Cree LEDs - returning LOW_SIMILARITY");
+                return LOW_SIMILARITY;
+            }
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare color (CRITICAL)
+        ComponentTypeMetadata.SpecConfig colorConfig = metadata.getSpecConfig("color");
+        if (colorConfig != null && color1 != null && color2 != null) {
+            ToleranceRule rule = colorConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(color1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(color2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(colorConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Color comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (HIGH)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && !package1.isEmpty() && !package2.isEmpty()) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Note: brightness, forwardVoltage, viewingAngle, wavelength are not extractable
+        // from LED MPNs in a reliable way, so they are skipped
+
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+        // Apply family-based boost for same family or equivalent groups
+        String base1 = getBasePart(mpn1);
+        String base2 = getBasePart(mpn2);
+
+        // Same base part (different bins)
+        if (base1.equals(base2)) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.debug("Boosted similarity to {} for same base part", HIGH_SIMILARITY);
+        }
+        // Same LED family
+        else if (areSameLEDFamily(base1, base2)) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.debug("Boosted similarity to {} for same LED family", HIGH_SIMILARITY);
+        }
+
+        return similarity;
+    }
+
+    /**
+     * Extract LED color (RED, GREEN, BLUE, WHITE, etc.) from MPN.
+     */
+    private String extractColor(String mpn) {
+        if (mpn == null) return null;
+
+        String family = getLEDFamily(mpn);
+        if (family.contains("_RED") || family.contains("_R")) return "RED";
+        if (family.contains("_GREEN") || family.contains("_G")) return "GREEN";
+        if (family.contains("_BLUE") || family.contains("_B")) return "BLUE";
+        if (family.contains("_WHITE") || family.contains("_W")) return "WHITE";
+
+        // Extract from MPN patterns
+        String upperMpn = mpn.toUpperCase();
+        if (upperMpn.matches(".*TLH?R.*")) return "RED";
+        if (upperMpn.matches(".*TLH?G.*")) return "GREEN";
+        if (upperMpn.matches(".*TLH?B.*")) return "BLUE";
+        if (upperMpn.matches(".*TLH?W.*")) return "WHITE";
+        if (upperMpn.matches(".*L[WRGB].*")) {
+            int idx = upperMpn.indexOf('L');
+            if (idx + 1 < upperMpn.length()) {
+                char colorChar = upperMpn.charAt(idx + 1);
+                if (colorChar == 'W') return "WHITE";
+                if (colorChar == 'R') return "RED";
+                if (colorChar == 'G') return "GREEN";
+                if (colorChar == 'B') return "BLUE";
+            }
+        }
+
+        // For Samsung LM/LC/LH series and other generic LEDs,
+        // assume WHITE if no specific color is detected
+        if (upperMpn.matches("^(LM|LC|LH|XP|XB)[0-9].*")) {
+            return "WHITE";  // Most power LEDs without color indicator are white
+        }
+
+        return null;
+    }
+
+    /**
      * Calculate similarity based on LED families, bins, and color temperatures.
-     * This is the primary LED comparison method.
+     * This is the fallback LED comparison method.
      */
     private double calculateFamilyBasedSimilarity(String mpn1, String mpn2) {
         // Get base parts without bin codes
