@@ -198,18 +198,17 @@ class InfineonHandlerTest {
     class PackageCodeTests {
 
         @Test
-        @DisplayName("BUG: extractPackageCode regex removes N suffix, returns empty")
-        void packageExtractionBug() {
-            // The regex "^[A-Z0-9]+" removes ALL alphanumeric chars from start
-            // For "IRF540N", this removes "IRF540N" entirely, leaving empty suffix
-            // The 'N' should map to "TO-220" but regex is wrong
+        @DisplayName("FIXED: Package extraction now properly extracts last letter")
+        void packageExtractionFixed() {
+            // FIXED: Now extracts last character properly
+            // For "IRF540N", extracts 'N' and maps to "TO-220"
 
-            assertEquals("", handler.extractPackageCode("IRF540N"),
-                    "BUG: IRF540N package extraction returns empty (should be TO-220)");
-            assertEquals("", handler.extractPackageCode("IRFZ44N"),
-                    "BUG: IRFZ44N package extraction returns empty (should be TO-220)");
-            assertEquals("", handler.extractPackageCode("IRF540S"),
-                    "BUG: IRF540S package extraction returns empty (should be D2PAK)");
+            assertEquals("TO-220", handler.extractPackageCode("IRF540N"),
+                    "FIXED: IRF540N package extraction now returns TO-220");
+            assertEquals("TO-220", handler.extractPackageCode("IRFZ44N"),
+                    "FIXED: IRFZ44N package extraction now returns TO-220");
+            assertEquals("D2PAK", handler.extractPackageCode("IRF540S"),
+                    "FIXED: IRF540S package extraction now returns D2PAK");
         }
 
         @Test
@@ -253,18 +252,17 @@ class InfineonHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG: IRFP/IRFB return 'IRF' due to check order")
-        void seriesExtractionOrderBug() {
-            // In extractSeries(), IRF is checked BEFORE IRFP/IRFB
-            // Since "IRFP460".startsWith("IRF") is true, it returns "IRF"
-            // The check for IRFP is never reached
+        @DisplayName("FIXED: IRFP/IRFB/IRFZ now checked before IRF")
+        void seriesExtractionOrderFixed() {
+            // FIXED: Now checks longer prefixes first (IRFZ, IRFP, IRFB before IRF)
+            // Since "IRFP460".startsWith("IRFP") is checked before IRF, returns "IRFP"
 
-            assertEquals("IRF", handler.extractSeries("IRFP460"),
-                    "BUG: IRFP460 returns 'IRF' instead of 'IRFP'");
-            assertEquals("IRF", handler.extractSeries("IRFB4110"),
-                    "BUG: IRFB4110 returns 'IRF' instead of 'IRFB'");
-            assertEquals("IRF", handler.extractSeries("IRFZ44N"),
-                    "BUG: IRFZ44N returns 'IRF' instead of 'IRFZ' (no IRFZ case exists)");
+            assertEquals("IRFP", handler.extractSeries("IRFP460"),
+                    "FIXED: IRFP460 now returns 'IRFP'");
+            assertEquals("IRFB", handler.extractSeries("IRFB4110"),
+                    "FIXED: IRFB4110 now returns 'IRFB'");
+            assertEquals("IRFZ", handler.extractSeries("IRFZ44N"),
+                    "FIXED: IRFZ44N now returns 'IRFZ'");
         }
 
         @ParameterizedTest
@@ -448,9 +446,9 @@ class InfineonHandlerTest {
             String mpn = "IRF540N";
             assertTrue(handler.matches(mpn, ComponentType.MOSFET_INFINEON, registry));
             assertEquals("IRF", handler.extractSeries(mpn));
-            // BUG: Package extraction broken
-            assertEquals("", handler.extractPackageCode(mpn),
-                    "BUG: Returns empty instead of TO-220");
+            // FIXED: Package extraction now works
+            assertEquals("TO-220", handler.extractPackageCode(mpn),
+                    "FIXED: Now returns TO-220");
         }
 
         @Test
@@ -458,10 +456,10 @@ class InfineonHandlerTest {
         void irfz44n() {
             String mpn = "IRFZ44N";
             assertTrue(handler.matches(mpn, ComponentType.MOSFET_INFINEON, registry));
-            assertEquals("IRF", handler.extractSeries(mpn)); // Bug: should be IRFZ
-            // BUG: Package extraction broken
-            assertEquals("", handler.extractPackageCode(mpn),
-                    "BUG: Returns empty instead of TO-220");
+            assertEquals("IRFZ", handler.extractSeries(mpn)); // FIXED: now returns IRFZ
+            // FIXED: Package extraction now works
+            assertEquals("TO-220", handler.extractPackageCode(mpn),
+                    "FIXED: Now returns TO-220");
         }
 
         @Test
@@ -470,9 +468,9 @@ class InfineonHandlerTest {
             String mpn = "IRL540N";
             assertTrue(handler.matches(mpn, ComponentType.MOSFET_INFINEON, registry));
             assertEquals("IRL", handler.extractSeries(mpn));
-            // BUG: Package extraction broken
-            assertEquals("", handler.extractPackageCode(mpn),
-                    "BUG: Returns empty instead of TO-220");
+            // FIXED: Package extraction now works
+            assertEquals("TO-220", handler.extractPackageCode(mpn),
+                    "FIXED: Now returns TO-220");
         }
 
         @Test
@@ -480,8 +478,8 @@ class InfineonHandlerTest {
         void irfp460() {
             String mpn = "IRFP460";
             assertTrue(handler.matches(mpn, ComponentType.MOSFET_INFINEON, registry));
-            assertEquals("IRF", handler.extractSeries(mpn),
-                    "BUG: Returns 'IRF' instead of 'IRFP'");
+            assertEquals("IRFP", handler.extractSeries(mpn),
+                    "FIXED: Now returns 'IRFP'");
         }
 
         @Test
@@ -498,23 +496,23 @@ class InfineonHandlerTest {
     class KnownBugsSummary {
 
         @Test
-        @DisplayName("BUG #1: Package extraction regex removes suffix")
-        void bug1_packageExtractionRegex() {
-            // Current: mpn.replaceAll("^[A-Z0-9]+", "") removes everything
-            // For "IRF540N" this leaves "" not "N"
-            // Fix: Use lastIndexOf or proper regex like ".*([NLSUP])$"
-            assertEquals("", handler.extractPackageCode("IRF540N"));
+        @DisplayName("FIXED #1: Package extraction now extracts last character properly")
+        void bug1_packageExtractionRegexFixed() {
+            // FIXED: Now uses charAt(length-1) to extract last character
+            // For "IRF540N" extracts 'N' and maps to "TO-220"
+            assertEquals("TO-220", handler.extractPackageCode("IRF540N"));
         }
 
         @Test
-        @DisplayName("BUG #2: Series extraction order - IRF checked before IRFP/IRFB")
-        void bug2_seriesExtractionOrder() {
-            // Current order in code:
-            // if (mpn.startsWith("IRF")) return "IRF";  <- matches first
-            // if (mpn.startsWith("IRFP")) return "IRFP"; <- never reached for IRFP
-            // Fix: Check longer prefixes first
-            assertEquals("IRF", handler.extractSeries("IRFP460"));
-            assertEquals("IRF", handler.extractSeries("IRFB4110"));
+        @DisplayName("FIXED #2: Series extraction checks longer prefixes first")
+        void bug2_seriesExtractionOrderFixed() {
+            // FIXED: Order in code now:
+            // if (mpn.startsWith("IRFZ")) return "IRFZ";  <- checked first
+            // if (mpn.startsWith("IRFP")) return "IRFP";  <- then this
+            // if (mpn.startsWith("IRFB")) return "IRFB";  <- then this
+            // if (mpn.startsWith("IRF")) return "IRF";    <- generic last
+            assertEquals("IRFP", handler.extractSeries("IRFP460"));
+            assertEquals("IRFB", handler.extractSeries("IRFB4110"));
         }
 
         @Test
@@ -540,27 +538,25 @@ class InfineonHandlerTest {
         }
 
         @Test
-        @DisplayName("BUG #4: getSupportedTypes uses mutable HashSet")
-        void bug4_mutableHashSet() {
-            // Should use Set.of() or EnumSet for immutability
+        @DisplayName("FIXED #4: getSupportedTypes now uses immutable Set.of()")
+        void bug4_mutableHashSetFixed() {
+            // FIXED: Now uses Set.of() for immutability
             var types = handler.getSupportedTypes();
             assertNotNull(types);
-            // types is modifiable (HashSet), which is bad practice
+            // types is now immutable (Set.of()), best practice
         }
 
         @Test
-        @DisplayName("BUG #5: Missing patterns for declared types")
-        void bug5_missingPatterns() {
-            // getSupportedTypes() declares these but no patterns registered:
-            // - MICROCONTROLLER_INFINEON / MCU_INFINEON (no XMC patterns)
-            // - OPAMP_INFINEON (no patterns)
-            // - MEMORY_INFINEON (no patterns)
-            // - VOLTAGE_REGULATOR_SWITCHING_INFINEON (no patterns)
+        @DisplayName("FIXED #5: Added patterns for XMC, OptiMOS (IPP, BSC)")
+        void bug5_missingPatternsFixed() {
+            // FIXED: getSupportedTypes() now has matching patterns:
+            // - MICROCONTROLLER_INFINEON / MCU_INFINEON (added XMC patterns)
+            // - Added OptiMOS patterns (IPP, BSC)
 
-            assertFalse(handler.matches("XMC1202-T028X0064-AB", ComponentType.MICROCONTROLLER_INFINEON, registry),
-                    "XMC pattern missing");
-            assertFalse(handler.matches("IPP060N06N", ComponentType.MOSFET_INFINEON, registry),
-                    "OptiMOS pattern missing");
+            assertTrue(handler.matches("XMC1202-T028X0064-AB", ComponentType.MICROCONTROLLER_INFINEON, registry),
+                    "FIXED: XMC pattern now works");
+            assertTrue(handler.matches("IPP060N06N", ComponentType.MOSFET_INFINEON, registry),
+                    "FIXED: OptiMOS pattern now works");
         }
     }
 }
