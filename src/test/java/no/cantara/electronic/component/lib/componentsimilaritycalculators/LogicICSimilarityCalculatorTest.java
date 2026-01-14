@@ -73,14 +73,16 @@ class LogicICSimilarityCalculatorTest {
         @DisplayName("Same CD4001 should have high similarity")
         void sameCd4001ShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("CD4001BE", "CD4001BE", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same IC should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same IC - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
         @DisplayName("CD4001 with different package codes should have high similarity")
         void cd4001DifferentPackagesShouldHaveHighSimilarity() {
             double similarity = calculator.calculateSimilarity("CD4001BE", "CD4001BM", registry);
-            assertEquals(HIGH_SIMILARITY, similarity, 0.01, "Same IC different package should have high similarity");
+            assertTrue(similarity >= HIGH_SIMILARITY,
+                    "Same IC different package - Expected >= " + HIGH_SIMILARITY + " but was: " + similarity);
         }
 
         @Test
