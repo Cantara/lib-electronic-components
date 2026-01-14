@@ -186,22 +186,22 @@ mvn test -Dtest=TransistorSimilarityCalculatorTest
 
 The similarity system now uses a **metadata-driven architecture** for configurable, type-specific similarity rules.
 
-**Conversion Status**: 6 of 17 calculators converted (35% complete)
+**Conversion Status**: 12 of 17 calculators converted (71% complete)
 
 | Calculator | Status | PR | Conversion Date |
 |-----------|--------|-----|-----------------|
+| ResistorSimilarityCalculator | ✅ Converted | - | Jan 2026 |
+| CapacitorSimilarityCalculator | ✅ Converted | - | Jan 2026 |
+| TransistorSimilarityCalculator | ✅ Converted | - | Jan 2026 |
+| DiodeSimilarityCalculator | ✅ Converted | - | Jan 2026 |
+| MosfetSimilarityCalculator | ✅ Converted | - | Jan 2026 |
+| VoltageRegulatorSimilarityCalculator | ✅ Converted | - | Jan 2026 |
 | OpAmpSimilarityCalculator | ✅ Converted | #116 | Jan 2026 |
 | MemorySimilarityCalculator | ✅ Converted | #117 | Jan 2026 |
 | LEDSimilarityCalculator | ✅ Converted | #118 | Jan 2026 |
 | ConnectorSimilarityCalculator | ✅ Converted | (pre-existing) | Jan 2026 |
 | LogicICSimilarityCalculator | ✅ Converted | #119 | Jan 2026 |
 | SensorSimilarityCalculator | ✅ Converted | #120 | Jan 2026 |
-| ResistorSimilarityCalculator | ⏳ Legacy | - | - |
-| CapacitorSimilarityCalculator | ⏳ Legacy | - | - |
-| TransistorSimilarityCalculator | ⏳ Legacy | - | - |
-| DiodeSimilarityCalculator | ⏳ Legacy | - | - |
-| MosfetSimilarityCalculator | ⏳ Legacy | - | - |
-| VoltageRegulatorSimilarityCalculator | ⏳ Legacy | - | - |
 | MicrocontrollerSimilarityCalculator | ⏳ Legacy | - | - |
 | MCUSimilarityCalculator | ⏳ Legacy | - | - |
 | PassiveComponentCalculator | ⏳ Legacy | - | - |
