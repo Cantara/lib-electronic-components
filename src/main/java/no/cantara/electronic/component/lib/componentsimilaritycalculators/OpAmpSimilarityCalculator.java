@@ -130,10 +130,10 @@ public class OpAmpSimilarityCalculator implements ComponentSimilarityCalculator 
         // Handle null type
         if (type == null) {
             return false;
-        }// If it's a base IC type, we'll check if it's an op-amp in calculateSimilarity
-        if (type == ComponentType.IC || type == ComponentType.ANALOG_IC) {
-            return true;
         }
+
+        // Only handle specific op-amp types to avoid intercepting other IC types
+        // (e.g., logic ICs, memory ICs, etc.)
         return type == ComponentType.OPAMP ||
                 type == ComponentType.OPAMP_TI ||
                 type.name().startsWith("OPAMP_");
