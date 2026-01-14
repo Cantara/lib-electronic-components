@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,19 +145,250 @@ public class MemorySimilarityCalculator implements ComponentSimilarityCalculator
             return 0.0;
         }
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Try metadata-driven approach first
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.MEMORY);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for MEMORY, using equivalent group approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven similarity calculation");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // Memory comparison primarily uses equivalent groups and characteristics
+        // Fallback to equivalent group approach
+        logger.trace("No metadata found for MEMORY, using equivalent group approach");
         return calculateEquivalentGroupBasedSimilarity(mpn1, mpn2);
     }
 
     /**
+     * Calculate similarity using metadata-driven approach with weighted spec comparison.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        // Extract specs from both MPNs
+        String type1 = extractType(mpn1);
+        String type2 = extractType(mpn2);
+        Integer capacity1 = extractCapacity(mpn1);
+        Integer capacity2 = extractCapacity(mpn2);
+        String interface1 = extractInterface(mpn1);
+        String interface2 = extractInterface(mpn2);
+        String voltage1 = extractVoltage(mpn1);
+        String voltage2 = extractVoltage(mpn2);
+        String package1 = extractPackage(mpn1);
+        String package2 = extractPackage(mpn2);
+
+        // Short-circuit checks for CRITICAL incompatibilities
+        if (type1 != null && type2 != null && !type1.equals(type2)) {
+            logger.debug("Different memory types: {} vs {} - returning 0.0", type1, type2);
+            return 0.0;
+        }
+
+        if (interface1 != null && interface2 != null && !interface1.equals(interface2)) {
+            logger.debug("Different interfaces: {} vs {} - returning 0.0", interface1, interface2);
+            return 0.0;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare type (CRITICAL)
+        ComponentTypeMetadata.SpecConfig typeConfig = metadata.getSpecConfig("type");
+        if (typeConfig != null && type1 != null && type2 != null) {
+            ToleranceRule rule = typeConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(type1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(type2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(typeConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Type comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare capacity (CRITICAL)
+        ComponentTypeMetadata.SpecConfig capacityConfig = metadata.getSpecConfig("capacity");
+        if (capacityConfig != null && capacity1 != null && capacity2 != null) {
+            ToleranceRule rule = capacityConfig.getToleranceRule();
+            SpecValue<Integer> orig = new SpecValue<>(capacity1, SpecUnit.NONE);
+            SpecValue<Integer> cand = new SpecValue<>(capacity2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(capacityConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Capacity comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare interface (CRITICAL)
+        ComponentTypeMetadata.SpecConfig interfaceConfig = metadata.getSpecConfig("interface");
+        if (interfaceConfig != null && interface1 != null && interface2 != null) {
+            ToleranceRule rule = interfaceConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(interface1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(interface2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(interfaceConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Interface comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare voltage (HIGH)
+        ComponentTypeMetadata.SpecConfig voltageConfig = metadata.getSpecConfig("voltage");
+        if (voltageConfig != null && voltage1 != null && voltage2 != null) {
+            ToleranceRule rule = voltageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(voltage1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(voltage2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(voltageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Voltage comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (MEDIUM)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && package1 != null && package2 != null) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}",
+                    specScore, specWeight, specScore * specWeight);
+        }
+
+        // Speed is not extracted currently, so skip it
+
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+        // Boost for known equivalent parts
+        String base1 = extractBasePart(mpn1);
+        String base2 = extractBasePart(mpn2);
+        if (areEquivalentParts(base1, base2)) {
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+            logger.debug("Boosted similarity to {} for equivalent parts: {} and {}", HIGH_SIMILARITY, base1, base2);
+        }
+
+        return similarity;
+    }
+
+    /**
+     * Extract memory type (EEPROM, Flash, SRAM).
+     */
+    private String extractType(String mpn) {
+        if (mpn == null) return null;
+
+        String base = extractBasePart(mpn);
+        MemoryCharacteristics chars = getCharacteristics(base);
+        if (chars != null) {
+            return chars.memoryType;
+        }
+
+        // Fallback: pattern-based detection
+        String upperMpn = mpn.toUpperCase();
+        if (upperMpn.matches("^(24|25|93)[A-Z]?C[0-9]+.*") ||
+            upperMpn.matches("^AT24.*") ||
+            upperMpn.matches("^M24.*") ||
+            upperMpn.matches("^CAT24.*")) {
+            return "EEPROM";
+        }
+        if (upperMpn.matches("^W25[QX][0-9]+.*") ||
+            upperMpn.matches("^MX25[LU][0-9]+.*") ||
+            upperMpn.matches("^S25FL[0-9]+.*") ||
+            upperMpn.matches("^IS25LP[0-9]+.*")) {
+            return "Flash";
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract memory capacity in Kbit.
+     */
+    private Integer extractCapacity(String mpn) {
+        if (mpn == null) return null;
+
+        String base = extractBasePart(mpn);
+        MemoryCharacteristics chars = getCharacteristics(base);
+        if (chars != null) {
+            return chars.capacity;
+        }
+
+        // Fallback: extract from part number (e.g., 24LC256 → 256 Kbit)
+        String upperMpn = mpn.toUpperCase();
+        Pattern pattern = Pattern.compile("(?:24LC|AT24C|M24C|25LC|AT25|M95|W25Q|W25X|MX25L|S25FL|IS25LP)([0-9]+)");
+        Matcher matcher = pattern.matcher(upperMpn);
+        if (matcher.find()) {
+            String capacityStr = matcher.group(1);
+            try {
+                int value = Integer.parseInt(capacityStr);
+                // Handle different encoding: 256 = 256Kbit, 32 = 32Mbit (32768 Kbit)
+                if (value <= 1024) {
+                    return value;  // Kbit
+                } else {
+                    return value;  // Assume Kbit for now
+                }
+            } catch (NumberFormatException e) {
+                logger.trace("Could not parse capacity from: {}", capacityStr);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract interface type (I2C, SPI, parallel).
+     */
+    private String extractInterface(String mpn) {
+        if (mpn == null) return null;
+
+        String base = extractBasePart(mpn);
+        MemoryCharacteristics chars = getCharacteristics(base);
+        if (chars != null) {
+            return chars.interface_;
+        }
+
+        // Fallback: pattern-based detection
+        String upperMpn = mpn.toUpperCase();
+        if (upperMpn.matches("^24[A-Z]?C[0-9]+.*") ||
+            upperMpn.matches("^AT24.*") ||
+            upperMpn.matches("^M24.*") ||
+            upperMpn.matches("^CAT24.*")) {
+            return "I2C";
+        }
+        if (upperMpn.matches("^25[A-Z]?[CA][0-9]+.*") ||
+            upperMpn.matches("^AT25.*") ||
+            upperMpn.matches("^M95.*") ||
+            upperMpn.matches("^W25[QX][0-9]+.*") ||
+            upperMpn.matches("^MX25[LU][0-9]+.*") ||
+            upperMpn.matches("^S25FL[0-9]+.*") ||
+            upperMpn.matches("^IS25LP[0-9]+.*")) {
+            return "SPI";
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract voltage range as string (e.g., "1.7V-5.5V").
+     */
+    private String extractVoltage(String mpn) {
+        if (mpn == null) return null;
+
+        String base = extractBasePart(mpn);
+        MemoryCharacteristics chars = getCharacteristics(base);
+        if (chars != null) {
+            return String.format("%.1fV-%.1fV", chars.minVoltage, chars.maxVoltage);
+        }
+
+        return null;
+    }
+
+    /**
      * Calculate similarity based on equivalent groups and known characteristics.
-     * This is the primary memory comparison method.
+     * This is the fallback memory comparison method.
      */
     private double calculateEquivalentGroupBasedSimilarity(String mpn1, String mpn2) {
 
