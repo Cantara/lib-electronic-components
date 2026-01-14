@@ -4,6 +4,10 @@ import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
 import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
+import no.cantara.electronic.component.lib.similarity.config.SimilarityProfile;
+import no.cantara.electronic.component.lib.similarity.config.ToleranceRule;
+import no.cantara.electronic.component.lib.specs.base.SpecUnit;
+import no.cantara.electronic.component.lib.specs.base.SpecValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +21,11 @@ import java.util.stream.Collectors;
 /**
  * Similarity calculator for MOSFET components.
  *
- * Uses equivalent groups (IRF530≈STF530, IRF/IRFP families) and characteristics comparison.
- * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ * Uses metadata-driven comparison based on extracted specs (channel, voltage, current, rdsOn).
+ * N-channel vs P-channel MOSFETs (IRF530≈STF530, IRF/IRFP families) are compared using
+ * their electrical specifications with known equivalent groups as boost.
+ *
+ * Fallback to equivalent-group matching for unknown MOSFET types.
  */
 public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(MosfetSimilarityCalculator.class);
@@ -89,19 +96,200 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
             return 0.0;
         }
 
-        // Check if metadata is available (for future spec-based enhancement)
+        // Get metadata for spec-based comparison
         Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.MOSFET);
-        if (metadataOpt.isEmpty()) {
-            logger.trace("No metadata found for MOSFET, using equivalent group approach");
+        if (metadataOpt.isPresent()) {
+            logger.trace("Using metadata-driven comparison for MOSFETs");
+            return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
         }
 
-        // MOSFET comparison primarily uses equivalent groups and characteristics
+        // Fallback to equivalent-group matching if metadata not available
+        logger.trace("No metadata found for MOSFET, using equivalent group fallback");
         return calculateEquivalentGroupBasedSimilarity(mpn1, mpn2);
     }
 
     /**
+     * Calculate similarity using metadata-driven weighted comparison.
+     * Extracts specs from MPNs and uses tolerance rules for comparison.
+     */
+    private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+        SimilarityProfile profile = metadata.getDefaultProfile();
+
+        logger.trace("Using profile: {}", profile);
+
+        // Extract specs from both MPNs
+        String channel1 = extractChannel(mpn1);
+        String channel2 = extractChannel(mpn2);
+        Integer voltage1 = extractVoltageRating(mpn1);
+        Integer voltage2 = extractVoltageRating(mpn2);
+        Integer current1 = extractCurrentRating(mpn1);
+        Integer current2 = extractCurrentRating(mpn2);
+        Double rdsOn1 = extractRdsOn(mpn1);
+        Double rdsOn2 = extractRdsOn(mpn2);
+        String package1 = extractPackage(mpn1);
+        String package2 = extractPackage(mpn2);
+
+        logger.trace("MPN1 specs: channel={}, voltage={}V, current={}A, rdsOn={}Ω, package={}",
+                channel1, voltage1, current1, rdsOn1, package1);
+        logger.trace("MPN2 specs: channel={}, voltage={}V, current={}A, rdsOn={}Ω, package={}",
+                channel2, voltage2, current2, rdsOn2, package2);
+
+        // Short-circuit: N-channel and P-channel are not interchangeable
+        if (channel1 != null && channel2 != null && !channel1.equals(channel2)) {
+            logger.debug("Different channel: {} vs {} -> 0.0", channel1, channel2);
+            return 0.0;
+        }
+
+        double totalScore = 0.0;
+        double maxPossibleScore = 0.0;
+
+        // Compare channel (CRITICAL)
+        ComponentTypeMetadata.SpecConfig channelConfig = metadata.getSpecConfig("channel");
+        if (channelConfig != null && channel1 != null && channel2 != null) {
+            ToleranceRule rule = channelConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(channel1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(channel2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(channelConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Channel comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare voltageRating (CRITICAL)
+        ComponentTypeMetadata.SpecConfig voltageConfig = metadata.getSpecConfig("voltageRating");
+        if (voltageConfig != null && voltage1 != null && voltage2 != null) {
+            ToleranceRule rule = voltageConfig.getToleranceRule();
+            SpecValue<Integer> orig = new SpecValue<>(voltage1, SpecUnit.VOLTS);
+            SpecValue<Integer> cand = new SpecValue<>(voltage2, SpecUnit.VOLTS);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(voltageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Voltage comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare currentRating (CRITICAL)
+        ComponentTypeMetadata.SpecConfig currentConfig = metadata.getSpecConfig("currentRating");
+        if (currentConfig != null && current1 != null && current2 != null) {
+            ToleranceRule rule = currentConfig.getToleranceRule();
+            SpecValue<Integer> orig = new SpecValue<>(current1, SpecUnit.AMPS);
+            SpecValue<Integer> cand = new SpecValue<>(current2, SpecUnit.AMPS);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(currentConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Current comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare rdsOn (HIGH)
+        ComponentTypeMetadata.SpecConfig rdsOnConfig = metadata.getSpecConfig("rdsOn");
+        if (rdsOnConfig != null && rdsOn1 != null && rdsOn2 != null) {
+            ToleranceRule rule = rdsOnConfig.getToleranceRule();
+            SpecValue<Double> orig = new SpecValue<>(rdsOn1, SpecUnit.OHMS);
+            SpecValue<Double> cand = new SpecValue<>(rdsOn2, SpecUnit.OHMS);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(rdsOnConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("RdsOn comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Compare package (MEDIUM)
+        ComponentTypeMetadata.SpecConfig packageConfig = metadata.getSpecConfig("package");
+        if (packageConfig != null && package1 != null && package2 != null) {
+            ToleranceRule rule = packageConfig.getToleranceRule();
+            SpecValue<String> orig = new SpecValue<>(package1, SpecUnit.NONE);
+            SpecValue<String> cand = new SpecValue<>(package2, SpecUnit.NONE);
+            double specScore = rule.compare(orig, cand);
+            double specWeight = profile.getEffectiveWeight(packageConfig.getImportance());
+            totalScore += specScore * specWeight;
+            maxPossibleScore += specWeight;
+            logger.trace("Package comparison: score={}, weight={}, contribution={}", specScore, specWeight, specScore * specWeight);
+        }
+
+        // Normalize to [0.0, 1.0]
+        double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+        // Check for known equivalent groups and boost score if applicable
+        String base1 = extractBasePart(mpn1);
+        String base2 = extractBasePart(mpn2);
+        if (areKnownEquivalents(base1, base2)) {
+            logger.trace("Known equivalent group detected, boosting similarity");
+            similarity = Math.max(similarity, HIGH_SIMILARITY);
+        }
+
+        logger.debug("Final similarity: {}", similarity);
+        return similarity;
+    }
+
+    /**
+     * Extract channel from MPN (N-channel or P-channel).
+     */
+    private String extractChannel(String mpn) {
+        if (mpn == null) return null;
+        return isNChannel(mpn) ? "N-channel" : "P-channel";
+    }
+
+    /**
+     * Extract voltage rating from MPN in volts.
+     */
+    private Integer extractVoltageRating(String mpn) {
+        if (mpn == null) return null;
+        MosfetCharacteristics chars = getCharacteristics(mpn);
+        if (chars != null) {
+            return (int) chars.voltageRating;
+        }
+        // Default ratings based on common series
+        return 100; // Typical for IRF/STF series
+    }
+
+    /**
+     * Extract current rating from MPN in amps.
+     */
+    private Integer extractCurrentRating(String mpn) {
+        if (mpn == null) return null;
+        MosfetCharacteristics chars = getCharacteristics(mpn);
+        if (chars != null) {
+            return (int) chars.currentRating;
+        }
+        // Try to extract from part number
+        try {
+            String basePart = extractBasePart(mpn);
+            return extractCurrentRatingFromBasePart(basePart);
+        } catch (Exception e) {
+            return 20; // Default for unknown parts
+        }
+    }
+
+    /**
+     * Extract RdsOn from MPN in ohms.
+     */
+    private Double extractRdsOn(String mpn) {
+        if (mpn == null) return null;
+        MosfetCharacteristics chars = getCharacteristics(mpn);
+        if (chars != null) {
+            return chars.rdsOn;
+        }
+        return null; // Unknown RdsOn
+    }
+
+    /**
+     * Extract package type from MPN.
+     */
+    private String extractPackage(String mpn) {
+        if (mpn == null) return null;
+        MosfetCharacteristics chars = getCharacteristics(mpn);
+        if (chars != null) {
+            return chars.packageType;
+        }
+        // Default package detection
+        return "TO-220"; // Most common for power MOSFETs
+    }
+
+    /**
      * Calculate similarity based on equivalent groups and known characteristics.
-     * This is the primary MOSFET comparison method.
+     * This is the fallback comparison method when metadata is not available.
      */
     private double calculateEquivalentGroupBasedSimilarity(String mpn1, String mpn2) {
         // Check polarity FIRST
@@ -290,8 +478,8 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
 
         // Similar current rating (based on part number)
         try {
-            int rating1 = extractCurrentRating(base1);
-            int rating2 = extractCurrentRating(base2);
+            int rating1 = extractCurrentRatingFromBasePart(base1);
+            int rating2 = extractCurrentRatingFromBasePart(base2);
             if (Math.min(rating1, rating2) > 0 &&
                     Math.abs(rating1 - rating2) <= Math.max(rating1, rating2) * 0.2) {
                 similarity += 0.2;
@@ -303,7 +491,7 @@ public class MosfetSimilarityCalculator implements ComponentSimilarityCalculator
         return similarity;
     }
 
-    private int extractCurrentRating(String basePart) {
+    private int extractCurrentRatingFromBasePart(String basePart) {
         // Extract numeric part that typically indicates current rating
         String numbers = basePart.replaceAll("[^0-9]", "");
         if (numbers.length() >= 2) {
