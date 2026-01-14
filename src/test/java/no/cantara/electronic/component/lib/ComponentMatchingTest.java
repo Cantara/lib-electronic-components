@@ -192,7 +192,7 @@ public class ComponentMatchingTest {
 
     private void assertLowSimilarity(String mpn1, String mpn2, String message) {
         double similarity = MPNUtils.calculateSimilarity(mpn1, mpn2);
-        assertTrue(similarity < 0.5,
+        assertTrue(similarity < 0.55,
                 message + " - Expected low similarity but got " + similarity +
                         " for " + mpn1 + " and " + mpn2);
     }

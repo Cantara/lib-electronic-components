@@ -132,10 +132,9 @@ public class MPNUtils {
             if (applicable1 || applicable2) {
                 double similarity = calculator.calculateSimilarity(mpn1, mpn2, patternRegistry);
                 logger.trace("Similarity: {}", similarity);
-                if (similarity > 0) {
-                    logger.debug("  Returning similarity: {}", similarity);
-                    return similarity;
-                }
+                // Trust the calculator's result, even if it's 0.0 (incompatible parts)
+                logger.debug("  Returning similarity: {}", similarity);
+                return similarity;
             }
         }
         logger.trace("  Returning calculateDefaultSimilarity");

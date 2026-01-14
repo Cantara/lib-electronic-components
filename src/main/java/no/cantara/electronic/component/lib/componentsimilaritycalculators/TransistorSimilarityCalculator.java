@@ -461,7 +461,12 @@ public class TransistorSimilarityCalculator implements ComponentSimilarityCalcul
 
     private String getBasePart(String mpn) {
         if (mpn == null) return "";
-        return mpn.replaceAll("([A-Z0-9]+)[A-Z].*$", "$1").toUpperCase();
+        String upperMpn = mpn.toUpperCase();
+        // Remove known suffixes (package codes, qualifiers)
+        // Keep the core part number (e.g., "2N2222" from "2N2222A", "2N3904" from "2N3904-TA")
+        return upperMpn.replaceAll("[-](T|TR|TA|TF|G|L|R|Q|X)$", "")
+                       .replaceAll("(T|TR|TA|TF|G|L|R|Q|X)$", "")
+                       .replaceAll("A$", "");  // Remove trailing A
     }
 
     private boolean isTransistor(String mpn) {
