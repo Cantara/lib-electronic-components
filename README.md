@@ -183,7 +183,32 @@ boolean isDigital1 = MPNUtils.isDigitalIC("74LS00");  // true
 boolean isDigital2 = MPNUtils.isDigitalIC("LM317");   // false
 ```
 
-### Similarity Calculators
+### Similarity System
+
+#### Metadata-Driven Architecture (January 2026)
+
+The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules:
+
+- **ComponentTypeMetadata**: Defines critical specs, importance levels, and tolerance rules per component type
+- **SpecImportance**: 5 levels (CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL) with base weights
+- **ToleranceRule**: 5 comparison strategies (ExactMatch, Percentage, MinRequired, MaxAllowed, Range)
+- **SimilarityProfile**: 5 context-aware profiles (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION, PERFORMANCE_UPGRADE, EMERGENCY_SOURCING)
+- **Pre-registered types**: RESISTOR, CAPACITOR, MOSFET, TRANSISTOR, DIODE, OPAMP, MICROCONTROLLER, MEMORY, LED, CONNECTOR
+
+```java
+// Get metadata for a component type
+ComponentTypeMetadataRegistry registry = ComponentTypeMetadataRegistry.getInstance();
+Optional<ComponentTypeMetadata> metadata = registry.getMetadata(ComponentType.RESISTOR);
+
+// Check if spec is critical
+boolean critical = metadata.get().isCritical("resistance"); // true
+
+// Use context-aware profiles
+SimilarityProfile profile = SimilarityProfile.REPLACEMENT;
+boolean passes = profile.meetsThreshold(0.78); // threshold: 0.75
+```
+
+#### Similarity Calculators
 
 The library includes 17 specialized similarity calculators that compare components based on electrical characteristics rather than just string matching:
 
