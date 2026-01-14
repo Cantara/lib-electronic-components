@@ -126,6 +126,54 @@ calculator.calculateSimilarity("XPERED-L1-FKA", "XPERED-L1-FCA", registry);
 
 ---
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (PR #118)
+
+The `LEDSimilarityCalculator` now uses a **metadata-driven approach** with spec-based comparison.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **color** | CRITICAL | exactMatch | Red, Green, Blue, White, etc. |
+| **family** | HIGH | exactMatch | TLHR, LG R, LM301, XP-E, etc. |
+| **brightness** | HIGH | exactMatch | Brightness bin code |
+| **package** | LOW | exactMatch | 0603, 0805, 5mm, SMD, etc. |
+
+### Implementation Pattern
+
+```java
+// Short-circuit check for CRITICAL incompatibility
+if (!color1.isEmpty() && !color2.isEmpty() && !color1.equals(color2)) {
+    return LOW_SIMILARITY;
+}
+
+// Weighted spec scoring
+// color: CRITICAL (1.0 weight)
+// family: HIGH (0.7 weight)
+// brightness: HIGH (0.7 weight)
+// package: LOW (0.2 weight)
+
+// Family boost for known equivalent groups
+if (areSameFamily(mpn1, mpn2)) {
+    similarity = Math.max(similarity, HIGH_SIMILARITY);
+}
+```
+
+### Behavior Changes
+
+| Comparison | Legacy Result | Metadata Result | Notes |
+|-----------|--------------|-----------------|-------|
+| TLHR5400 vs TLHR5401 | 0.9 | 0.96 | Same family, different bins |
+| LG R971 vs LG R971-KN | 0.9 | 1.0 | Exact family + color match |
+| TLHR5400 vs LCW E6SF | 0.7 | 0.66 | Different families, same color |
+| XPERED-L1-FKA vs XPERED-L1-FCA | 0.3 | 0.3 | Short-circuit on color temp |
+
+**Why more accurate**: Metadata approach prioritizes color matching (CRITICAL) and separates family from brightness considerations.
+
+---
+
 ## Learnings & Quirks
 
 ### Color Temperature Codes

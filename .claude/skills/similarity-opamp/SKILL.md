@@ -105,6 +105,79 @@ The calculator may also consider:
 
 ---
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (PR #116)
+
+The `OpAmpSimilarityCalculator` now uses a **metadata-driven approach** with spec-based comparison.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **configuration** | CRITICAL | exactMatch | Single, dual, quad channel count |
+| **family** | HIGH | exactMatch | LM358, TL072, NE5532, etc. |
+| **package** | MEDIUM | exactMatch | DIP, SOIC, TSSOP, etc. |
+
+### Implementation Details
+
+```java
+@Override
+public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
+    // Try metadata-driven approach first
+    Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.OPAMP);
+    if (metadataOpt.isPresent()) {
+        return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
+    }
+    // Fallback to legacy family-based approach
+    return calculateFamilyBasedSimilarity(mpn1, mpn2);
+}
+```
+
+**Key Features:**
+- **Short-circuit check**: Different configurations (single vs dual vs quad) return LOW_SIMILARITY immediately
+- **Family boost**: Known equivalent families (LM358 ≈ MC1458) boost similarity to HIGH_SIMILARITY
+- **Weighted scoring**: `totalScore / maxPossibleScore` formula for precise comparison
+- **Backward compatible**: Falls back to legacy logic if metadata not available
+
+### Spec Extraction Methods
+
+```java
+// Extract configuration from MPN
+private String extractConfiguration(String mpn) {
+    if (matchesDualOpAmp(mpn)) return "dual";
+    if (matchesQuadOpAmp(mpn)) return "quad";
+    if (matchesSingleOpAmp(mpn)) return "single";
+    return "";
+}
+
+// Extract family from MPN
+private String extractFamily(String mpn) {
+    // Returns: LM358, LM324, TL072, TL074, NE5532, etc.
+}
+
+// Extract package from MPN
+private String extractPackageCode(String mpn) {
+    // Returns: N, D, DR, PW, P, etc.
+}
+```
+
+### Behavior Changes
+
+**Before (Legacy)**: Hardcoded equivalent family checks
+**After (Metadata)**: Configurable specs with weighted importance
+
+| Comparison | Legacy Result | Metadata Result | Notes |
+|-----------|--------------|-----------------|-------|
+| LM358 vs MC1458 | 0.9 | 1.0 | Exact configuration + family match |
+| LM358N vs LM358D | 0.9 | 0.958 | Same op-amp, different package |
+| LM358 vs LM324 | 0.7 | LOW_SIMILARITY | Short-circuit on configuration mismatch |
+| TL072 vs TL074 | 0.7 | LOW_SIMILARITY | Different channel count |
+
+**Why more accurate**: Metadata approach clearly separates configuration (CRITICAL) from package (MEDIUM), providing more precise scoring.
+
+---
+
 ## Learnings & Quirks
 
 ### Naming Conventions

@@ -148,6 +148,50 @@ calculator.calculateSimilarity(null, "1-292161-0", registry);
 - Series embedded in part number
 - Configuration codes vary by series
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (pre-existing)
+
+The `ConnectorSimilarityCalculator` uses a **metadata-driven approach** with `ConnectorHandler` integration.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **pinCount** | CRITICAL | exactMatch | Number of pins (MUST match) |
+| **pitch** | CRITICAL | exactMatch | Pin spacing (2.54mm, 1.27mm, etc.) |
+| **family** | HIGH | exactMatch | Connector series/family |
+| **mountingType** | HIGH | exactMatch | THT, SMD, Press-fit |
+
+### Implementation Pattern
+
+```java
+// Different families return 0.0 immediately
+if (!handler1.getFamily().equals(handler2.getFamily())) {
+    return 0.0;
+}
+
+// Extract specs using ConnectorHandler
+int pinCount1 = handler1.getPinCount(mpn1);
+int pinCount2 = handler2.getPinCount(mpn2);
+double pitch1 = handler1.getPitch(mpn1);
+double pitch2 = handler2.getPitch(mpn2);
+
+// Weighted spec scoring
+// pinCount: CRITICAL (1.0 weight)
+// pitch: CRITICAL (1.0 weight)
+// family: HIGH (0.7 weight)
+// mountingType: HIGH (0.7 weight)
+```
+
+### Key Feature: Handler-Based Extraction
+
+Unlike other calculators that use regex patterns, `ConnectorSimilarityCalculator` uses `ConnectorHandler` implementations for accurate spec extraction.
+
+**Why more accurate**: Connectors have complex MPN formats that vary by manufacturer. Using handlers ensures correct extraction of pin count and pitch.
+
+---
+
 ### Pin Count Extraction
 - Critical for compatibility
 - Different manufacturers encode differently
