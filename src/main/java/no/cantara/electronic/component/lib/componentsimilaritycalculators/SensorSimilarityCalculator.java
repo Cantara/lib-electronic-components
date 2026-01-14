@@ -2,17 +2,33 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+/**
+ * Similarity calculator for sensor components.
+ *
+ * Handles temperature, accelerometer, gyroscope, humidity, pressure, and combined sensors.
+ * Uses family matching and equivalent sensor groups for comparison.
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class SensorSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(SensorSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
+
+    public SensorSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
 
     /**
      * Indicates whether this calculator is applicable for the given component type.
@@ -51,6 +67,22 @@ public class SensorSimilarityCalculator implements ComponentSimilarityCalculator
             logger.debug("One or both parts are not sensors");
             return 0.0;
         }
+
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.SENSOR);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for SENSOR, using family matching approach");
+        }
+
+        // Sensor comparison uses family matching approach
+        return calculateFamilyBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on sensor family, type, and equivalent groups.
+     * This is the primary sensor comparison method.
+     */
+    private double calculateFamilyBasedSimilarity(String mpn1, String mpn2) {
 
         // Get base parts without package codes
         String base1 = getBasePart(mpn1);
