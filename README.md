@@ -187,9 +187,15 @@ boolean isDigital2 = MPNUtils.isDigitalIC("LM317");   // false
 
 #### Metadata-Driven Architecture (January 2026)
 
-The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules. **6 of 17 calculators** (35%) have been converted to this approach:
+The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules. **12 of 17 calculators** (71%) have been converted to this approach:
 
 **Converted Calculators:**
+- ✅ **ResistorSimilarityCalculator** - Resistance value, package, tolerance comparison
+- ✅ **CapacitorSimilarityCalculator** - Capacitance value, voltage rating, dielectric type, package
+- ✅ **TransistorSimilarityCalculator** - Polarity (NPN/PNP), voltage/current ratings, hFE, package
+- ✅ **DiodeSimilarityCalculator** - Diode type, voltage/current ratings, package
+- ✅ **MosfetSimilarityCalculator** - Channel (N/P), voltage/current ratings, RdsOn, package
+- ✅ **VoltageRegulatorSimilarityCalculator** - Regulator type, output voltage, polarity, current rating
 - ✅ **OpAmpSimilarityCalculator** (PR #116) - Configuration, family, package comparison
 - ✅ **MemorySimilarityCalculator** (PR #117) - Memory type, capacity, interface, package
 - ✅ **LEDSimilarityCalculator** (PR #118) - Color, family, brightness, package

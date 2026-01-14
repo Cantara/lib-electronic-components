@@ -131,17 +131,27 @@ The similarity system has been significantly enhanced with a **metadata-driven a
 
 ### Conversion Status
 
-**6 of 17 calculators converted (35% complete)**
+**12 of 17 calculators converted (71% complete)**
 
 | Calculator | Status | PR | Specs | Critical Specs |
 |-----------|--------|-----|-------|----------------|
+| ResistorSimilarityCalculator | ✅ | - | resistance, package, tolerance | resistance |
+| CapacitorSimilarityCalculator | ✅ | - | capacitance, voltage, dielectric, package | capacitance, voltage |
+| TransistorSimilarityCalculator | ✅ | - | polarity, voltageRating, currentRating, hfe, package | polarity, voltageRating, currentRating |
+| DiodeSimilarityCalculator | ✅ | - | type, voltageRating, currentRating, package | type, voltageRating, currentRating |
+| MosfetSimilarityCalculator | ✅ | - | channel, voltageRating, currentRating, rdsOn, package | channel, voltageRating, currentRating |
+| VoltageRegulatorSimilarityCalculator | ✅ | - | regulatorType, outputVoltage, polarity, currentRating, package | regulatorType, outputVoltage, polarity |
 | OpAmpSimilarityCalculator | ✅ | #116 | configuration, family, package | configuration |
 | MemorySimilarityCalculator | ✅ | #117 | memoryType, capacity, interface, package | memoryType, capacity |
 | LEDSimilarityCalculator | ✅ | #118 | color, family, brightness, package | color |
 | ConnectorSimilarityCalculator | ✅ | pre-existing | pinCount, pitch, family, mountingType | pinCount, pitch |
 | LogicICSimilarityCalculator | ✅ | #119 | function, series, technology, package | function |
 | SensorSimilarityCalculator | ✅ | #120 | sensorType, family, interface, package | sensorType |
-| Others (11) | ⏳ | - | - | - |
+| MCUSimilarityCalculator | ⏳ | - | family, series, features | - |
+| MicrocontrollerSimilarityCalculator | ⏳ | - | manufacturer, series, package | - |
+| PassiveComponentCalculator | ⏳ | - | value, sizeCode, tolerance | - |
+| DefaultSimilarityCalculator | ⏳ | - | - | - |
+| LevenshteinCalculator | ⏳ | - | - | - |
 
 ### Core Architecture Classes
 
