@@ -2,23 +2,37 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 
+/**
+ * Similarity calculator for logic IC components (74xx, CD4000 series).
+ *
+ * Uses function matching, technology compatibility, and series identification.
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class LogicICSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(LogicICSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
     private static final Pattern TTL_PATTERN = Pattern.compile("([0-9]+)([A-Z]+)([0-9]+).*");
     private static final Pattern CMOS_PATTERN = Pattern.compile("CD([0-9]+)([A-Z]*).*");
 
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.5;
     private static final double LOW_SIMILARITY = 0.3;
+
+    public LogicICSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
 
     // Common 74xx series function groups
     private static final Map<String, Set<String>> FUNCTION_GROUPS = new HashMap<>();
@@ -69,6 +83,22 @@ public class LogicICSimilarityCalculator implements ComponentSimilarityCalculato
         if (mpn1 == null || mpn2 == null) return 0.0;
 
         logger.debug("Comparing logic ICs: {} vs {}", mpn1, mpn2);
+
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.LOGIC_IC);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for LOGIC_IC, using function/technology matching approach");
+        }
+
+        // Logic IC comparison uses function/technology matching approach
+        return calculateFunctionBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on function matching, series, and technology compatibility.
+     * This is the primary logic IC comparison method.
+     */
+    private double calculateFunctionBasedSimilarity(String mpn1, String mpn2) {
 
         // CD4000 series comparison
         if (mpn1.matches("^CD4.*") || mpn2.matches("^CD4.*")) {

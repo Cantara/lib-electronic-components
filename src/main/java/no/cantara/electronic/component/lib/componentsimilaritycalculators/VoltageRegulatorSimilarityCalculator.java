@@ -2,18 +2,33 @@ package no.cantara.electronic.component.lib.componentsimilaritycalculators;
 
 import no.cantara.electronic.component.lib.ComponentType;
 import no.cantara.electronic.component.lib.PatternRegistry;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadata;
+import no.cantara.electronic.component.lib.similarity.config.ComponentTypeMetadataRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Similarity calculator for voltage regulator components.
+ *
+ * Handles both fixed voltage regulators (78xx/79xx series) and adjustable regulators (LM317/LM337).
+ * Metadata infrastructure available for spec-based comparison when characteristics are known.
+ */
 public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarityCalculator {
     private static final Logger logger = LoggerFactory.getLogger(VoltageRegulatorSimilarityCalculator.class);
+    private final ComponentTypeMetadataRegistry metadataRegistry;
+
     private static final double HIGH_SIMILARITY = 0.9;
     private static final double MEDIUM_SIMILARITY = 0.7;
     private static final double LOW_SIMILARITY = 0.3;
+
+    public VoltageRegulatorSimilarityCalculator() {
+        this.metadataRegistry = ComponentTypeMetadataRegistry.getInstance();
+    }
 
     @Override
     public boolean isApplicable(ComponentType type) {
@@ -39,6 +54,22 @@ public class VoltageRegulatorSimilarityCalculator implements ComponentSimilarity
         }
 
         logger.debug("Comparing voltage regulators: {} vs {}", mpn1, mpn2);
+
+        // Check if metadata is available (for future spec-based enhancement)
+        Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.VOLTAGE_REGULATOR);
+        if (metadataOpt.isEmpty()) {
+            logger.trace("No metadata found for VOLTAGE_REGULATOR, using regulator type matching approach");
+        }
+
+        // Voltage regulator comparison uses regulator type matching approach
+        return calculateRegulatorTypeBasedSimilarity(mpn1, mpn2);
+    }
+
+    /**
+     * Calculate similarity based on regulator type (fixed/adjustable), voltage, and polarity.
+     * This is the primary voltage regulator comparison method.
+     */
+    private double calculateRegulatorTypeBasedSimilarity(String mpn1, String mpn2) {
 
         // Handle adjustable voltage regulators first
         if (isAdjustableRegulator(mpn1) && isAdjustableRegulator(mpn2)) {

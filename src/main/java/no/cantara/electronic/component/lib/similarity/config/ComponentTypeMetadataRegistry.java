@@ -37,6 +37,9 @@ public class ComponentTypeMetadataRegistry {
         registerMemoryMetadata();
         registerLedMetadata();
         registerConnectorMetadata();
+        registerVoltageRegulatorMetadata();
+        registerLogicICMetadata();
+        registerSensorMetadata();
     }
 
     /**
@@ -227,6 +230,47 @@ public class ComponentTypeMetadataRegistry {
                 .addSpec("mountingType", SpecImportance.HIGH, ToleranceRule.exactMatch()) // SMD, THT
                 .addSpec("currentRating", SpecImportance.MEDIUM, ToleranceRule.minimumRequired())
                 .addSpec("voltageRating", SpecImportance.MEDIUM, ToleranceRule.minimumRequired())
+                .defaultProfile(SimilarityProfile.REPLACEMENT)
+                .build();
+
+        register(metadata);
+    }
+
+    private void registerVoltageRegulatorMetadata() {
+        ComponentTypeMetadata metadata = ComponentTypeMetadata.builder(ComponentType.VOLTAGE_REGULATOR)
+                .addSpec("regulatorType", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // fixed, adjustable
+                .addSpec("outputVoltage", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // 05, 12, 15, etc.
+                .addSpec("polarity", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // positive (78xx), negative (79xx)
+                .addSpec("currentRating", SpecImportance.HIGH, ToleranceRule.minimumRequired())
+                .addSpec("package", SpecImportance.MEDIUM, ToleranceRule.exactMatch())
+                .addSpec("dropoutVoltage", SpecImportance.LOW, ToleranceRule.maximumAllowed(1.5))
+                .defaultProfile(SimilarityProfile.REPLACEMENT)
+                .build();
+
+        register(metadata);
+    }
+
+    private void registerLogicICMetadata() {
+        ComponentTypeMetadata metadata = ComponentTypeMetadata.builder(ComponentType.LOGIC_IC)
+                .addSpec("function", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // 00=NAND, 02=NOR, etc.
+                .addSpec("series", SpecImportance.HIGH, ToleranceRule.exactMatch()) // 74xx, CD4000
+                .addSpec("technology", SpecImportance.MEDIUM, ToleranceRule.exactMatch()) // LS, HC, HCT, etc.
+                .addSpec("package", SpecImportance.LOW, ToleranceRule.exactMatch())
+                .addSpec("voltageRange", SpecImportance.LOW, ToleranceRule.rangeTolerance(0.9, 1.1))
+                .defaultProfile(SimilarityProfile.REPLACEMENT)
+                .build();
+
+        register(metadata);
+    }
+
+    private void registerSensorMetadata() {
+        ComponentTypeMetadata metadata = ComponentTypeMetadata.builder(ComponentType.SENSOR)
+                .addSpec("sensorType", SpecImportance.CRITICAL, ToleranceRule.exactMatch()) // temperature, accelerometer, gyroscope, humidity, pressure
+                .addSpec("family", SpecImportance.HIGH, ToleranceRule.exactMatch()) // LM35, DS18, TMP, ADXL, MMA, etc.
+                .addSpec("interface", SpecImportance.MEDIUM, ToleranceRule.exactMatch()) // I2C, SPI, 1-Wire, analog
+                .addSpec("package", SpecImportance.LOW, ToleranceRule.exactMatch())
+                .addSpec("accuracy", SpecImportance.MEDIUM, ToleranceRule.maximumAllowed(1.5))
+                .addSpec("range", SpecImportance.LOW, ToleranceRule.rangeTolerance(0.8, 1.2))
                 .defaultProfile(SimilarityProfile.REPLACEMENT)
                 .build();
 
