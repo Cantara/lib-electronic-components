@@ -118,6 +118,73 @@ calculator.calculateSimilarity("ADXL345BCCZ", "ADXL345BCCZ-RL", registry);
 
 ---
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (PR #120)
+
+The `SensorSimilarityCalculator` now uses a **metadata-driven approach** with spec-based comparison.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **sensorType** | CRITICAL | exactMatch | TEMPERATURE, ACCELEROMETER, GYROSCOPE, HUMIDITY, PRESSURE, COMBINED |
+| **family** | HIGH | exactMatch | LM35, DS18, ADXL, MMA, SHT, BME, BMP, etc. |
+| **interface** | MEDIUM | exactMatch | I2C, SPI, 1-Wire, Analog |
+| **package** | LOW | exactMatch | TO-92, SOIC, LGA, QFN, BCC, etc. |
+
+### Implementation Pattern
+
+```java
+// Short-circuit check for CRITICAL incompatibility
+if (!sensorType1.isEmpty() && !sensorType2.isEmpty() && !sensorType1.equals(sensorType2)) {
+    return LOW_SIMILARITY;
+}
+
+// Extract sensor type from MPN
+private String extractSensorType(String mpn) {
+    SensorFamily family = determineSensorFamily(mpn);
+    return family.name(); // TEMPERATURE, ACCELEROMETER, etc.
+}
+
+// Extract sensor family with specific model number
+private String extractSensorFamily(String mpn) {
+    if (mpn.matches("^ADXL[0-9]+.*")) return "ADXL345", "ADXL362", etc.;
+    if (mpn.matches("^DS18.*")) return "DS18B20", "DS18";
+    // ... returns specific sensor model
+}
+
+// Equivalent sensor boost
+if (areEquivalentSensorsByFamily(mpn1, mpn2, family1, family2)) {
+    similarity = Math.max(similarity, HIGH_SIMILARITY);
+}
+```
+
+### Behavior Changes
+
+| Comparison | Legacy Result | Metadata Result | Notes |
+|-----------|--------------|-----------------|-------|
+| DS18B20 vs DS18B20 | 0.9 | 1.0 | Identical sensor |
+| DS18B20+ vs DS18B20Z | 0.9 | 1.0 | Equivalent variants boost |
+| ADXL345 vs ADXL345 | 0.9 | 1.0 | Identical |
+| ADXL345 vs ADXL346 | 0.3 | 0.703 | Same type + interface = MEDIUM |
+| ADXL345BCCZ vs ADXL345BCCZ-RL | 0.9 | 0.976 | Same sensor, packaging variant |
+| LM35 vs ADXL345 | 0.3 | 0.3 | Short-circuit on sensor type |
+
+**Why more accurate**: Metadata approach recognizes that ADXL345 vs ADXL346 share sensor type (ACCELEROMETER) and interface (SPI/I2C), giving them MEDIUM similarity instead of LOW. This is more accurate than treating them as completely different sensors.
+
+### Equivalent Sensor Groups
+
+The calculator maintains equivalent sensor families:
+- **DS18B20 variants**: DS18B20, DS18B20+, DS18B20Z all equivalent
+- **LM35 grades**: LM35D, LM35C, LM35A all equivalent
+- **TMP36 variants**: TMP36, TMP36GT9Z all equivalent
+- **MAX31820**: Compatible with DS18B20
+- **SHT3x series**: SHT30/31/35 within accuracy grades
+- **BMP/BME pressure**: BMP280 ≈ BME280 for pressure
+
+---
+
 ## Learnings & Quirks
 
 ### Temperature Sensors

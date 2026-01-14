@@ -128,6 +128,53 @@ calculator.calculateSimilarity("24LC256", "24LC512", registry);
 
 ---
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (PR #117)
+
+The `MemorySimilarityCalculator` now uses a **metadata-driven approach** with spec-based comparison.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **memoryType** | CRITICAL | exactMatch | EEPROM, Flash, SRAM, etc. |
+| **capacity** | CRITICAL | exactMatch | 256Kbit, 512Kbit, 1Mbit, etc. |
+| **interface** | HIGH | exactMatch | I2C, SPI, Parallel |
+| **package** | LOW | exactMatch | SOIC, DIP, TSSOP, etc. |
+
+### Implementation Pattern
+
+```java
+// Short-circuit check for CRITICAL incompatibility
+if (!memoryType1.isEmpty() && !memoryType2.isEmpty() && !memoryType1.equals(memoryType2)) {
+    return LOW_SIMILARITY;
+}
+if (!capacity1.isEmpty() && !capacity2.isEmpty() && !capacity1.equals(capacity2)) {
+    return LOW_SIMILARITY;
+}
+
+// Weighted spec scoring
+// memoryType: CRITICAL (1.0 weight)
+// capacity: CRITICAL (1.0 weight)
+// interface: HIGH (0.7 weight)
+// package: LOW (0.2 weight)
+```
+
+### Behavior Changes
+
+| Comparison | Legacy Result | Metadata Result | Notes |
+|-----------|--------------|-----------------|-------|
+| 24LC256 vs 24LC256 | 1.0 | 1.0 | Identical |
+| 24LC256 vs AT24C256 | 0.7+ | 0.85 | Equivalent I2C EEPROM |
+| W25Q32JV vs MX25L3233F | 0.3+ | 0.61 | Same capacity Flash |
+| 24LC256 vs 24LC512 | 0.3 | 0.3 | Short-circuit on capacity |
+| W25Q32JVSSIQ vs W25Q32JVSFIQ | 0.7+ | 0.93 | Same Flash, different package |
+
+**Why more accurate**: Metadata approach prioritizes capacity and type matching, with interface as secondary concern.
+
+---
+
 ## Learnings & Quirks
 
 ### Part Number Patterns

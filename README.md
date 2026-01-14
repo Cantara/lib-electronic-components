@@ -187,8 +187,17 @@ boolean isDigital2 = MPNUtils.isDigitalIC("LM317");   // false
 
 #### Metadata-Driven Architecture (January 2026)
 
-The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules:
+The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules. **6 of 17 calculators** (35%) have been converted to this approach:
 
+**Converted Calculators:**
+- ✅ **OpAmpSimilarityCalculator** (PR #116) - Configuration, family, package comparison
+- ✅ **MemorySimilarityCalculator** (PR #117) - Memory type, capacity, interface, package
+- ✅ **LEDSimilarityCalculator** (PR #118) - Color, family, brightness, package
+- ✅ **ConnectorSimilarityCalculator** (pre-existing) - Pin count, pitch, family, mounting
+- ✅ **LogicICSimilarityCalculator** (PR #119) - Function, series, technology, package
+- ✅ **SensorSimilarityCalculator** (PR #120) - Sensor type, family, interface, package
+
+**Core Components:**
 - **ComponentTypeMetadata**: Defines critical specs, importance levels, and tolerance rules per component type
 - **SpecImportance**: 5 levels (CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL) with base weights
 - **ToleranceRule**: 5 comparison strategies (ExactMatch, Percentage, MinRequired, MaxAllowed, Range)
@@ -206,7 +215,18 @@ boolean critical = metadata.get().isCritical("resistance"); // true
 // Use context-aware profiles
 SimilarityProfile profile = SimilarityProfile.REPLACEMENT;
 boolean passes = profile.meetsThreshold(0.78); // threshold: 0.75
+
+// Converted calculators use weighted scoring
+// similarity = totalScore / maxPossibleScore
+// where totalScore = Σ(specScore × effectiveWeight)
 ```
+
+**Key Benefits:**
+- More accurate similarity scores (e.g., LM358 vs MC1458: 0.9 → 1.0)
+- Short-circuit checks for critical mismatches (e.g., dual vs quad op-amps)
+- Configurable importance weights per spec
+- Context-aware thresholds for different use cases
+- Better documentation of comparison logic
 
 #### Similarity Calculators
 

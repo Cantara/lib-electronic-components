@@ -123,6 +123,177 @@ Skills for working with component similarity calculations in `.claude/skills/sim
 - `/similarity-regulator` - 78xx/79xx fixed, LM317 adjustable
 - `/similarity-logic` - 74xx/CD4000 series, LS/HC/HCT technologies
 
+---
+
+## Metadata-Driven Similarity Framework (January 2026)
+
+The similarity system has been significantly enhanced with a **metadata-driven architecture** for configurable, type-specific similarity rules.
+
+### Conversion Status
+
+**6 of 17 calculators converted (35% complete)**
+
+| Calculator | Status | PR | Specs | Critical Specs |
+|-----------|--------|-----|-------|----------------|
+| OpAmpSimilarityCalculator | ✅ | #116 | configuration, family, package | configuration |
+| MemorySimilarityCalculator | ✅ | #117 | memoryType, capacity, interface, package | memoryType, capacity |
+| LEDSimilarityCalculator | ✅ | #118 | color, family, brightness, package | color |
+| ConnectorSimilarityCalculator | ✅ | pre-existing | pinCount, pitch, family, mountingType | pinCount, pitch |
+| LogicICSimilarityCalculator | ✅ | #119 | function, series, technology, package | function |
+| SensorSimilarityCalculator | ✅ | #120 | sensorType, family, interface, package | sensorType |
+| Others (11) | ⏳ | - | - | - |
+
+### Core Architecture Classes
+
+```
+ComponentTypeMetadataRegistry (Singleton)
+├── ComponentTypeMetadata (per component type)
+│   ├── SpecConfig (per spec: importance + tolerance rule)
+│   │   ├── SpecImportance (enum: CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL)
+│   │   └── ToleranceRule (interface: exactMatch, percentage, range, etc.)
+│   └── SimilarityProfile (context-aware: REPLACEMENT, DESIGN_PHASE, etc.)
+└── SpecValue<T> (type-safe wrapper: value + unit)
+```
+
+### Implementation Pattern
+
+Converted calculators follow this dual-path approach:
+
+```java
+@Override
+public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
+    if (mpn1 == null || mpn2 == null) return 0.0;
+
+    // Try metadata-driven approach first
+    Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.OPAMP);
+    if (metadataOpt.isPresent()) {
+        logger.trace("Using metadata-driven similarity calculation");
+        return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
+    }
+
+    // Fallback to legacy pattern-based approach
+    logger.trace("No metadata found, using legacy approach");
+    return calculateLegacySimilarity(mpn1, mpn2);
+}
+
+private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+    SimilarityProfile profile = metadata.getDefaultProfile();
+
+    // Extract specs from MPNs
+    String config1 = extractConfiguration(mpn1);
+    String config2 = extractConfiguration(mpn2);
+    // ... extract other specs
+
+    // Short-circuit check for CRITICAL incompatibility
+    if (!config1.isEmpty() && !config2.isEmpty() && !config1.equals(config2)) {
+        logger.debug("CRITICAL spec mismatch - returning LOW_SIMILARITY");
+        return LOW_SIMILARITY;
+    }
+
+    double totalScore = 0.0;
+    double maxPossibleScore = 0.0;
+
+    // Compare each spec with weighted scoring
+    ComponentTypeMetadata.SpecConfig configSpec = metadata.getSpecConfig("configuration");
+    if (configSpec != null && !config1.isEmpty() && !config2.isEmpty()) {
+        ToleranceRule rule = configSpec.getToleranceRule();
+        SpecValue<String> orig = new SpecValue<>(config1, SpecUnit.NONE);
+        SpecValue<String> cand = new SpecValue<>(config2, SpecUnit.NONE);
+
+        double specScore = rule.compare(orig, cand);
+        double specWeight = profile.getEffectiveWeight(configSpec.getImportance());
+
+        totalScore += specScore * specWeight;
+        maxPossibleScore += specWeight;
+    }
+
+    // Repeat for other specs (family, package, etc.)
+    // ...
+
+    double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+    // Apply boosts for known equivalent groups
+    if (areEquivalentParts(mpn1, mpn2)) {
+        similarity = Math.max(similarity, HIGH_SIMILARITY);
+    }
+
+    return similarity;
+}
+```
+
+### Key Features
+
+**1. Spec Importance Levels**
+- **CRITICAL** (1.0): Must match, short-circuit on mismatch
+- **HIGH** (0.7): Primary characteristics
+- **MEDIUM** (0.4): Secondary characteristics
+- **LOW** (0.2): Minor details (package, suffix)
+- **OPTIONAL** (0.0): Informational only
+
+**2. Tolerance Rules**
+- `exactMatch()` - Strings must be identical
+- `percentageTolerance(double)` - Within percentage range
+- `minimumRequired(double)` - Must meet minimum value
+- `maximumAllowed(double)` - Must not exceed maximum
+- `rangeTolerance(double, double)` - Within min/max range
+
+**3. Context-Aware Profiles**
+```java
+| Profile | Threshold | CRITICAL | HIGH | MEDIUM | LOW | Use Case |
+|---------|-----------|----------|------|--------|-----|----------|
+| DESIGN_PHASE | 0.85 | 1.0 | 0.9 | 0.7 | 0.4 | Exact match for new designs |
+| REPLACEMENT | 0.75 | 1.0 | 0.7 | 0.4 | 0.2 | Direct replacement (default) |
+| COST_OPTIMIZATION | 0.60 | 1.0 | 0.4 | 0.2 | 0.0 | Maintain critical specs only |
+| EMERGENCY_SOURCING | 0.50 | 0.8 | 0.4 | 0.2 | 0.0 | Urgent, relaxed requirements |
+```
+
+**4. Weighted Scoring Formula**
+```java
+similarity = totalScore / maxPossibleScore
+
+where:
+  totalScore = Σ(specScore × effectiveWeight)
+  maxPossibleScore = Σ(effectiveWeight)
+  effectiveWeight = profile.getEffectiveWeight(specImportance)
+```
+
+### Behavior Improvements
+
+The metadata-driven approach provides more accurate similarity scores:
+
+**OpAmp Example**:
+- LM358 vs MC1458: 0.9 → **1.0** (exact configuration + family match)
+- LM358 vs LM324: 0.7 → **0.3** (short-circuit on configuration: dual vs quad)
+
+**Memory Example**:
+- 24LC256 vs AT24C256: 0.7+ → **0.85** (equivalent I2C EEPROM)
+- 24LC256 vs 24LC512: 0.3 → **0.3** (short-circuit on capacity)
+
+**Sensor Example**:
+- ADXL345 vs ADXL346: 0.3 → **0.703** (same type + interface = MEDIUM)
+- DS18B20 vs DS18B20+: 0.9 → **1.0** (equivalent variants boost)
+
+### Migration Guidelines
+
+**For converting existing calculators:**
+1. Add imports: `SimilarityProfile`, `ToleranceRule`, `SpecUnit`, `SpecValue`
+2. Modify `calculateSimilarity()` to check for metadata first
+3. Implement `calculateMetadataDrivenSimilarity()` method
+4. Add spec extraction helper methods
+5. Update tests to use threshold assertions (`>= HIGH_SIMILARITY`)
+6. Verify backward compatibility with full test suite
+
+**Benefits of conversion:**
+- More precise similarity scores
+- Configurable importance weights
+- Context-aware thresholds
+- Better documentation of comparison logic
+- Easier to maintain and extend
+
+**See `/similarity` skill for complete documentation.**
+
+---
+
 ## Manufacturer Skills
 
 Manufacturer-specific skills for complex MPN encoding patterns:

@@ -156,6 +156,58 @@ CD 4001 BE
 └────────── Series prefix
 ```
 
+## Metadata-Driven Implementation (January 2026)
+
+**Status**: ✅ Converted (PR #119)
+
+The `LogicICSimilarityCalculator` now uses a **metadata-driven approach** with spec-based comparison.
+
+### Specs Compared
+
+| Spec | Importance | Tolerance Rule | Description |
+|------|-----------|----------------|-------------|
+| **function** | CRITICAL | exactMatch | NAND, NOR, NOT, AND, OR, flip-flop, etc. |
+| **series** | HIGH | exactMatch | 74xx vs CD4000 |
+| **technology** | MEDIUM | exactMatch | LS, HC, HCT, ALS, F, etc. |
+| **package** | LOW | exactMatch | N, D, P, PW, etc. |
+
+### Implementation Pattern
+
+```java
+// Short-circuit check for CRITICAL incompatibility
+if (!function1.isEmpty() && !function2.isEmpty() && !areSameFunction(mpn1, mpn2)) {
+    return LOW_SIMILARITY;
+}
+
+// Short-circuit for series incompatibility (74xx vs CD4000)
+if (!series1.isEmpty() && !series2.isEmpty() && !series1.equals(series2)) {
+    return 0.0;
+}
+
+// Extract function from both 74xx and CD4000 series
+private String extractFunction(String mpn) {
+    if (mpn.matches("^CD4.*")) {
+        // CD4001 → "001", CD4011 → "011"
+        return cmosPatternMatcher.group(1);
+    }
+    // 74LS00 → "00", 74HC138 → "138"
+    return ttlPatternMatcher.group(3);
+}
+```
+
+### Behavior Changes
+
+| Comparison | Legacy Result | Metadata Result | Notes |
+|-----------|--------------|-----------------|-------|
+| 74LS00 vs 74HC00 | 0.9 | 0.88 | Compatible technologies |
+| CD4001BE vs CD4001BM | 0.9 | 0.96 | Same IC, different package |
+| CD4001 vs CD4011 | 0.3 | 0.3 | Short-circuit on function |
+| 74LS00 vs CD4001 | undefined | 0.0 | Short-circuit on series |
+
+**Why more accurate**: Metadata approach correctly handles both 74xx and CD4000 series, with series check preventing false matches.
+
+---
+
 ### Technology Compatibility Notes
 - HC is CMOS, LS is TTL - but they're voltage compatible at 5V
 - HCT is specifically designed for TTL compatibility

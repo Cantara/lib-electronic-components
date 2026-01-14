@@ -186,6 +186,28 @@ mvn test -Dtest=TransistorSimilarityCalculatorTest
 
 The similarity system now uses a **metadata-driven architecture** for configurable, type-specific similarity rules.
 
+**Conversion Status**: 6 of 17 calculators converted (35% complete)
+
+| Calculator | Status | PR | Conversion Date |
+|-----------|--------|-----|-----------------|
+| OpAmpSimilarityCalculator | ✅ Converted | #116 | Jan 2026 |
+| MemorySimilarityCalculator | ✅ Converted | #117 | Jan 2026 |
+| LEDSimilarityCalculator | ✅ Converted | #118 | Jan 2026 |
+| ConnectorSimilarityCalculator | ✅ Converted | (pre-existing) | Jan 2026 |
+| LogicICSimilarityCalculator | ✅ Converted | #119 | Jan 2026 |
+| SensorSimilarityCalculator | ✅ Converted | #120 | Jan 2026 |
+| ResistorSimilarityCalculator | ⏳ Legacy | - | - |
+| CapacitorSimilarityCalculator | ⏳ Legacy | - | - |
+| TransistorSimilarityCalculator | ⏳ Legacy | - | - |
+| DiodeSimilarityCalculator | ⏳ Legacy | - | - |
+| MosfetSimilarityCalculator | ⏳ Legacy | - | - |
+| VoltageRegulatorSimilarityCalculator | ⏳ Legacy | - | - |
+| MicrocontrollerSimilarityCalculator | ⏳ Legacy | - | - |
+| MCUSimilarityCalculator | ⏳ Legacy | - | - |
+| PassiveComponentCalculator | ⏳ Legacy | - | - |
+| LevenshteinCalculator | ⏳ Legacy | - | - |
+| DefaultSimilarityCalculator | ⏳ Legacy | - | - |
+
 ### Core Metadata Classes
 
 | Class | Purpose |
@@ -254,19 +276,108 @@ boolean passes = profile.meetsThreshold(similarity); // true
 double effectiveWeight = profile.getEffectiveWeight(SpecImportance.HIGH); // 0.7 × 0.7 = 0.49
 ```
 
+### Converted Calculator Implementation Pattern
+
+Calculators converted to metadata-driven approach follow this pattern:
+
+```java
+@Override
+public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
+    if (mpn1 == null || mpn2 == null) return 0.0;
+
+    // Try metadata-driven approach first
+    Optional<ComponentTypeMetadata> metadataOpt = metadataRegistry.getMetadata(ComponentType.OPAMP);
+    if (metadataOpt.isPresent()) {
+        logger.trace("Using metadata-driven similarity calculation");
+        return calculateMetadataDrivenSimilarity(mpn1, mpn2, metadataOpt.get());
+    }
+
+    // Fallback to legacy pattern-based approach
+    logger.trace("No metadata found, using legacy approach");
+    return calculateLegacySimilarity(mpn1, mpn2);
+}
+
+private double calculateMetadataDrivenSimilarity(String mpn1, String mpn2, ComponentTypeMetadata metadata) {
+    SimilarityProfile profile = metadata.getDefaultProfile();
+
+    // Extract specs from MPNs
+    String config1 = extractConfiguration(mpn1);  // e.g., "dual", "quad"
+    String config2 = extractConfiguration(mpn2);
+    // ... extract other specs
+
+    // Short-circuit check for CRITICAL incompatibility
+    if (!config1.isEmpty() && !config2.isEmpty() && !config1.equals(config2)) {
+        return LOW_SIMILARITY;
+    }
+
+    double totalScore = 0.0;
+    double maxPossibleScore = 0.0;
+
+    // Compare each spec with weighted scoring
+    ComponentTypeMetadata.SpecConfig configSpec = metadata.getSpecConfig("configuration");
+    if (configSpec != null && !config1.isEmpty() && !config2.isEmpty()) {
+        ToleranceRule rule = configSpec.getToleranceRule();
+        SpecValue<String> orig = new SpecValue<>(config1, SpecUnit.NONE);
+        SpecValue<String> cand = new SpecValue<>(config2, SpecUnit.NONE);
+
+        double specScore = rule.compare(orig, cand);
+        double specWeight = profile.getEffectiveWeight(configSpec.getImportance());
+
+        totalScore += specScore * specWeight;
+        maxPossibleScore += specWeight;
+    }
+
+    // Repeat for other specs (family, package, etc.)
+    // ...
+
+    double similarity = maxPossibleScore > 0 ? totalScore / maxPossibleScore : 0.0;
+
+    // Apply boosts for equivalent groups
+    if (areEquivalentParts(mpn1, mpn2)) {
+        similarity = Math.max(similarity, HIGH_SIMILARITY);
+    }
+
+    return similarity;
+}
+```
+
+**Key Features of Converted Calculators:**
+1. **Dual-path approach** - Try metadata first, fall back to legacy
+2. **Short-circuit checks** - Early return for CRITICAL spec mismatches
+3. **Weighted scoring** - `totalScore / maxPossibleScore` formula
+4. **Spec extraction** - Component-specific methods to extract values from MPNs
+5. **Equivalent boost** - Apply known equivalence rules after scoring
+6. **Profile support** - Use `getEffectiveWeight()` for context-aware weights
+
+### Converted Calculator Specs
+
+| Calculator | Critical Specs | High Importance | Medium Importance | Low Importance |
+|-----------|----------------|-----------------|-------------------|----------------|
+| **OpAmp** | configuration | family | package | - |
+| **Memory** | memoryType, capacity | interface | - | package |
+| **LED** | color | family, brightness | - | package |
+| **Connector** | pinCount, pitch | family | mountingType | - |
+| **LogicIC** | function | series, technology | - | package |
+| **Sensor** | sensorType | family | interface | package |
+
 ### Migration Path
 
-**Future calculators** should:
-1. Use `ComponentTypeMetadataRegistry` to get metadata
-2. Query tolerance rules for spec comparison
-3. Use `SimilarityProfile` for context-aware thresholds
-4. Avoid hardcoded weights - query `SpecImportance.getBaseWeight()`
+**For converting existing calculators:**
+1. Add imports: `SimilarityProfile`, `ToleranceRule`, `SpecUnit`, `SpecValue`
+2. Modify `calculateSimilarity()` to check for metadata first
+3. Implement `calculateMetadataDrivenSimilarity()` method
+4. Add spec extraction helper methods
+5. Update tests to use threshold assertions (`>= HIGH_SIMILARITY`)
+6. Run full test suite to verify backward compatibility
 
-**Existing calculators** (17 legacy implementations):
-- Still work with hardcoded logic
-- Gradual migration planned (Milestone 2)
+**For new calculators:**
+1. Start with metadata-driven approach from the beginning
+2. Define specs in `ComponentTypeMetadataRegistry`
+3. Implement spec extraction methods
+4. Use `SpecValue` wrapper for type-safe comparison
+5. Apply context-aware profiles with `SimilarityProfile`
 
-See CLAUDE.md § "Similarity Metadata System" for complete architecture details.
+See CLAUDE.md § "Metadata-Driven Similarity Framework" for complete architecture details.
 
 ---
 
