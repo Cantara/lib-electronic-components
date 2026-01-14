@@ -1589,6 +1589,113 @@ private String getBasePart(String mpn) {
 2. Simple suffix stripping is more reliable than complex capture groups
 3. Always test helper methods with actual part numbers to verify correct extraction
 
+### Bug 3: OpAmpSimilarityCalculator Intercepting Generic IC Types
+
+**Discovered**: January 14, 2026 (Session 2)
+**Severity**: HIGH - Caused logic ICs to receive 0.0 similarity instead of correct scores
+**Fixed**: PR #115
+
+**Problem**: `OpAmpSimilarityCalculator.isApplicable()` returned `true` for `ComponentType.IC`, causing it to intercept **ALL ICs** before more specific calculators like `LogicICSimilarityCalculator` could handle them. When it received a non-op-amp IC, it would check `isOpAmp()`, find it wasn't an op-amp, and return 0.0.
+
+**Impact**:
+- CD4001 vs CD4001BE: 0.0 instead of 0.9 ❌
+- All logic ICs intercepted by OpAmpSimilarityCalculator
+- LogicICSimilarityCalculator never reached for logic ICs
+
+**Root Cause - Calculator Registration Order**:
+```java
+// MPNUtils.java line 37-51
+private static final List<ComponentSimilarityCalculator> calculators = Arrays.asList(
+        new VoltageRegulatorSimilarityCalculator(),
+        new LEDSimilarityCalculator(),
+        new OpAmpSimilarityCalculator(),         // ← Claimed ALL ICs here (line 40)
+        new LogicICSimilarityCalculator(),        // ← Never reached (line 41)
+        new MemorySimilarityCalculator(),
+        // ...
+);
+```
+
+The first applicable calculator wins. OpAmpSimilarityCalculator said "yes, I handle IC type" and returned 0.0 for non-op-amps.
+
+**Execution Flow**:
+```java
+// MPNUtils.calculateSimilarity()
+for (ComponentSimilarityCalculator calculator : calculators) {
+    if (calculator.isApplicable(type1) || calculator.isApplicable(type2)) {
+        double similarity = calculator.calculateSimilarity(mpn1, mpn2, patternRegistry);
+        return similarity;  // FIRST applicable calculator wins!
+    }
+}
+```
+
+**OpAmpSimilarityCalculator Behavior (BEFORE)**:
+```java
+public boolean isApplicable(ComponentType type) {
+    // This intercepted ALL ICs ❌
+    if (type == ComponentType.IC || type == ComponentType.ANALOG_IC) {
+        return true;
+    }
+    return type == ComponentType.OPAMP || type.name().startsWith("OPAMP_");
+}
+
+public double calculateSimilarity(String mpn1, String mpn2, PatternRegistry registry) {
+    // Check if both are actually op-amps
+    if (!isOpAmp(mpn1) || !isOpAmp(mpn2)) {
+        return 0.0;  // Returns 0.0 for logic ICs like CD4001
+    }
+    // ...
+}
+```
+
+**Fix** (OpAmpSimilarityCalculator.java):
+```java
+@Override
+public boolean isApplicable(ComponentType type) {
+    if (type == null) {
+        return false;
+    }
+
+    // Only handle specific op-amp types to avoid intercepting other IC types
+    // (e.g., logic ICs, memory ICs, etc.)
+    return type == ComponentType.OPAMP ||
+            type == ComponentType.OPAMP_TI ||
+            type.name().startsWith("OPAMP_");
+}
+```
+
+**Test Updates** (OpAmpSimilarityCalculatorTest.java):
+```java
+// BEFORE:
+@Test
+void shouldBeApplicableForICTypes() {
+    assertTrue(calculator.isApplicable(ComponentType.IC));
+    assertTrue(calculator.isApplicable(ComponentType.ANALOG_IC));
+}
+
+// AFTER:
+@Test
+void shouldNotBeApplicableForGenericICTypes() {
+    // OpAmpSimilarityCalculator should only handle specific OPAMP types
+    assertFalse(calculator.isApplicable(ComponentType.IC));
+    assertFalse(calculator.isApplicable(ComponentType.ANALOG_IC));
+}
+```
+
+**Results**:
+- CD4001 vs CD4001BE: 0.0 → 0.9 ✅
+- Logic ICs now properly handled by LogicICSimilarityCalculator
+- All 13,314 tests passing ✅
+
+**Lesson Learned**:
+1. **Calculator order matters** - First applicable calculator wins and returns immediately
+2. **Be specific in isApplicable()** - Don't claim generic types unless you handle ALL subtypes
+3. **Test ordering matters** - Bug only appeared when running full test suite, not individual tests
+4. **Each calculator should own its domain** - Op-amp calculator should only handle op-amps, not all ICs
+
+**Related Issues**:
+- This pattern may exist in other calculators (check LEDSimilarityCalculator, MemorySimilarityCalculator, etc.)
+- Consider adding validation: if calculator returns 0.0 for parts of claimed type, log warning
+
 ### Metadata-Driven Conversion Progress (January 2026)
 
 **Completed Conversions**:
