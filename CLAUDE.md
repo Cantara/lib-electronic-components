@@ -1506,4 +1506,134 @@ The search also checks common ElectronicPart fields:
 3. **String comparisons are case-insensitive**: `= X7R` matches `x7r`
 4. **IN clause is case-insensitive**: `IN(x7r, X5R)` works
 
+---
+
+## Critical Bug Fixes (January 2026 - PR #114)
+
+### Bug 1: MPNUtils Ignoring 0.0 Calculator Results
+
+**Discovered**: January 14, 2026
+**Severity**: CRITICAL - Caused incompatible parts to receive high similarity scores
+
+**Problem**: `MPNUtils.calculateSimilarity()` had a check `if (similarity > 0)` at line 135 that **ignored calculator results of 0.0**. When similarity calculators correctly returned 0.0 for incompatible parts (e.g., N-channel vs P-channel MOSFETs), the code fell through to `calculateDefaultSimilarity()` which gave high scores based only on manufacturer/type matching.
+
+**Impact Examples**:
+- IRF530 (N-channel) vs IRF9530 (P-channel): returned **0.9** instead of **0.0** ❌
+- 2N2222 vs 2N3904 (different current ratings): returned **1.0** instead of **0.547** ❌
+
+**Root Cause**: The assumption that 0.0 meant "calculator couldn't determine similarity" instead of "parts are incompatible".
+
+**Fix** (MPNUtils.java line 132-138):
+```java
+// BEFORE:
+if (applicable1 || applicable2) {
+    double similarity = calculator.calculateSimilarity(mpn1, mpn2, patternRegistry);
+    if (similarity > 0) {  // ❌ BUG: ignores 0.0
+        return similarity;
+    }
+}
+
+// AFTER:
+if (applicable1 || applicable2) {
+    double similarity = calculator.calculateSimilarity(mpn1, mpn2, patternRegistry);
+    // Trust the calculator's result, even if it's 0.0 (incompatible parts)
+    return similarity;  // ✅ FIX: trust all results
+}
+```
+
+**Lesson Learned**: Always trust calculator results. If a calculator returns 0.0, it means "these parts are incompatible," not "I don't know."
+
+### Bug 2: TransistorSimilarityCalculator getBasePart() Regex Failure
+
+**Discovered**: January 14, 2026
+**Severity**: HIGH - Caused all transistors to use default characteristics
+
+**Problem**: The `getBasePart()` method had a broken regex `([A-Z0-9]+)[A-Z].*$` that extracted only the first character. For "2N2222", it matched "2" + "N" + "2222" and captured just **"2"**, causing all `KNOWN_CHARACTERISTICS` lookups to fail.
+
+**Impact**:
+- `getBasePart("2N2222")` returned `"2"` instead of `"2N2222"` ❌
+- `getBasePart("2N3904")` returned `"2"` instead of `"2N3904"` ❌
+- All transistors used default values (600mA, TO-18) instead of actual specs
+- Similarity scores were based on defaults, not real characteristics
+
+**Example Impact**:
+```
+2N2222 specs: 800mA, TO-18 (actual)
+2N3904 specs: 200mA, TO-92 (actual)
+
+With bug: Both got 600mA, TO-18 (defaults) → similarity = 1.0 ❌
+After fix: Used actual specs → similarity = 0.547 ✅
+```
+
+**Fix** (TransistorSimilarityCalculator.java):
+```java
+// BEFORE:
+private String getBasePart(String mpn) {
+    if (mpn == null) return "";
+    return mpn.replaceAll("([A-Z0-9]+)[A-Z].*$", "$1").toUpperCase();  // ❌ BROKEN
+}
+
+// AFTER:
+private String getBasePart(String mpn) {
+    if (mpn == null) return "";
+    String upperMpn = mpn.toUpperCase();
+    // Remove known suffixes (package codes, qualifiers)
+    return upperMpn.replaceAll("[-](T|TR|TA|TF|G|L|R|Q|X)$", "")
+                   .replaceAll("(T|TR|TA|TF|G|L|R|Q|X)$", "")
+                   .replaceAll("A$", "");  // ✅ FIXED: preserves base part
+}
+```
+
+**Lesson Learned**:
+1. Regex for part number extraction must preserve the full base part, not just extract pieces
+2. Simple suffix stripping is more reliable than complex capture groups
+3. Always test helper methods with actual part numbers to verify correct extraction
+
+### Metadata-Driven Conversion Progress (January 2026)
+
+**Completed Conversions**:
+1. ✅ DiodeSimilarityCalculator (PR #110)
+2. ✅ MosfetSimilarityCalculator (PR #111)
+3. ✅ TransistorSimilarityCalculator (PR #112)
+4. ✅ VoltageRegulatorSimilarityCalculator (PR #113)
+
+**Key Benefits Observed**:
+1. **More accurate scoring** - Metadata approach produces scores based on actual specs (0.95-0.99 for very similar, 1.0 for identical)
+2. **Better differentiation** - Compatible but non-identical parts get appropriate intermediate scores
+3. **Proper incompatibility detection** - Critical spec mismatches return 0.0
+4. **Threshold-based testing** - Tests use `>= HIGH_SIMILARITY` instead of `assertEquals(0.9, similarity)`
+
+**Conversion Pattern**:
+```java
+// 1. Extract specs from both MPNs
+String spec1 = extractSpec(mpn1);
+String spec2 = extractSpec(mpn2);
+
+// 2. Short-circuit check for critical mismatches
+if (spec1 != null && spec2 != null && !spec1.equals(spec2)) {
+    return 0.0;  // Incompatible
+}
+
+// 3. Weighted spec comparison
+for each spec {
+    specScore = rule.compare(origValue, candValue);
+    specWeight = profile.getEffectiveWeight(importance);
+    totalScore += specScore * specWeight;
+    maxPossibleScore += specWeight;
+}
+similarity = totalScore / maxPossibleScore;
+
+// 4. Optional boost for known equivalent groups
+if (areKnownEquivalents(mpn1, mpn2)) {
+    similarity = Math.max(similarity, HIGH_SIMILARITY);
+}
+```
+
+**Test Expectation Updates**:
+- Changed from `assertEquals(0.9, similarity)` to `assertTrue(similarity >= 0.9)`
+- Adjusted borderline thresholds from `< 0.5` to `< 0.55` for parts with moderate similarity
+- Updated tests to expect moderate scores (0.5-0.7) for parts that share some but not all critical specs
+
+**Next Candidates**: OpAmpSimilarityCalculator, MemorySimilarityCalculator, LEDSimilarityCalculator
+
 <!-- Add new learnings above this line -->
