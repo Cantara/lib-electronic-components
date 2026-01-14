@@ -578,15 +578,32 @@ public enum ComponentType {
     /**
      * Mapping from ComponentType suffix to ComponentManufacturer for cases where
      * the suffix doesn't match the enum name directly.
+     *
+     * Lazily initialized to avoid circular dependency with ComponentManufacturer.
      */
-    private static final java.util.Map<String, ComponentManufacturer> MANUFACTURER_SUFFIX_MAP = java.util.Map.ofEntries(
-            // Special cases where suffix differs from enum name
-            java.util.Map.entry("ON", ComponentManufacturer.ON_SEMI),
-            java.util.Map.entry("ONSEMI", ComponentManufacturer.ON_SEMI),
-            java.util.Map.entry("SILABS", ComponentManufacturer.SILICON_LABS),
-            java.util.Map.entry("AD", ComponentManufacturer.ANALOG_DEVICES),
-            java.util.Map.entry("DIODES", ComponentManufacturer.DIODES_INC)
-    );
+    private static volatile java.util.Map<String, ComponentManufacturer> manufacturerSuffixMap;
+
+    /**
+     * Get the manufacturer suffix map, lazily initializing it on first access.
+     * This breaks the circular dependency between ComponentType and ComponentManufacturer.
+     */
+    private static java.util.Map<String, ComponentManufacturer> getManufacturerSuffixMap() {
+        if (manufacturerSuffixMap == null) {
+            synchronized (ComponentType.class) {
+                if (manufacturerSuffixMap == null) {
+                    manufacturerSuffixMap = java.util.Map.ofEntries(
+                            // Special cases where suffix differs from enum name
+                            java.util.Map.entry("ON", ComponentManufacturer.ON_SEMI),
+                            java.util.Map.entry("ONSEMI", ComponentManufacturer.ON_SEMI),
+                            java.util.Map.entry("SILABS", ComponentManufacturer.SILICON_LABS),
+                            java.util.Map.entry("AD", ComponentManufacturer.ANALOG_DEVICES),
+                            java.util.Map.entry("DIODES", ComponentManufacturer.DIODES_INC)
+                    );
+                }
+            }
+        }
+        return manufacturerSuffixMap;
+    }
 
     /**
      * Get the manufacturer associated with this component type.
@@ -597,8 +614,8 @@ public enum ComponentType {
         if (parts.length > 1) {
             String suffix = parts[parts.length - 1];
 
-            // Check special cases first
-            ComponentManufacturer mapped = MANUFACTURER_SUFFIX_MAP.get(suffix);
+            // Check special cases first (uses lazy initialization)
+            ComponentManufacturer mapped = getManufacturerSuffixMap().get(suffix);
             if (mapped != null) {
                 return mapped;
             }
