@@ -342,7 +342,8 @@ This ensures institutional knowledge is preserved for future sessions.
 ### Testing
 - `MPNUtilsTest` and `MPNExtractionTest` are the primary tests for MPN parsing logic
 - Many test MPNs are real-world part numbers from datasheets
-- **Test coverage**: 61 handlers have tests (4497 tests), 17 similarity calculators have tests (302 tests)
+- **Test coverage**: 65 handlers have tests (4960+ tests), 17 similarity calculators have tests (302 tests)
+- **Handler test coverage**: 65/67 handlers (97.1%), missing: AbstractManufacturerHandler (base class), UnknownHandler (special case)
 - **Flaky tests**: If tests pass individually but fail in suite, check for non-deterministic iteration (HashSet → TreeSet)
 
 ### Handler Test Gotchas (IMPORTANT)
