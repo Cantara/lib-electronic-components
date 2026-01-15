@@ -187,21 +187,24 @@ boolean isDigital2 = MPNUtils.isDigitalIC("LM317");   // false
 
 #### Metadata-Driven Architecture (January 2026)
 
-The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules. **12 of 17 calculators** (71%) have been converted to this approach:
+The similarity system uses a **metadata-driven architecture** with configurable, type-specific rules. **15 of 17 calculators** (88%) have been converted to this approach:
 
 **Converted Calculators:**
-- ✅ **ResistorSimilarityCalculator** - Resistance value, package, tolerance comparison
-- ✅ **CapacitorSimilarityCalculator** - Capacitance value, voltage rating, dielectric type, package
-- ✅ **TransistorSimilarityCalculator** - Polarity (NPN/PNP), voltage/current ratings, hFE, package
-- ✅ **DiodeSimilarityCalculator** - Diode type, voltage/current ratings, package
-- ✅ **MosfetSimilarityCalculator** - Channel (N/P), voltage/current ratings, RdsOn, package
-- ✅ **VoltageRegulatorSimilarityCalculator** - Regulator type, output voltage, polarity, current rating
+- ✅ **ResistorSimilarityCalculator** (pre-existing) - Resistance value, package, tolerance comparison
+- ✅ **CapacitorSimilarityCalculator** (pre-existing) - Capacitance value, voltage rating, dielectric type, package
+- ✅ **TransistorSimilarityCalculator** (pre-existing) - Polarity (NPN/PNP), voltage/current ratings, hFE, package
+- ✅ **DiodeSimilarityCalculator** (pre-existing) - Diode type, voltage/current ratings, package
+- ✅ **MosfetSimilarityCalculator** (pre-existing) - Channel (N/P), voltage/current ratings, RdsOn, package
+- ✅ **VoltageRegulatorSimilarityCalculator** (pre-existing) - Regulator type, output voltage, polarity, current rating
 - ✅ **OpAmpSimilarityCalculator** (PR #116) - Configuration, family, package comparison
 - ✅ **MemorySimilarityCalculator** (PR #117) - Memory type, capacity, interface, package
 - ✅ **LEDSimilarityCalculator** (PR #118) - Color, family, brightness, package
 - ✅ **ConnectorSimilarityCalculator** (pre-existing) - Pin count, pitch, family, mounting
 - ✅ **LogicICSimilarityCalculator** (PR #119) - Function, series, technology, package
 - ✅ **SensorSimilarityCalculator** (PR #120) - Sensor type, family, interface, package
+- ✅ **MCUSimilarityCalculator** (PR #123) - Family, series, features weighted comparison
+- ✅ **MicrocontrollerSimilarityCalculator** (PR #123) - Manufacturer registry with metadata weights
+- ✅ **PassiveComponentCalculator** (PR #123) - Generic value, size code, tolerance comparison
 
 **Core Components:**
 - **ComponentTypeMetadata**: Defines critical specs, importance levels, and tolerance rules per component type
