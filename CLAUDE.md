@@ -396,7 +396,7 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 
 ### Known Technical Debt
 
-**Fixed (PR #74, #75, #76, #77, #78, #80, #81)**:
+**Fixed (PR #74, #75, #76, #77, #78, #80, #81, Pre-2026)**:
 - ~~TIHandler duplicate COMPONENT_SERIES entries~~ - Consolidated, removed ~170 lines of duplicates
 - ~~No AbstractManufacturerHandler base class~~ - Created with shared helper methods
 - ~~Package code mappings duplicated~~ - Created `PackageCodeRegistry` with centralized mappings
@@ -412,8 +412,11 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - ~~STHandler: package extraction bugs~~ - Fixed STM32 (returns LQFP not T6), MOSFET, regulators
 - ~~STHandler: multi-pattern matching bug~~ - Added explicit type checks
 - ~~AtmelHandler: cross-handler pattern matching~~ - Don't fall through for base MICROCONTROLLER type
+- ~~InfineonHandler: All 5 bugs fixed~~ - Uses Set.of(), package extraction works, series extraction order fixed, has XMC/OptiMOS patterns
+- ~~MicrochipHandler: All 5 bugs fixed~~ - Uses Set.of(), has AVR32 patterns, package extraction decodes properly
+- ~~AnalogDevicesHandler: All 5 bugs fixed~~ - Uses Set.of(), has ADC/DAC patterns, package extraction comprehensive
 
-**Documented Handler Bugs (11 handlers audited, 880+ tests)**:
+**Documented Handler Bugs (5 handlers remaining, 337 tests passing for fixed handlers)**:
 
 *NXPHandler (8 bugs)*:
 - HashSet in getSupportedTypes() - should use Set.of()
@@ -423,18 +426,6 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - Series extraction incomplete for audio codecs, sensors
 - Cross-handler pattern matching possible (falls through to registry)
 
-*InfineonHandler (5 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- Missing Cypress PSoC specific patterns (acquired company)
-- Package extraction only handles IRF MOSFETs, not BSC/IFX
-- Speed grade suffix handling incomplete
-
-*MicrochipHandler (5 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- Missing AVR32 patterns (legacy acquired from Atmel)
-- Package extraction returns raw suffix, not decoded package name
-- Some dsPIC patterns overlap with PIC patterns
-
 *OnSemiHandler (9 bugs)*:
 - HashSet in getSupportedTypes() - should use Set.of()
 - Missing NTD/FQP/FDP MOSFET patterns
@@ -442,12 +433,6 @@ When cleaning up a manufacturer handler, follow this pattern (established in PR 
 - Missing NCP regulator patterns
 - Package extraction only handles diodes, not MOSFETs/transistors
 - Series extraction incomplete for MOSFETs/transistors
-
-*AnalogDevicesHandler (5 bugs)*:
-- HashSet in getSupportedTypes() - should use Set.of()
-- Missing AD7xxx ADC and AD5xxx DAC patterns with manufacturer-specific types
-- ADCs/DACs fall through to generic IC instead of ADC_AD/DAC_AD
-- Package extraction doesn't handle grade+package+rohs structure
 
 *MaximHandler (6 bugs)*:
 - HashSet in getSupportedTypes() - should use Set.of()
