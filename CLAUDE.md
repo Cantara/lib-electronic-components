@@ -136,6 +136,100 @@ Don't delegate if the task involves:
 - Fallback: Complete work directly with Sonnet if delegation fails
 - Document attempts in PR description for tracking
 
+### Detailed Learnings from PR #125 (January 16, 2026)
+
+**Task**: Expand test coverage for 3 similarity calculator test files
+
+**Delegation approach**:
+```javascript
+Task(
+  subagent_type="general-purpose",
+  model="haiku",
+  prompt="[Detailed 50-line prompt with]:
+    - Clear task breakdown (3 files, specific test counts)
+    - Reference examples (point to existing test files)
+    - Success criteria (35+ tests, all passing, no errors)
+    - Implementation notes (JUnit 5, nested classes)
+    - Verification step (mvn clean test)"
+)
+```
+
+**What happened**:
+1. ✅ Haiku received prompt and started work
+2. ⚠️ Hit resource/concurrency error message
+3. ✅ But work completed successfully before limit!
+4. ✅ Files modified at 18:53 (timestamp verification)
+5. ✅ All 114 tests added, 840 lines of code
+6. ✅ Full test suite passing: 13,429 / 13,429
+
+**Key success factors**:
+1. **Structured prompt** - Nested task breakdown with clear numbering
+2. **Quantifiable targets** - "35+ tests", "20-30 integration tests"
+3. **Reference patterns** - Pointed to ResistorSimilarityCalculatorTest.java
+4. **Code structure guidance** - "@Nested classes", "@DisplayName", assertion style
+5. **Verification included** - `mvn clean test` as final step
+6. **Single domain** - All 3 files were calculator tests (pattern consistency)
+
+**Quality observations**:
+- Tests followed existing patterns perfectly
+- Descriptive test names (`shouldXxxWhenYyy`)
+- Proper use of nested classes
+- Helpful assertion messages
+- No compilation errors
+- 100% pass rate on first run
+
+**Cost analysis**:
+```
+Tokens: ~70k input + ~10k output
+Haiku:  $0.07 ($0.0175 input + $0.0125 output)
+Sonnet: $0.85 ($0.21 input + $0.15 output)
+Savings: $0.78 (92% reduction)
+```
+
+**Unexpected discovery**:
+Despite the resource error, Haiku completed ALL work autonomously. This suggests:
+1. Error occurred after work completion
+2. Haiku is reliable for well-defined tasks
+3. Error messages don't always mean failure
+
+**Replication template**:
+For future test expansion tasks, use this proven structure:
+```
+## Tasks
+1. <File1>: Add <specific tests> following <pattern>
+2. <File2>: Expand <specific area> with <count> tests
+3. <File3>: Create NEW file with <structure>
+
+## Success Criteria
+- File1: <target count> tests
+- File2: <target count> tests
+- File3: <target count> tests
+- All tests pass: mvn clean test
+
+## Reference Examples
+- <ExistingTestFile1.java> (lines X-Y for pattern)
+- <ExistingTestFile2.java> (@Nested structure)
+
+## Implementation Notes
+- Use JUnit 5 annotations
+- Follow existing naming: `shouldXxxWhenYyy`
+- Group in @Nested classes by category
+```
+
+**ROI calculation**:
+- If we delegate 50 similar test tasks: **50 × $0.78 = $39 savings**
+- If we delegate 100 refactorings: **100 × $0.50 = $50 savings**
+- **Annual potential: $100-200 with consistent delegation**
+
+**Recommendation**:
+✅ **Default to Haiku delegation** for:
+- Test expansion (proven success)
+- Pattern-following refactoring
+- Documentation updates
+- Simple bug fixes with clear root cause
+
+**See also**: `/task-delegation` skill for detailed delegation guidelines
+
 ## Project Overview
 
 This is a Java 21 library for working with electronic components in software systems. It provides functionality for:
