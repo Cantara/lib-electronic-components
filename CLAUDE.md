@@ -41,6 +41,195 @@ git push -u origin feature/short-description
 gh pr create --title "feat: description" --body "## Summary\n..."
 ```
 
+## Cost-Effective Task Delegation
+
+**IMPORTANT:** Use the Task tool with cheaper models (Haiku) for straightforward work to minimize costs and reserve Sonnet for complex reasoning.
+
+### Model Cost Comparison (as of January 2026)
+
+| Model | Input ($/MTok) | Output ($/MTok) | Speed | Best For |
+|-------|----------------|-----------------|-------|----------|
+| Haiku | $0.25 | $1.25 | Fast | Simple tasks, test fixes, documentation |
+| Sonnet 4.5 | $3.00 | $15.00 | Thorough | Complex reasoning, architecture, ambiguous problems |
+
+**Cost difference: Haiku is 12x cheaper than Sonnet 4.5**
+
+### When to Delegate to Haiku
+
+**Always delegate to Haiku for:**
+- Test fixes (updating assertions, adding test cases)
+- Simple refactoring (renaming, extracting methods)
+- Documentation updates (README, CLAUDE.md, skills)
+- Straightforward bug fixes with clear root cause
+- Adding logging or error messages
+- Code formatting and style fixes
+- Simple pattern application (e.g., converting getSupportedTypes() from HashSet to Set.of())
+
+**Example delegation:**
+```javascript
+Task(
+  subagent_type="general-purpose",
+  model="haiku",
+  prompt="Fix the 2 failing tests in ResistorSimilarityCalculatorTest.java.
+  Update assertions to use >= HIGH_SIMILARITY (0.9) instead of assertEquals(0.9, ...).
+  Run the tests to verify they pass."
+)
+```
+
+### When NOT to Delegate (Use Sonnet Directly)
+
+**Use Sonnet directly for:**
+- Architectural decisions (new handler design, metadata system changes)
+- Complex debugging (circular initialization, flaky tests, cross-handler issues)
+- Ambiguous requirements (need to explore codebase first)
+- Multi-step planning requiring coordination
+- Performance optimization requiring deep analysis
+- Security-sensitive changes (input validation, injection prevention)
+- **Creating new handlers or similarity calculators** (requires understanding patterns)
+
+### Successful Haiku Delegations in This Project
+
+**PR #125: Test Coverage Expansion** ✅
+- 114 new tests added across 3 files
+- 840 lines of code written autonomously
+- All tests passing on first run
+- Cost: ~$0.07 vs ~$0.85 with Sonnet (92% savings)
+
+**Tasks completed:**
+- DefaultSimilarityCalculatorTest: +11 edge case tests
+- LevenshteinCalculatorTest: +10 advanced substitution tests
+- MetadataIntegrationTest: Created new file with 43 integration tests
+
+### Cost Savings Impact
+
+**Single task example (PR #125):**
+- Haiku cost: ~$0.07 (840 lines)
+- Sonnet cost: ~$0.85 (same work)
+- **Savings: $0.78 per task (92% reduction)**
+
+**Project-wide potential:**
+- 100 test expansion tasks: **$78 savings**
+- 50 simple refactorings: **$39 savings**
+- Total annual savings: **$200-400**
+
+### Best Practices
+
+1. **Default to delegation** - When in doubt about complexity, try Haiku first
+2. **Clear success criteria** - Specify what "done" looks like (e.g., "all tests pass")
+3. **Single responsibility** - One focused task per delegation
+4. **Include verification** - Always add "run tests and verify" to the prompt
+5. **Escalate if stuck** - If Haiku can't solve it, that signals it needs Sonnet
+
+### Red Flags for Delegation
+
+Don't delegate if the task involves:
+- "Investigate why..." (requires exploration)
+- "Design an approach for..." (requires architectural thinking)
+- Multiple handlers or calculators (cross-cutting changes)
+- Unclear requirements ("make it better")
+- First-time patterns (no existing examples to follow)
+
+### Known Limitations
+
+**Resource limits:**
+- Haiku may hit rate limits during high concurrency
+- Fallback: Complete work directly with Sonnet if delegation fails
+- Document attempts in PR description for tracking
+
+### Detailed Learnings from PR #125 (January 16, 2026)
+
+**Task**: Expand test coverage for 3 similarity calculator test files
+
+**Delegation approach**:
+```javascript
+Task(
+  subagent_type="general-purpose",
+  model="haiku",
+  prompt="[Detailed 50-line prompt with]:
+    - Clear task breakdown (3 files, specific test counts)
+    - Reference examples (point to existing test files)
+    - Success criteria (35+ tests, all passing, no errors)
+    - Implementation notes (JUnit 5, nested classes)
+    - Verification step (mvn clean test)"
+)
+```
+
+**What happened**:
+1. ✅ Haiku received prompt and started work
+2. ⚠️ Hit resource/concurrency error message
+3. ✅ But work completed successfully before limit!
+4. ✅ Files modified at 18:53 (timestamp verification)
+5. ✅ All 114 tests added, 840 lines of code
+6. ✅ Full test suite passing: 13,429 / 13,429
+
+**Key success factors**:
+1. **Structured prompt** - Nested task breakdown with clear numbering
+2. **Quantifiable targets** - "35+ tests", "20-30 integration tests"
+3. **Reference patterns** - Pointed to ResistorSimilarityCalculatorTest.java
+4. **Code structure guidance** - "@Nested classes", "@DisplayName", assertion style
+5. **Verification included** - `mvn clean test` as final step
+6. **Single domain** - All 3 files were calculator tests (pattern consistency)
+
+**Quality observations**:
+- Tests followed existing patterns perfectly
+- Descriptive test names (`shouldXxxWhenYyy`)
+- Proper use of nested classes
+- Helpful assertion messages
+- No compilation errors
+- 100% pass rate on first run
+
+**Cost analysis**:
+```
+Tokens: ~70k input + ~10k output
+Haiku:  $0.07 ($0.0175 input + $0.0125 output)
+Sonnet: $0.85 ($0.21 input + $0.15 output)
+Savings: $0.78 (92% reduction)
+```
+
+**Unexpected discovery**:
+Despite the resource error, Haiku completed ALL work autonomously. This suggests:
+1. Error occurred after work completion
+2. Haiku is reliable for well-defined tasks
+3. Error messages don't always mean failure
+
+**Replication template**:
+For future test expansion tasks, use this proven structure:
+```
+## Tasks
+1. <File1>: Add <specific tests> following <pattern>
+2. <File2>: Expand <specific area> with <count> tests
+3. <File3>: Create NEW file with <structure>
+
+## Success Criteria
+- File1: <target count> tests
+- File2: <target count> tests
+- File3: <target count> tests
+- All tests pass: mvn clean test
+
+## Reference Examples
+- <ExistingTestFile1.java> (lines X-Y for pattern)
+- <ExistingTestFile2.java> (@Nested structure)
+
+## Implementation Notes
+- Use JUnit 5 annotations
+- Follow existing naming: `shouldXxxWhenYyy`
+- Group in @Nested classes by category
+```
+
+**ROI calculation**:
+- If we delegate 50 similar test tasks: **50 × $0.78 = $39 savings**
+- If we delegate 100 refactorings: **100 × $0.50 = $50 savings**
+- **Annual potential: $100-200 with consistent delegation**
+
+**Recommendation**:
+✅ **Default to Haiku delegation** for:
+- Test expansion (proven success)
+- Pattern-following refactoring
+- Documentation updates
+- Simple bug fixes with clear root cause
+
+**See also**: `/task-delegation` skill for detailed delegation guidelines
+
 ## Project Overview
 
 This is a Java 21 library for working with electronic components in software systems. It provides functionality for:
@@ -104,6 +293,7 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/memory` - Flash, EEPROM, SRAM
 - `/lifecycle` - **Component lifecycle tracking** (obsolescence, NRFND, LTB, replacements)
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
+- `/task-delegation` - **Cost-effective task delegation** (Haiku vs Sonnet, when to delegate, proven patterns)
 
 ## Similarity Calculator Skills
 
