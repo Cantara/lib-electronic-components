@@ -293,6 +293,7 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/memory` - Flash, EEPROM, SRAM
 - `/lifecycle` - **Component lifecycle tracking** (obsolescence, NRFND, LTB, replacements)
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
+- `/task-delegation` - **Cost-effective task delegation** (Haiku vs Sonnet, when to delegate, proven patterns)
 
 ## Similarity Calculator Skills
 
