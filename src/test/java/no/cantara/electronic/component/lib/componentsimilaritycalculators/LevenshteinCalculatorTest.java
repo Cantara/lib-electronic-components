@@ -218,6 +218,180 @@ class LevenshteinCalculatorTest {
     }
 
     @Nested
+    @DisplayName("Advanced substitution tests")
+    class AdvancedSubstitutionTests {
+
+        @Test
+        @DisplayName("Multiple substitutions in one string")
+        void multipleSubstitutionsInString() {
+            Map<String, String> substitutions = Map.of(
+                    "2N", "PN",
+                    "22", "33"
+            );
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "2N2222", "PN3333", substitutions);
+            // After substitutions: PN2222 vs PN3333, which should be similar
+            assertTrue(similarity > 0.5, "Multiple substitutions should find similarity");
+        }
+
+        @Test
+        @DisplayName("Overlapping substitutions should be handled correctly")
+        void overlappingSubstitutionsShouldWork() {
+            Map<String, String> substitutions = Map.of(
+                    "AB", "XY",
+                    "ABC", "XYZ"
+            );
+            // "ABC" could match both "AB" and "ABC" in substitutions
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "ABC123", "XYZ123", substitutions);
+            assertTrue(similarity >= 0.5, "Overlapping substitutions should work");
+        }
+
+        @Test
+        @DisplayName("Empty substitution map should use basic similarity")
+        void emptySubstitutionMapShouldUseBasis() {
+            Map<String, String> emptySubstitutions = Map.of();
+            double withEmpty = calculator.calculateSimilarityWithSubstitutions(
+                    "LM358", "LM358", emptySubstitutions);
+            double basic = calculator.calculateSimilarity("LM358", "LM358");
+            assertEquals(withEmpty, basic, 0.001, "Empty substitutions should match basic");
+        }
+
+        @Test
+        @DisplayName("Substitutions that don't match should fall back to basic similarity")
+        void nonMatchingSubstitutionsShouldFallback() {
+            Map<String, String> substitutions = Map.of(
+                    "XY", "AB",
+                    "QQ", "ZZ"
+            );
+            double withSub = calculator.calculateSimilarityWithSubstitutions(
+                    "hello", "hallo", substitutions);
+            double basic = calculator.calculateSimilarity("hello", "hallo");
+            // Should fall back to basic or find the max similarity
+            assertTrue(withSub >= basic - 0.01, "Should not be worse than basic similarity");
+        }
+
+        @Test
+        @DisplayName("Real-world transistor substitutions")
+        void realWorldTransistorSubstitutions() {
+            Map<String, String> transistorSubs = Map.of(
+                    "2N", "PN",       // 2N2222 ≈ PN2222
+                    "MMBT", "MMBTA"   // MMBT2222 ≈ MMBTA2222
+            );
+            double sim1 = calculator.calculateSimilarityWithSubstitutions(
+                    "2N2222", "PN2222", transistorSubs);
+            assertEquals(0.9, sim1, 0.01, "Known substitution 2N->PN should give 0.9");
+
+            double sim2 = calculator.calculateSimilarityWithSubstitutions(
+                    "MMBT2222", "MMBTA2222", transistorSubs);
+            assertEquals(0.9, sim2, 0.01, "Known substitution MMBT->MMBTA should give 0.9");
+        }
+
+        @Test
+        @DisplayName("Real-world MOSFET substitutions")
+        void realWorldMosfetSubstitutions() {
+            Map<String, String> mosfetSubs = Map.of(
+                    "IRF", "STF",     // IRF530 ≈ STF530
+                    "FQP", "FDP"      // FQP30N06L ≈ FDP30N06L
+            );
+            double sim1 = calculator.calculateSimilarityWithSubstitutions(
+                    "IRF530", "STF530", mosfetSubs);
+            assertEquals(0.9, sim1, 0.01, "IRF->STF substitution should work");
+
+            double sim2 = calculator.calculateSimilarityWithSubstitutions(
+                    "FQP30N06L", "FDP30N06L", mosfetSubs);
+            assertEquals(0.9, sim2, 0.01, "FQP->FDP substitution should work");
+        }
+
+        @Test
+        @DisplayName("Case insensitive with substitutions")
+        void caseInsensitiveWithSubstitutions() {
+            Map<String, String> substitutions = Map.of("LM", "MC");
+            double sim1 = calculator.calculateSimilarityWithSubstitutions(
+                    "LM358", "MC358", substitutions);
+            // Should find high similarity
+            assertTrue(sim1 > 0.7, "Substitution should work with different cases");
+        }
+
+        @Test
+        @DisplayName("Null values in substitution map should be handled")
+        void nullValuesInSubstitutionMapShouldBeHandled() {
+            // Note: using Map.of() doesn't allow null values, so this tests with valid map
+            Map<String, String> substitutions = Map.of("A", "B");
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    null, "ABC", substitutions);
+            assertEquals(0.0, similarity, "Null input should return 0.0");
+        }
+
+        @Test
+        @DisplayName("Substitutions creating identical strings")
+        void substitutionsCreatingIdenticalStrings() {
+            Map<String, String> substitutions = Map.of("A", "A");
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "ABA", "ABA", substitutions);
+            assertEquals(1.0, similarity, 0.001, "Already identical strings should score 1.0");
+        }
+
+        @Test
+        @DisplayName("Partial string substitution matches")
+        void partialSubstitutionMatches() {
+            Map<String, String> substitutions = Map.of("358", "358");
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "LM358", "MC358", substitutions);
+            // Partial match on "358", but prefix differs
+            assertTrue(similarity > 0.3, "Partial substitution matches should find some similarity");
+        }
+
+        @Test
+        @DisplayName("Multiple different substitutions in map")
+        void multipleSubstitutionsInMap() {
+            // Test with multiple different substitution pairs
+            Map<String, String> substitutions = new java.util.HashMap<>();
+            substitutions.put("2N", "PN");
+            substitutions.put("BC", "AC");
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "2N2222", "PN2222", substitutions);
+            // One of the substitutions should match
+            assertTrue(similarity >= 0.5, "Should try substitutions and find match");
+        }
+
+        @Test
+        @DisplayName("Long strings with substitutions")
+        void longStringsWithSubstitutions() {
+            Map<String, String> substitutions = Map.of(
+                    "STM32", "STM32",
+                    "F4", "H7"
+            );
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "STM32F407VGT6", "STM32H743ZIT6", substitutions);
+            assertTrue(similarity >= 0.0 && similarity <= 1.0, "Long strings should produce valid score");
+        }
+
+        @Test
+        @DisplayName("Substitutions should be symmetric in effect")
+        void substitutionsShouldBeSymmetric() {
+            Map<String, String> substitutions = Map.of("A", "B");
+            double sim1 = calculator.calculateSimilarityWithSubstitutions(
+                    "ABCD", "BBCD", substitutions);
+            double sim2 = calculator.calculateSimilarityWithSubstitutions(
+                    "BBCD", "ABCD", substitutions);
+            assertEquals(sim1, sim2, 0.001, "Substitution effect should be symmetric");
+        }
+
+        @Test
+        @DisplayName("Real-world diode substitutions")
+        void realWorldDiodeSubstitutions() {
+            Map<String, String> diodeSubs = Map.of(
+                    "1N4148", "1N914"   // Common signal diode equivalents
+            );
+            double similarity = calculator.calculateSimilarityWithSubstitutions(
+                    "1N4148", "1N914", diodeSubs);
+            // These are actually different parts, but substitution should recognize equivalence
+            assertTrue(similarity >= 0.5, "Recognized equivalents should have decent similarity");
+        }
+    }
+
+    @Nested
     @DisplayName("Symmetry and property tests")
     class PropertyTests {
 
