@@ -2,6 +2,10 @@
 
 All notable changes to lib-electronic-components will be documented in this file.
 
+For detailed technical notes, implementation patterns, bug analyses, and learnings, see:
+- **[HISTORY.md](HISTORY.md)** - Chronological timeline with technical details
+- **[.docs/history/](.docs/history/)** - Deep dives into bugs, handler patterns, and architectural decisions
+
 ## [1.0.0] - 2026-01-11
 
 First major release of lib-electronic-components library.

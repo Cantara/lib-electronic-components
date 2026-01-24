@@ -338,4 +338,13 @@ When reviewing code, watch for:
 - PR #90: Fixed cross-handler pattern matching that caused STM32 MPNs to match CypressHandler
 - Some handlers have commented-out patterns (e.g., `ComponentManufacturer.java` lines 45-53) - unclear if deprecated or WIP
 
+---
+
+## See Also
+
+- **HISTORY.md** - Technical debt history and completed work
+- **.docs/history/** - Detailed analyses of architectural decisions
+
+---
+
 <!-- Add new learnings above this line -->

@@ -7,6 +7,16 @@ description: Use when working with MCU/microcontroller similarity calculations -
 
 Guidance for working with MCU similarity calculators in the lib-electronic-components library.
 
+---
+
+**For metadata-driven similarity architecture**, see `/similarity-metadata`:
+- SpecImportance levels (CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL)
+- ToleranceRule types (exactMatch, percentageTolerance, minimumRequired, etc.)
+- SimilarityProfile contexts (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION, etc.)
+- Calculator integration patterns and gotchas
+
+---
+
 ## Overview
 
 There are two MCU-related calculators:
