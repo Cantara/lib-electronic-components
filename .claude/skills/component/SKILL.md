@@ -152,6 +152,12 @@ Use specialized skills for specific component types:
 - `/connector` - Connector manufacturer patterns
 - `/memory` - Flash, EEPROM, RAM components
 
+## See Also
+
+- **HISTORY.md** - Handler bug patterns and fixes (PR #89, handler cleanup PRs #73-88)
+- **.docs/history/HANDLER_IMPLEMENTATION_PATTERNS.md** - Detailed handler development patterns
+- **.docs/history/BUG_FIX_ANALYSIS.md** - Critical bugs and prevention strategies
+
 ## Recording Learnings
 
 **Important**: When you discover quirks, edge cases, or important patterns while working on components:

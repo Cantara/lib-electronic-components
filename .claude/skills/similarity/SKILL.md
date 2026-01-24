@@ -7,6 +7,16 @@ description: Use when working with component similarity calculations - comparing
 
 This skill provides guidance for working with component similarity calculators in the lib-electronic-components library.
 
+---
+
+**For metadata-driven similarity architecture**, see `/similarity-metadata`:
+- SpecImportance levels (CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL)
+- ToleranceRule types (exactMatch, percentageTolerance, minimumRequired, etc.)
+- SimilarityProfile contexts (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION, etc.)
+- Calculator integration patterns and gotchas
+
+---
+
 ## Overview
 
 Similarity calculators determine how similar two electronic components are based on their MPNs (Manufacturer Part Numbers). They return a value between 0.0 (completely different) and 1.0 (identical or equivalent).

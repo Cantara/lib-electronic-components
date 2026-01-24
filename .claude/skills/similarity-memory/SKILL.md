@@ -7,6 +7,16 @@ description: Use when working with memory IC similarity calculations - comparing
 
 Guidance for working with `MemorySimilarityCalculator` in the lib-electronic-components library.
 
+---
+
+**For metadata-driven similarity architecture**, see `/similarity-metadata`:
+- SpecImportance levels (CRITICAL, HIGH, MEDIUM, LOW, OPTIONAL)
+- ToleranceRule types (exactMatch, percentageTolerance, minimumRequired, etc.)
+- SimilarityProfile contexts (DESIGN_PHASE, REPLACEMENT, COST_OPTIMIZATION, etc.)
+- Calculator integration patterns and gotchas
+
+---
+
 ## Overview
 
 The `MemorySimilarityCalculator` compares memory ICs based on:
