@@ -539,4 +539,160 @@ public class MPNUtils {
         return matchingTypes;
     }
 
+    /**
+     * Strip package/ordering suffix from MPN to get base part number.
+     * Handles manufacturer-specific packaging codes.
+     *
+     * <p>Common package suffix patterns:
+     * <ul>
+     *   <li>Maxim/Analog Devices: {@code +} (lead-free)</li>
+     *   <li>Linear Technology: {@code #PBF}, {@code #TR}, {@code #TRPBF} (RoHS, tape &amp; reel)</li>
+     *   <li>NXP: {@code /CM,118} (ordering/package codes)</li>
+     *   <li>ON Semiconductor: {@code G} (green/RoHS package)</li>
+     * </ul>
+     *
+     * <p>Examples:
+     * <ul>
+     *   <li>{@code "MAX3483EESA+"} → {@code "MAX3483EESA"}</li>
+     *   <li>{@code "LTC2053HMS8#PBF"} → {@code "LTC2053HMS8"}</li>
+     *   <li>{@code "TJA1050T/CM,118"} → {@code "TJA1050T"}</li>
+     *   <li>{@code "ADS1115IDGSR"} → {@code "ADS1115IDGSR"} (no suffix)</li>
+     * </ul>
+     *
+     * @param mpn Manufacturer part number (may include package suffix)
+     * @return Base part number without package suffix, empty string if input is null/empty
+     */
+    public static String stripPackageSuffix(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return "";
+        }
+
+        String trimmed = mpn.trim();
+
+        // Pattern 1: + suffix (Maxim/Analog Devices lead-free)
+        if (trimmed.endsWith("+")) {
+            return trimmed.substring(0, trimmed.length() - 1);
+        }
+
+        // Pattern 2: # suffix (Linear Tech: #PBF, #TR, #TRPBF)
+        int hashIndex = trimmed.indexOf('#');
+        if (hashIndex > 0) {
+            return trimmed.substring(0, hashIndex);
+        }
+
+        // Pattern 3: / suffix (NXP ordering codes: /CM,118)
+        int slashIndex = trimmed.indexOf('/');
+        if (slashIndex > 0) {
+            return trimmed.substring(0, slashIndex);
+        }
+
+        // Pattern 4: , suffix (some ordering codes)
+        int commaIndex = trimmed.indexOf(',');
+        if (commaIndex > 0) {
+            return trimmed.substring(0, commaIndex);
+        }
+
+        // No recognized suffix
+        return trimmed;
+    }
+
+    /**
+     * Generate search variations for an MPN.
+     * Returns both original and base part number for flexible searching.
+     *
+     * <p>Useful for:
+     * <ul>
+     *   <li>Datasheet searches: try both {@code "MAX3483EESA+"} and {@code "MAX3483EESA"}</li>
+     *   <li>Component searches: find equivalent packages</li>
+     *   <li>Supplier matching: handle different packaging codes</li>
+     * </ul>
+     *
+     * <p>Examples:
+     * <ul>
+     *   <li>{@code "MAX3483EESA+"} → {@code ["MAX3483EESA+", "MAX3483EESA"]}</li>
+     *   <li>{@code "ADS1115"} → {@code ["ADS1115"]} (no variations)</li>
+     * </ul>
+     *
+     * @param mpn Manufacturer part number
+     * @return List of search variations (1-2 items), never null
+     */
+    public static List<String> getSearchVariations(String mpn) {
+        List<String> variations = new ArrayList<>();
+
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return variations;
+        }
+
+        // Always include original
+        variations.add(mpn);
+
+        // Add base part if different
+        String base = stripPackageSuffix(mpn);
+        if (!base.isEmpty() && !base.equals(mpn)) {
+            variations.add(base);
+        }
+
+        return variations;
+    }
+
+    /**
+     * Check if two MPNs refer to the same base component.
+     * Ignores package/ordering suffixes.
+     *
+     * <p>Useful for component equivalence checking, BOM validation,
+     * and supplier part matching.
+     *
+     * <p>Examples:
+     * <ul>
+     *   <li>{@code "MAX3483EESA+"} ≡ {@code "MAX3483EESA"} → {@code true}</li>
+     *   <li>{@code "LTC2053HMS8#PBF"} ≡ {@code "LTC2053HMS8#TR"} → {@code true}</li>
+     *   <li>{@code "NC7WZ485M8X"} ≡ {@code "NC7WZ240"} → {@code false}</li>
+     * </ul>
+     *
+     * @param mpn1 First MPN
+     * @param mpn2 Second MPN
+     * @return {@code true} if same base component (ignoring packaging)
+     */
+    public static boolean isEquivalentMPN(String mpn1, String mpn2) {
+        if (mpn1 == null || mpn2 == null) {
+            return false;
+        }
+
+        String base1 = stripPackageSuffix(mpn1);
+        String base2 = stripPackageSuffix(mpn2);
+
+        if (base1.isEmpty() || base2.isEmpty()) {
+            return false;
+        }
+
+        return base1.equalsIgnoreCase(base2);
+    }
+
+    /**
+     * Extract the package suffix from an MPN, if present.
+     *
+     * <p>Examples:
+     * <ul>
+     *   <li>{@code "MAX3483EESA+"} → {@code Optional.of("+")}</li>
+     *   <li>{@code "LTC2053HMS8#PBF"} → {@code Optional.of("#PBF")}</li>
+     *   <li>{@code "TJA1050T/CM,118"} → {@code Optional.of("/CM,118")}</li>
+     *   <li>{@code "ADS1115"} → {@code Optional.empty()}</li>
+     * </ul>
+     *
+     * @param mpn Manufacturer part number
+     * @return Package suffix if found, empty otherwise
+     */
+    public static Optional<String> getPackageSuffix(String mpn) {
+        if (mpn == null || mpn.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        String base = stripPackageSuffix(mpn);
+        if (base.equals(mpn.trim())) {
+            return Optional.empty();
+        }
+
+        return Optional.of(mpn.trim().substring(base.length()));
+    }
+
 }
