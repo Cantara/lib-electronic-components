@@ -342,6 +342,13 @@ When reviewing code, watch for:
 
 ## See Also
 
+### Advanced Skills
+- `/handler-pattern-design` - Handler patterns, anti-patterns, and cleanup checklists
+- `/similarity-calculator-architecture` - Calculator ordering and architectural patterns
+- `/component-type-detection-hierarchy` - Type system architecture and specificity
+- `/manufacturer-detection-from-mpn` - Manufacturer detection patterns and ordering
+
+### Documentation
 - **HISTORY.md** - Technical debt history and completed work
 - **.docs/history/** - Detailed analyses of architectural decisions
 
