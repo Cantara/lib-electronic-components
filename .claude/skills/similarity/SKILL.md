@@ -436,3 +436,13 @@ ComponentTypeMetadata.builder(ComponentType.IC).build(); // IllegalStateExceptio
 ```
 
 <!-- Add new learnings above this line -->
+
+---
+
+## See Also
+
+### Advanced Skills
+- `/similarity-calculator-architecture` - Calculator registration, ordering, and the OpAmp IC interception bug
+- `/metadata-driven-similarity-conversion` - Converting calculators to metadata-driven approach
+- `/component-spec-extraction` - How to extract specs from MPNs for comparison
+- `/equivalent-group-identification` - Hardcoded equivalent groups across calculators

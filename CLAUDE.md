@@ -28,7 +28,16 @@ mvn package -DskipTests
 
 **Always use Pull Requests** - never commit directly to main.
 
+**🚨 CRITICAL: Update documentation BEFORE committing!**
+
 ```bash
+# 0. Update documentation FIRST (use checklist)
+# Run: /documentation-maintenance
+# - Update relevant skill files with learnings
+# - Add examples for new patterns
+# - Update CLAUDE.md for cross-cutting changes
+# - Update HISTORY.md for significant features
+
 # 1. Create feature branch
 git checkout -b feature/short-description
 
@@ -201,6 +210,19 @@ Specialized skills are available in `.claude/skills/` for working with specific 
 - `/lifecycle` - **Component lifecycle tracking** (obsolescence, NRFND, LTB, replacements)
 - `/architecture` - **Refactoring and cleanup guidance** (critical issues, duplication hotspots)
 - `/task-delegation` - **Cost-effective task delegation** (Haiku vs Sonnet, when to delegate, proven patterns)
+- `/documentation-maintenance` - **🚨 Pre-PR documentation checklist** (MANDATORY before commits, ensures skills/learnings updated)
+
+### Advanced Component Skills
+
+Deep-dive skills for complex subsystems and architectural patterns:
+- `/handler-pattern-design` - **Handler patterns and anti-patterns** (Set.of() vs HashSet, dual type registration, matches() override, testing strategies)
+- `/mpn-normalization` - **MPN suffix handling and normalization** (stripPackageSuffix, getSearchVariations, Unicode µ→Μ gotcha)
+- `/similarity-calculator-architecture` - **Calculator ordering and bugs** (OpAmp IC interception, first-applicable-wins, isApplicable() patterns)
+- `/component-type-detection-hierarchy` - **Type hierarchy and detection** (~450 types, specificity levels, getBaseType() mapping)
+- `/component-spec-extraction` - **Spec extraction patterns** (SpecValue wrapper, camelCase naming, type-specific extraction)
+- `/metadata-driven-similarity-conversion` - **Metadata migration guide** (5-step conversion, dual-path implementation, weighted scoring)
+- `/manufacturer-detection-from-mpn` - **Manufacturer regex patterns** (120+ manufacturers, detection ordering, shared prefixes)
+- `/equivalent-group-identification` - **Equivalent part groups** (2N2222≈PN2222, IRF530≈STF530, hardcoded groups in 4 calculators)
 
 ## Similarity Calculator Skills
 

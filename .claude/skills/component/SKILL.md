@@ -154,6 +154,14 @@ Use specialized skills for specific component types:
 
 ## See Also
 
+### Advanced Skills
+- `/handler-pattern-design` - Handler patterns, anti-patterns, and testing strategies
+- `/mpn-normalization` - MPN suffix handling and normalization patterns
+- `/component-type-detection-hierarchy` - Type hierarchy, specificity levels, getBaseType() mapping
+- `/component-spec-extraction` - Spec extraction patterns and naming conventions
+- `/manufacturer-detection-from-mpn` - Manufacturer regex patterns and detection ordering
+
+### Documentation
 - **HISTORY.md** - Handler bug patterns and fixes (PR #89, handler cleanup PRs #73-88)
 - **.docs/history/HANDLER_IMPLEMENTATION_PATTERNS.md** - Detailed handler development patterns
 - **.docs/history/BUG_FIX_ANALYSIS.md** - Critical bugs and prevention strategies
