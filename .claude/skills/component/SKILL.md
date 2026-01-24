@@ -82,8 +82,22 @@ case NEW_TYPE_INFINEON, NEW_TYPE_ST -> NEW_TYPE;
 ## MPN Operations
 
 ```java
-// Normalize MPN
+// Normalize MPN (removes special characters)
 String normalized = MPNUtils.normalize("LM358-N"); // "LM358N"
+
+// Strip package suffix to get base part number
+String base = MPNUtils.stripPackageSuffix("MAX3483EESA+"); // "MAX3483EESA"
+String base2 = MPNUtils.stripPackageSuffix("LTC2053HMS8#PBF"); // "LTC2053HMS8"
+
+// Generate search variations (for datasheet/component searches)
+List<String> vars = MPNUtils.getSearchVariations("TJA1050T/CM,118");
+// ["TJA1050T/CM,118", "TJA1050T"]
+
+// Check component equivalence (ignoring package suffixes)
+boolean equiv = MPNUtils.isEquivalentMPN("LTC2053HMS8#PBF", "LTC2053HMS8#TR"); // true
+
+// Extract package suffix
+Optional<String> suffix = MPNUtils.getPackageSuffix("MAX3483EESA+"); // Optional.of("+")
 
 // Detect manufacturer
 ComponentManufacturer mfr = ComponentManufacturer.fromMPN("STM32F103C8T6");
@@ -94,6 +108,20 @@ ComponentType type = ComponentType.fromMPN("IRF540N"); // MOSFET
 // Calculate similarity
 double sim = MPNUtils.calculateSimilarity("LM358", "MC1458"); // 0.9
 ```
+
+### Package Suffix Support
+
+MPNUtils now supports manufacturer-specific package suffixes:
+- **Maxim/AD**: `+` (lead-free) - e.g., `MAX3483EESA+`
+- **Linear Tech**: `#PBF`, `#TR` (RoHS, Tape & Reel) - e.g., `LTC2053HMS8#PBF`
+- **NXP**: `/CM,118` (ordering codes) - e.g., `TJA1050T/CM,118`
+- **Various**: `,315` (ordering codes) - e.g., `NC7WZ04,315`
+
+**Use cases:**
+- Datasheet searches: Try both original and base MPN
+- Component deduplication: Same base = same component
+- BOM validation: Match supplier MPNs to design MPNs
+- Inventory matching: Ignore packaging differences
 
 ## Similarity Calculators
 

@@ -710,6 +710,63 @@ All handlers documented with bugs have been fixed in previous work:
 - Similarity calculators registered in `MPNUtils` static initializer (lines 34-48)
 - `ManufacturerHandlerFactory` uses reflection-based classpath scanning with TreeSet for deterministic order
 
+### MPN Package Suffix Support (January 2026)
+
+**Feature**: MPNUtils now supports stripping manufacturer-specific package suffixes from MPNs for better component matching and searching.
+
+**Supported Patterns**:
+| Pattern | Delimiter | Example | Manufacturers |
+|---------|-----------|---------|---------------|
+| Plus suffix | `+` | MAX3483EESA**+** → MAX3483EESA | Maxim, Analog Devices (lead-free) |
+| Hash suffix | `#` | LTC2053HMS8**#PBF** → LTC2053HMS8 | Linear Technology (RoHS, Tape & Reel) |
+| Slash suffix | `/` | TJA1050T**/CM,118** → TJA1050T | NXP (ordering codes) |
+| Comma suffix | `,` | NC7WZ04**,315** → NC7WZ04 | Various (ordering codes) |
+
+**API Methods**:
+```java
+// Strip package suffix to get base part
+String base = MPNUtils.stripPackageSuffix("MAX3483EESA+");  // → "MAX3483EESA"
+
+// Generate search variations for datasheet/component searches
+List<String> vars = MPNUtils.getSearchVariations("LTC2053HMS8#PBF");  // → ["LTC2053HMS8#PBF", "LTC2053HMS8"]
+
+// Check component equivalence (ignoring packaging)
+boolean equiv = MPNUtils.isEquivalentMPN("LTC2053HMS8#PBF", "LTC2053HMS8#TR");  // → true
+
+// Extract the package suffix
+Optional<String> suffix = MPNUtils.getPackageSuffix("MAX3483EESA+");  // → Optional.of("+")
+```
+
+**Use Cases**:
+- **Datasheet searches**: Try both "MAX3483EESA+" and "MAX3483EESA" for better search results
+- **Component deduplication**: Recognize "LTC2053HMS8#PBF" and "LTC2053HMS8#TR" as same component
+- **BOM validation**: Match supplier parts to design MPNs despite different packaging codes
+- **Inventory matching**: Improve supplier part number matching accuracy
+
+**Implementation Details**:
+- **Conservative approach**: Only strips well-known patterns (+, #, /, ,) to avoid false positives
+- **Single-letter suffixes NOT stripped**: "NC7WZ04G" remains unchanged (ambiguous - could be part of base MPN)
+- **Pattern priority**: + → # → / → , (first matching delimiter wins)
+- **Performance**: O(1) string operations, no regex overhead
+- **Case-insensitive**: Equivalence checks ignore case differences
+
+**Test Coverage**:
+- 32 comprehensive tests in `MPNPackageSuffixTest.java`
+- Real-world production MPNs tested (Maxim, Linear Tech, NXP, ON Semi)
+- Integration tests for datasheet search, BOM validation, deduplication scenarios
+- All 32 tests passing ✅
+
+**Gotchas**:
+1. **No manufacturer-specific logic**: Uses generic patterns, not ManufacturerHandler integration
+2. **First delimiter wins**: "PART#ABC/XYZ" → "PART" (stops at #, not /)
+3. **Conservative by design**: Ambiguous cases preserved to avoid breaking existing MPNs
+4. **No multiple suffix support**: Designed for single suffix per MPN
+
+**Future Enhancements** (if needed):
+- Manufacturer-aware suffix detection via ManufacturerHandler
+- Package code registry for more accurate detection
+- Support for manufacturer-specific single-letter suffixes (T, G, etc.)
+
 ---
 
 ## Jinling Handler Implementation (PR #102 - January 2026)
