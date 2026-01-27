@@ -1,0 +1,29 @@
+# {{PROJECT_NAME}} - History
+
+Chronological timeline of significant changes, decisions, and milestones.
+
+## Timeline
+
+### {{CURRENT_DATE}} - Project Initialized
+- Created project structure
+- Initialized LLM-assisted development meta-layer
+- Set up CLAUDE.md with {{TIER_NAME}} tier configuration
+- Created initial skills: {{INITIAL_SKILLS}}
+
+---
+
+## How to Update This File
+
+Add entries in reverse chronological order (newest first, above the line).
+
+Each entry should include:
+- **Date** and brief title
+- Bullet points describing what changed and why
+- Reference to PR or commit if applicable
+
+Categories:
+- **Feature**: New functionality
+- **Fix**: Bug fixes
+- **Refactor**: Code restructuring
+- **Docs**: Documentation changes
+- **Milestone**: Significant project events

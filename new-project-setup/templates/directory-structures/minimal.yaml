@@ -1,0 +1,37 @@
+# Minimal Tier - LLM-Assisted Development Structure
+# Use for: Quick scripts, small tools, personal projects, prototypes
+# Criteria: Single-purpose project, 1-2 developers, limited complexity
+
+tier: minimal
+description: Basic LLM-development structure with project instructions and two skills
+
+required_files:
+  - path: CLAUDE.md
+    description: Project instructions file (< 300 lines)
+    template: core/CLAUDE.md.template
+
+  - path: .claude/skills/architecture.md
+    description: Project architecture patterns and structure
+    template: skills/architecture.md
+
+  - path: .claude/skills/documentation-maintenance.md
+    description: Pre-PR documentation checklist
+    template: skills/documentation-maintenance.md
+
+required_directories:
+  - .claude/skills
+
+optional_files:
+  - path: HISTORY.md
+    description: Project timeline (recommended if project will live > 1 month)
+
+constraints:
+  claude_md_max_lines: 300
+  min_skills: 2
+  max_skills: 5
+
+upgrade_signals:
+  - "Project has 3+ distinct architectural modules"
+  - "Multiple contributors need onboarding context"
+  - "You're documenting the same patterns repeatedly"
+  - "Build/deploy process has non-obvious steps"

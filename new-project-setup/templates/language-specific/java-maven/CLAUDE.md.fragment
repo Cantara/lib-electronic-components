@@ -1,0 +1,9 @@
+## Build Commands
+
+```bash
+mvn clean install          # Build the project
+mvn test                   # Run all tests
+mvn test -Dtest=ClassName  # Run single test class
+mvn test -Dtest=Class#method  # Run single test method
+mvn install -DskipTests    # Skip tests during build
+```

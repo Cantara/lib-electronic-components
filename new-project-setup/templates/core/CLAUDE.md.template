@@ -1,0 +1,65 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code when working with this repository.
+
+## Build Commands
+
+{{BUILD_COMMANDS}}
+
+## Git Workflow
+
+{{GIT_WORKFLOW}}
+
+## Project Overview
+
+{{PROJECT_DESCRIPTION}}
+
+- **Primary language**: {{PRIMARY_LANGUAGE}}
+- **Build system**: {{BUILD_SYSTEM}}
+- **Key dependencies**: {{KEY_DEPENDENCIES}}
+
+## Architecture
+
+### {{ARCHITECTURE_SECTION_1_NAME}}
+{{ARCHITECTURE_SECTION_1_CONTENT}}
+
+### {{ARCHITECTURE_SECTION_2_NAME}}
+{{ARCHITECTURE_SECTION_2_CONTENT}}
+
+### Key Patterns
+{{KEY_PATTERNS}}
+
+---
+
+## Skills Index
+
+Skills provide detailed guidance for specific domains. Invoke with `/skill-name`.
+
+{{SKILLS_TABLE}}
+
+---
+
+## Critical Gotchas
+
+{{GOTCHAS}}
+
+---
+
+## Active Technical Debt
+
+{{TECHNICAL_DEBT}}
+
+---
+
+## Recording Learnings
+
+When you discover patterns or quirks:
+1. **General learnings** - Add to this file under appropriate section
+2. **Domain-specific** - Add to relevant skill in `.claude/skills/`
+3. **Fixed bugs** - Archive in `.docs/history/FIXED_BUGS.md`
+
+---
+
+## Historical Documentation
+
+{{HISTORICAL_DOCS}}

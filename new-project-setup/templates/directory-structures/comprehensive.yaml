@@ -1,0 +1,90 @@
+# Comprehensive Tier - LLM-Assisted Development Structure
+# Use for: Complex systems, large teams, long-lived projects
+# Criteria: Multi-subsystem project, 5+ developers, high complexity
+
+tier: comprehensive
+description: Full structure with hooks, commands, organized skills, and deep documentation
+
+required_files:
+  - path: CLAUDE.md
+    description: Project instructions file (< 300 lines, acts as index)
+    template: core/CLAUDE.md.template
+
+  - path: HISTORY.md
+    description: Chronological project timeline
+    template: core/HISTORY.md.template
+
+  - path: .claude/skills/architecture.md
+    description: Project architecture patterns and structure
+    template: skills/architecture.md
+
+  - path: .claude/skills/documentation-maintenance.md
+    description: Pre-PR documentation checklist
+    template: skills/documentation-maintenance.md
+
+  - path: .claude/skills/task-delegation.md
+    description: Cost optimization guidance
+    template: skills/task-delegation.md
+
+  - path: .docs/history/FIXED_BUGS.md
+    description: Archive of fixed bugs with analysis
+
+  - path: .docs/history/DECISIONS.md
+    description: Architectural decision records
+
+required_directories:
+  - .claude/skills
+  - .claude/commands
+  - .docs
+  - .docs/history
+
+optional_files:
+  - path: .claude/settings.json
+    description: Claude Code project settings
+
+optional_directories:
+  - .claude/hooks
+  - .docs/diagrams
+  - .docs/runbooks
+
+domain_skills:
+  count: "7+"
+  description: >
+    Seven or more domain-specific skills organized by subsystem.
+    For very large projects, skills may be grouped in subdirectories.
+  organization: >
+    When skill count exceeds 15, organize into subdirectories:
+    .claude/skills/api/
+    .claude/skills/data/
+    .claude/skills/deployment/
+    etc.
+  examples:
+    - "api.md - REST API patterns"
+    - "database.md - Schema and query patterns"
+    - "testing.md - Test conventions"
+    - "deployment.md - CI/CD pipeline"
+    - "security.md - Auth, secrets, permissions"
+    - "monitoring.md - Logging, metrics, alerts"
+    - "performance.md - Optimization patterns"
+
+custom_commands:
+  description: >
+    Project-specific slash commands in .claude/commands/
+    that automate common workflows.
+  examples:
+    - "deploy.md - Deploy to staging/production"
+    - "review-pr.md - Comprehensive PR review checklist"
+    - "debug.md - Common debugging workflows"
+
+constraints:
+  claude_md_max_lines: 300
+  min_skills: 10
+  max_skills: 50
+
+maturity_indicators:
+  - "Skills contain non-template content from real development sessions"
+  - "HISTORY.md has 10+ entries spanning multiple months"
+  - "FIXED_BUGS.md has real bug entries with analysis"
+  - "Custom commands exist and are referenced in CLAUDE.md"
+  - "Task delegation is actively used (evidence in commit history)"
+  - "Architecture skill has been updated 3+ times"

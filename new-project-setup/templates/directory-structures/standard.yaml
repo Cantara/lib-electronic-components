@@ -1,0 +1,64 @@
+# Standard Tier - LLM-Assisted Development Structure
+# Use for: Production libraries, services, team projects
+# Criteria: Multi-module project, 2-5 developers, ongoing development
+
+tier: standard
+description: Full LLM-development structure with history, documentation, and domain skills
+
+required_files:
+  - path: CLAUDE.md
+    description: Project instructions file (< 300 lines)
+    template: core/CLAUDE.md.template
+
+  - path: HISTORY.md
+    description: Chronological project timeline
+    template: core/HISTORY.md.template
+
+  - path: .claude/skills/architecture.md
+    description: Project architecture patterns and structure
+    template: skills/architecture.md
+
+  - path: .claude/skills/documentation-maintenance.md
+    description: Pre-PR documentation checklist
+    template: skills/documentation-maintenance.md
+
+  - path: .claude/skills/task-delegation.md
+    description: Cost optimization guidance
+    template: skills/task-delegation.md
+
+required_directories:
+  - .claude/skills
+  - .docs
+  - .docs/history
+
+optional_files:
+  - path: .docs/history/FIXED_BUGS.md
+    description: Archive of fixed bugs with analysis
+
+  - path: .docs/history/DECISIONS.md
+    description: Architectural decision records
+
+optional_directories:
+  - .claude/commands
+
+domain_skills:
+  count: 2
+  description: >
+    Two additional skills covering the project's primary domains.
+    These are generated based on codebase analysis during init/retrofit.
+  examples:
+    - "api.md - REST API patterns, endpoint conventions, error handling"
+    - "database.md - Schema patterns, migration process, query conventions"
+    - "testing.md - Test patterns, fixture management, coverage expectations"
+
+constraints:
+  claude_md_max_lines: 300
+  min_skills: 5
+  max_skills: 15
+
+upgrade_signals:
+  - "Project has 5+ distinct subsystems"
+  - "Team has 5+ developers"
+  - "Custom Claude Code commands would improve workflow"
+  - "CI/CD pipeline has project-specific hooks"
+  - "Domain skills exceed 10 and need organization"
