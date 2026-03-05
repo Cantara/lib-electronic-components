@@ -173,7 +173,9 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
-
+                        <!-- Disable JPMS module-path: forked VM crashes on Jenkins when
+                             Automatic-Module-Name triggers module-path compilation -->
+                        <useModulePath>false</useModulePath>
                     </configuration>
                 </plugin>
                 <plugin>
