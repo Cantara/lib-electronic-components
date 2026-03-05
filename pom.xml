@@ -176,6 +176,10 @@
                         <!-- Disable JPMS module-path: forked VM crashes on Jenkins when
                              Automatic-Module-Name triggers module-path compilation -->
                         <useModulePath>false</useModulePath>
+                        <!-- Run tests in-process: module-info.java requires JPMS modules
+                             that aren't on module-path in fork mode, causing forked VM to
+                             exit(0) before running any tests -->
+                        <forkCount>0</forkCount>
                     </configuration>
                 </plugin>
                 <plugin>
