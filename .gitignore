@@ -28,3 +28,7 @@ replay_pid*
 
 # Maven build output
 target/
+
+# Synthesis auto-generated companion files
+.synthesis.md
+**/.synthesis.md
