@@ -1,0 +1,25 @@
+id: lib-electronics-components
+name: lib-electronic-components
+version: 10.8.2-SNAPSHOT
+description: |
+  Java library modelling electronic components and their specifications.
+  Provides a type-safe component model used by PCB design tooling, covering
+  resistors, capacitors, ICs, connectors, and component attribute schemas.
+units:
+  - id: component-model
+    name: Component Model
+    type: library
+    description: Component type hierarchy — base types and specialisations for each component family.
+    path: src/main/java/no/cantara/electronic
+  - id: attributes
+    name: Attributes
+    type: component
+    description: Component attribute definitions and validation — values, tolerances, and units.
+  - id: search
+    name: Search
+    type: component
+    description: Component search and filtering API — query by type, value, package, and attribute.
+  - id: registry
+    name: Registry
+    type: component
+    description: Component registry and catalogue management — register, look up, and list components.
