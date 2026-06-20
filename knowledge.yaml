@@ -1,3 +1,17 @@
+kcp_version: "0.21"
+updated: "2026-06-20"
+language: en
+license: "Apache-2.0"
+indexing: private
+temporal:
+  valid_from: "2026-03-10"
+signing:
+  scheme: ed25519
+  scope: this-manifest
+  public_key: "MCowBQYDK2VwAyEAuipgusnqU9vjf3p2yPVLD/DmERT6tBbLOqEETdxAhMU="
+  signature: "https://raw.githubusercontent.com/Cantara/lib-electronic-components/main/knowledge.yaml.sig"
+not_for: []
+
 id: lib-electronics-components
 name: lib-electronic-components
 version: 10.8.2-SNAPSHOT
@@ -11,15 +25,27 @@ units:
     type: library
     description: Component type hierarchy — base types and specialisations for each component family.
     path: src/main/java/no/cantara/electronic
+      content_hash:
+        algorithm: sha256
+        value: ""
   - id: attributes
     name: Attributes
     type: component
     description: Component attribute definitions and validation — values, tolerances, and units.
+      content_hash:
+        algorithm: sha256
+        value: ""
   - id: search
     name: Search
     type: component
     description: Component search and filtering API — query by type, value, package, and attribute.
+      content_hash:
+        algorithm: sha256
+        value: ""
   - id: registry
     name: Registry
     type: component
     description: Component registry and catalogue management — register, look up, and list components.
+      content_hash:
+        algorithm: sha256
+        value: ""
